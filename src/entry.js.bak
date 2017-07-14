@@ -2,15 +2,14 @@
  * Created by tozawa on 2017/07/02.
  */
 
-import { RailPart } from "./rails/parts/RailPart";
-// import { Direction, SimpleTurnout,SymmetricalTurnout,CurvedTurnout } from "./rails/Turnout";
+import { AnchorType } from "./rails/parts/RailPart";
+import { Direction, SimpleTurnout,SymmetricalTurnout,CurvedTurnout } from "./rails/Turnout";
 import { CurveRailPart } from "./rails/parts/CurveRailPart";
 import { StraightRailPart } from "./rails/parts/StraightRailPart";
 import { StraightRail, DoubleStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
 import {LayoutEditor} from "./LayoutEditor";
-import {Joint} from "./rails/parts/Joint.js";
-import {RectPart} from "./rails/parts/RectPart";
+import { Joint } from "./rails/parts/Joint";
 
 paper.install(window);
 window.onload = () => {
@@ -20,20 +19,8 @@ window.onload = () => {
 
     var secondLayer = new Layer();
 
-    // let r = new RectPart(new Point(100, 100), 0, 10, 15, "blue");
-    // let r1 = new RectPart(new Point(100, 100), 30, 10, 30, "red");
-    //
-    // new Joint(new Point(300, 150), 0);
-    // new Joint(new Point(300, 150), 0, Joint.Direction.REVERSE_TO_ANGLE);
-    //
-    //
-    // new CurveRailPart(new Point(300, 100), 60, 100, 45);
-    // new CurveRail(new Point(100, 100), 90, 100, 30);
-
-
-
     var man = new LayoutEditor();
-    // let r2 = new StraightRail(new Point(300, 200), 30, 100);
+    // let r1 = new StraightRail(new Point(300, 200), 0, 100);
     // let r2 = r1.clone();
     // let r2 = new StraightRail(new Point(300, 200), 0, 100);
     // r2.move(r2.startPoint, r1.joints[1]);
@@ -165,13 +152,13 @@ function testStraightRailPart() {
     r3.rotateRelatively(45, r3.startPoint);
     let r4 = new StraightRailPart(new Point(200, 200), 90, 100);
     r4.moveRelatively(new Point(0, 100));
-    let r5 = new StraightRailPart(new Point(200, 200), 45, 100, RailPart.Anchor.END);
+    let r5 = new StraightRailPart(new Point(200, 200), 45, 100, AnchorType.END);
 }
 
 function testCurveRailPart() {
 
-    let r1 = new CurveRailPart(new Point(300, 100), 0, 100, 45);
-    let r2 = new CurveRailPart(new Point(300, 100), 45, 100, 45);
+    // let r1 = new CurveRailPart(new Point(300, 100), 0, 100, 45);
+    // let r2 = new CurveRailPart(new Point(300, 100), 45, 100, 45);
     // let r3 = new CurveRailPart(new Point(300, 100), 90, 100, 45);
     // let r4 = new CurveRailPart(new Point(300, 100), 135, 100, 45);
     // let r5 = new CurveRailPart(new Point(300, 100), 180, 100, 45);
@@ -189,7 +176,7 @@ function testCurveRailPart() {
     // r12.move(r10.endPoint, r12.endPoint);
     // // r12.rotate(r10.endAngle, r12.endPoint);
 
-    let r13 = new CurveRailPart(new Point(250, 300), -180, 100, 30, RailPart.Anchor.END);
+    let r13 = new CurveRailPart(new Point(250, 300), -180, 100, 30, AnchorType.END);
 
 
     // r1.rotate(0, r1.startPoint);

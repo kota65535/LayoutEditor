@@ -2,9 +2,9 @@
  * Created by tozawa on 2017/07/03.
  */
 import { Rail } from "./Rail";
-import { AnchorType } from "./RailPart";
-import { StraightRailPart } from "./StraightRailPart";
-import { CurveRailPart } from "./CurveRailPart";
+import { AnchorType } from "./parts/RailPart";
+import { StraightRailPart } from "./parts/StraightRailPart";
+import { CurveRailPart } from "./parts/CurveRailPart";
 
 /**
  * 分岐先の方向を指定するための識別子。
@@ -26,7 +26,7 @@ export class SimpleTurnout extends Rail {
      * @param {Direction} direction
      */
     constructor(startPoint, angle, length, radius, centerAngle, direction) {
-        super(angle);
+        super(startPoint, angle)
 
         this.length = length;
         this.radius = radius;
@@ -47,6 +47,14 @@ export class SimpleTurnout extends Rail {
 
         this.showJoints();
     }
+
+    /**
+     * レールを複製する。
+     * @returns {Object}
+     */
+    clone() {
+        return eval(Rail.evalMeToClone(this));
+    }
 }
 
 export class SymmetricalTurnout extends Rail {
@@ -58,7 +66,7 @@ export class SymmetricalTurnout extends Rail {
      * @param {number} centerAngle
      */
     constructor(startPoint, angle, radius, centerAngle) {
-        super(angle);
+        super(startPoint, angle)
 
         this.radius = radius;
         this.centerAngle = centerAngle;
@@ -72,6 +80,13 @@ export class SymmetricalTurnout extends Rail {
         this.showJoints();
     }
 
+    /**
+     * レールを複製する。
+     * @returns {Object}
+     */
+    clone() {
+        return eval(Rail.evalMeToClone(this));
+    }
 }
 
 
@@ -86,7 +101,7 @@ export class CurvedTurnout extends Rail {
      * @param {Direction} direction
      */
     constructor(startPoint, angle, outerRadius, innerRadius, centerAngle, direction) {
-        super(angle);
+        super(startPoint, angle)
 
         this.angle = angle;
         this.innerRadius = innerRadius;
@@ -115,4 +130,11 @@ export class CurvedTurnout extends Rail {
         this.showJoints();
     }
 
+    /**
+     * レールを複製する。
+     * @returns {Object}
+     */
+    clone() {
+        return eval(Rail.evalMeToClone(this));
+    }
 }

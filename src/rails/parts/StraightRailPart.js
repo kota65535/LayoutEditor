@@ -16,7 +16,7 @@ export class StraightRailPart extends RailPart {
      * @param {number} length
      * @param {AnchorType} anchorType
      */
-    constructor(point, angle, length, anchorType=AnchorType.START) {
+    constructor(point, angle, length, anchorType=RailPart.Anchor.START) {
         super();
 
         this.length = length;
@@ -32,20 +32,16 @@ export class StraightRailPart extends RailPart {
 
     _initPath(length) {
         let pathData = sprintf("M 0 0 L %f %f L %f %f L %f %f L %f %f L 0 %f Z",
-            0, -this.WIDTH/2,
-            length, -this.WIDTH/2,
+            0, -RailPart.WIDTH/2,
+            length, -RailPart.WIDTH/2,
             length, 0,
-            length, this.WIDTH/2,
-            this.WIDTH/2);
+            length, RailPart.WIDTH/2,
+            RailPart.WIDTH/2);
         this.path = new paper.Path(pathData);   // Path Object
-        this.path.strokeColor = "black";
-        // this.path.fillColor = 'blue';
+        // this.path.strokeColor = "black";
+        this.path.fillColor = RailPart.FILL_COLOR;
 
         // 始点・終点の更新
         this._updatePoints();
-
-        // パスのpositionはBoundの中心を示している。
-        // これに対しレールは始点をもとに位置を指定したいので、その差分をこれに保持しておく。
-        this.positionOffset = this.path.position;
     }
 }

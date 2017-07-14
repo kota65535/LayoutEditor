@@ -3,15 +3,6 @@
  */
 import {sprintf} from "sprintf-js";
 
-/**
- * レールパーツのコンストラクタでアンカー点を指定するための識別子。
- * 始点または終点が指定可能。
- * @type {{START: Symbol, END: Symbol}}
- */
-export const AnchorType = {
-    START: Symbol(),
-    END: Symbol
-};
 
 /**
  * レールパーツの基底クラス。全てのレールは複数のレールパーツとジョイントにより構成される。
@@ -19,67 +10,76 @@ export const AnchorType = {
  */
 export class RailPart {
 
+    static FILL_COLOR = "#333333";
+    static WIDTH = 10;
+
+    /**
+     * レールパーツのコンストラクタでアンカー点を指定するための識別子。
+     * 始点または終点が指定可能。
+     * @type {{START: Symbol, END: Symbol}}
+     */
+    static Anchor = {
+        START: Symbol(),
+        END: Symbol
+    };
+
     /**
      * レールパーツの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでパスの生成・移動・回転を行う。
      */
     constructor() {
-        this.WIDTH = 10;
-
         this.startPoint = this.endPoint = new Point(0, 0);
         this.startAngle = this.endAngle = 0;
 
         this.path = null;
-
-        // パスのpositionはBoundの中心を示している。
-        // これに対しレールは始点をもとに位置を指定したいので、その差分をこれに保持しておく。
-        this.positionOffset = new Point(0, 0);
     }
 
     /**
-     * 任意の点を基準に、絶対座標で移動する。
-     * @param {Point} point
-     * @param {Point} anchor
-     */
-    move(point, anchor) {
-        let anchorToPoint = point.subtract(anchor);
-        this.startPoint = this.startPoint.add(anchorToPoint);
-        this.path.position = this.positionOffset.add(this.startPoint);
-        this._updatePoints()
-        // this.showInfo();
-    }
-
-    /**
-     * 現在からの相対座標で移動する。
+     * 現在位置からの相対座標で移動する。
      * @param {Point} difference
      */
     moveRelatively(difference) {
-        let absPoint = this.startPoint.add(difference);
-        this.move(absPoint, this.startPoint);
+        this.path.position = this.path.position.add(difference);
+        this.position = this.path.position;
+        this._updatePoints()
     }
 
     /**
-     * 任意の点を中心に、X軸から時計回りの絶対角度で回転する。
-     * @param {number} angle
+     * 基準点の絶対座標で移動する。
+     * @param {Point} position
      * @param {Point} anchor
      */
-    rotate(angle, anchor) {
-        let relAngle = angle - this.startAngle;
-        this.rotateRelatively(relAngle, anchor);
+    move(position, anchor) {
+        let difference = position.subtract(anchor);
+        this.moveRelatively(difference);
     }
 
     /**
      * 任意の点を中心に、X軸から時計回りで現在からの相対角度で回転する。
      * @param {number} difference
-     * @param {Point} anchor
+     * @param {Point} center
      */
-    rotateRelatively(difference, anchor) {
+    rotateRelatively(difference, center) {
+        this.path.rotate(difference, center);
+        this._updatePoints();
         this.startAngle += difference;
         this.endAngle += difference;
-        this.path.rotate(difference, anchor);
-        this._updatePoints();
-        this.positionOffset = this.path.position.subtract(this.startPoint);
         // this.showInfo();
+    }
+
+    /**
+     * 任意の点を中心に、X軸から時計回りの絶対角度で回転する。
+     * @param {number} angle
+     * @param {Point} center
+     */
+    rotate(angle, center) {
+        let relAngle = angle - this.startAngle;
+        this.rotateRelatively(relAngle, center);
+    }
+
+
+    remove() {
+        this.path.remove();
     }
 
     /**
@@ -106,13 +106,14 @@ export class RailPart {
      * @private
      */
     _getAnchorFromType(anchorType) {
-        let anAnchorType = anchorType || AnchorType.START;
+        let anAnchorType = anchorType || RailPart.Anchor.START;
         let anchor;
         switch (anAnchorType) {
-            case AnchorType.START:
+            case RailPart.Anchor.START:
                 anchor = this.startPoint;
                 break;
-            case AnchorType.END:
+            case RailPart.Anchor.END:
+                anchor = this.startPoint;
                 anchor = this.endPoint;
                 break;
             default:

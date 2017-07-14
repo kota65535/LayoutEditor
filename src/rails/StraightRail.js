@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 import { Rail } from "./Rail";
-import { StraightRailPart } from "./StraightRailPart";
+import { StraightRailPart } from "./parts/StraightRailPart";
 
 
 export class StraightRail extends Rail {
@@ -14,7 +14,7 @@ export class StraightRail extends Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(angle);
+        super(startPoint, 0);
 
         this.length = length;
 
@@ -25,6 +25,15 @@ export class StraightRail extends Rail {
 
         this.showJoints();
     }
+
+    /**
+     * レールを複製する。
+     * @returns {Object}
+     */
+    clone() {
+        return eval(Rail.evalMeToClone(this));
+    }
+
 }
 
 export class DoubleStraightRail extends Rail {
@@ -36,16 +45,24 @@ export class DoubleStraightRail extends Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(angle);
+        super(startPoint, angle)
 
         this.length = length;
 
         this._addRailPart(new StraightRailPart(startPoint, 0, length));
-        this._addRailPart(new StraightRailPart(new Point(startPoint.x, startPoint.y + this.RAIL_SPACE), 0, length));
+        this._addRailPart(new StraightRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, length));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
 
         this.showJoints();
+    }
+
+    /**
+     * レールを複製する。
+     * @returns {Object}
+     */
+    clone() {
+        return eval(Rail.evalMeToClone(this));
     }
 }

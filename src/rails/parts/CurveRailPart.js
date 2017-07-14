@@ -16,7 +16,7 @@ export class CurveRailPart extends RailPart {
      * @param {number} centerAngle
      * @param {AnchorType} anchorType
      */
-    constructor(point, angle, radius, centerAngle, anchorType=AnchorType.START) {
+    constructor(point, angle, radius, centerAngle, anchorType=RailPart.Anchor.START) {
         super();
 
         this.radius = radius;               // 半径
@@ -33,31 +33,27 @@ export class CurveRailPart extends RailPart {
 
     _initPath(radius, centerAngle) {
         // 曲線の始点・終点の座標を計算
-        let outerEndX = (radius + this.WIDTH/2) * Math.sin(centerAngle / 180 * Math.PI);
-        let outerEndY = (radius + this.WIDTH/2) * (1 - Math.cos(centerAngle / 180 * Math.PI)) - this.WIDTH/2;
-        let innerEndX = (radius - this.WIDTH/2) * Math.sin(centerAngle / 180 * Math.PI);
-        let innerEndY = (radius - this.WIDTH/2) * (1 - Math.cos(centerAngle / 180 * Math.PI)) + this.WIDTH/2;
+        let outerEndX = (radius + RailPart.WIDTH/2) * Math.sin(centerAngle / 180 * Math.PI);
+        let outerEndY = (radius + RailPart.WIDTH/2) * (1 - Math.cos(centerAngle / 180 * Math.PI)) - RailPart.WIDTH/2;
+        let innerEndX = (radius - RailPart.WIDTH/2) * Math.sin(centerAngle / 180 * Math.PI);
+        let innerEndY = (radius - RailPart.WIDTH/2) * (1 - Math.cos(centerAngle / 180 * Math.PI)) + RailPart.WIDTH/2;
 
         let pathData = sprintf("M 0 0 L %f %f A %f %f, 0, 0, 1, %f %f L %f %f L %f %f A %f %f, 0, 0, 0, %f %f Z",
-            0, -this.WIDTH/2,
-            radius + this.WIDTH/2, radius + this.WIDTH/2, outerEndX, outerEndY,
+            0, -RailPart.WIDTH/2,
+            radius + RailPart.WIDTH/2, radius + RailPart.WIDTH/2, outerEndX, outerEndY,
             (outerEndX + innerEndX) / 2, (outerEndY + innerEndY) / 2,
             innerEndX, innerEndY,
-            radius - this.WIDTH/2, radius - this.WIDTH/2, 0, this.WIDTH/2);
+            radius - RailPart.WIDTH/2, radius - RailPart.WIDTH/2, 0, RailPart.WIDTH/2);
 
         console.log(sprintf("curve rail path: %s", pathData));
 
         this.path = new paper.Path(pathData);   // パスオブジェクト
-        this.path.strokeColor = "black";
-        // this.path.fillColor = 'blue';
+        // this.path.strokeColor = "black";
+        this.path.fillColor = RailPart.FILL_COLOR;
 
         // 始点・終点の更新
         this._updatePoints();
         this.endAngle = centerAngle;
-
-        // パスのpositionはBoundの中心を示している。
-        // これに対しレールは始点をもとに位置を指定したいので、その差分をこれに保持しておく。
-        this.positionOffset = this.path.position;
     }
 
     /**
