@@ -1,8 +1,8 @@
 module.exports = {
-    context: __dirname + '/src',
+    // context: __dirname + '/src',
 
     entry: {
-        js: "./entry.js"
+        js: __dirname + "/src/index.js"
     },
 
     output: {
@@ -12,6 +12,16 @@ module.exports = {
 
     module: {
         loaders: [
+            {
+                test: /\.tag$/,
+                exclude: /node_modules/,
+                loader: 'riot-tag-loader',
+                query: {
+                    type: 'es6', // transpile the riot tags using babel
+                    hot: true,
+                    debug: true
+                }
+            },
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
