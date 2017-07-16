@@ -1,7 +1,7 @@
 <editor-view>
     <editor-toolbar/>
     <editor-pallete items={ palette_items }></editor-pallete>
-      <!--<editor-content/>-->
+      <editor-content/>
 
     <!--<main-content></main-content>-->
   <script>

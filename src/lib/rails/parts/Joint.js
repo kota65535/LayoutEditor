@@ -11,10 +11,21 @@ import {sprintf} from "sprintf-js";
  */
 export class Joint extends RectPart {
 
-    static WIDTH = 4;
+    static WIDTH = 6;
     static HEIGHT = 12;
-    static FILL_COLOR_CONNECTED = "deepskyblue";
+    static FILL_COLOR_CONNECTED = "darkgray";
+    static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "darkorange";
+
+    /**
+     * ジョイントの状態。
+     * @type {{OPEN: Symbol, CONNECTING: Symbol, CONNECTED: Symbol}}
+     */
+    static State = {
+        OPEN: Symbol(),         // 未接続
+        CONNECTING: Symbol(),   // 接続試行中
+        CONNECTED: Symbol()     // 接続中
+    };
 
     /**
      * 接続方向とジョイントの向きの関係を指定するための識別子。
@@ -43,6 +54,7 @@ export class Joint extends RectPart {
 
         this.disconnect();
     }
+
 
     /**
      * 現在位置を取得する。
@@ -87,11 +99,16 @@ export class Joint extends RectPart {
      * 指定のジョイントと接続する。
      * @param {Joint} joint
      */
-    connect(joint) {
+    connect(joint, isDryRun=false) {
         this.connectedJoint = joint;
         joint.connectedJoint = this;
-        this.path.fillColor = Joint.FILL_COLOR_CONNECTED;
-        joint.path.fillColor = Joint.FILL_COLOR_CONNECTED;
+        if (isDryRun) {
+            this._setState(Joint.State.CONNECTING);
+            joint._setState(Joint.State.CONNECTING);
+        } else {
+            this._setState(Joint.State.CONNECTED);
+            joint._setState(Joint.State.CONNECTED);
+        }
     }
 
     /**
@@ -99,19 +116,19 @@ export class Joint extends RectPart {
      */
     disconnect() {
         if (this.connectedJoint) {
+            this.connectedJoint._setState(Joint.State.OPEN);
             this.connectedJoint.connectedJoint = null;
-            this.connectedJoint.path.fillColor = Joint.FILL_COLOR_OPEN;
         }
+        this._setState(Joint.State.OPEN);
         this.connectedJoint = null;
-        this.path.fillColor = Joint.FILL_COLOR_OPEN;
     }
 
     /**
      * ジョイントが接続中か否かを返す。
-     * @returns {boolean}
+     * @returns {State}
      */
-    isConnected() {
-        return this.connectedJoint !== null;
+    getState() {
+        return this.state;
     }
 
     /**
@@ -126,6 +143,31 @@ export class Joint extends RectPart {
     showInfo() {
         console.log(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",
             this.getPosition().x, this.getPosition().y, this.angle, this.getDirection()));
+    }
+
+    /**
+     * 状態を設定し、ジョイントの色、サイズを変更する。
+     * @param state
+     * @private
+     */
+    _setState(state) {
+        switch(state) {
+            case Joint.State.OPEN:
+                this.path.fillColor = Joint.FILL_COLOR_OPEN;
+                this.path.scale(1, 1, this.getPosition());
+                this.state = state;
+                break;
+            case Joint.State.CONNECTING:
+                this.path.fillColor = Joint.FILL_COLOR_CONNECTING;
+                this.path.scale(1, 1, this.getPosition());
+                this.state = state;
+                break;
+            case Joint.State.CONNECTED:
+                this.path.fillColor = Joint.FILL_COLOR_CONNECTED;
+                this.path.scale(0.5, 1, this.getPosition());
+                this.state = state;
+                break;
+        }
     }
 
 }

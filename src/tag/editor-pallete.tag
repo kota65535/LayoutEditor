@@ -38,7 +38,7 @@
     }
 
     .palette-item {
-      height: 140px;
+      height: 150px;
       /*line-height: 125px;*/
       background: #eee;
       padding: 10px;
@@ -66,27 +66,20 @@
 
   <div class="container-fluid" id="sidebar-wrapper">
     <!--<span class="sidebar-nav">Rails</span>-->
-    <canvas id="unko-canvas"></canvas>
 
     <div class="row">
       <div class="col-sm-6 palette-item" each={ item in opts.items }>
-        <button type="button" class="btn btn-primary btn-block">
-          <!--<div class="item-icon">-->
+        <button type="button" class="btn btn-primary btn-block" onClick={ handleItemClick.bind(this, item) }>
+          <div class="item-icon">
             <canvas class="button-canvas" id="{ item.name }-canvas"></canvas>
-          <!--</div>-->
-          <!--<div class="item-title">{ item.name }</div>-->
+          </div>
+          <div class="item-title">{ item.name }</div>
         </button>
       </div>
-      <!--<div class="col-sm-6 palette-item">-->
-        <!--<button type="button" class="btn btn-primary btn-block">-->
-          <!--<canvas class="button-canvas" id="button-canvas"></canvas>-->
-        <!--</button>-->
+      <!--<div class="col-sm-6" each={ item in opts.items }>-->
+        <!--<editor-palette-item id={ item.name } item={ item } onClick={selectItem(this)} ></editor-palette-item>-->
       <!--</div>-->
-      <!--<div class="col-sm-6 palette-item">-->
-        <!--<button type="button" class="btn btn-primary btn-block">-->
-          <!--&lt;!&ndash;<canvas class="button-canvas" id="button-canvas"></canvas>&ndash;&gt;-->
-        <!--</button>-->
-      <!--</div>-->
+
     </div>
   </div>
 
@@ -107,9 +100,23 @@
               let bounds = rail.getBounds();
               let center = new Point(canvas.width()/2, canvas.height()/2);
               rail.moveTest(center, bounds.center);
+              console.log(rail.getBounds());
+//              let scaleX = canvas.width() / bounds.width;
+//              if (scaleX < 1) {
+//                  rail.scale(scaleX, scaleX);
+//              }
+
 //              rail.path.position = center;
           });
       });
+
+      this.handleItemClick = (item) => {
+          this.selectedItem = item;
+          console.log("selected: " + this.selectedItem.name);
+      }
+
+
+
 
 
   </script>

@@ -12,6 +12,12 @@ export class Rail {
 
     static SPACE = 38;
 
+    static State = {
+        OPEN: Symbol(),         // 未接続
+        CONNECTING: Symbol(),   // 接続試行中
+        CONNECTED: Symbol()     // 接続中
+    }
+
     /**
      * レールの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでレールパーツの追加と移動・回転を行う。
@@ -24,6 +30,8 @@ export class Rail {
         this.joints = [];
         this.startPoint = startPoint;
         this.angle = angle;
+
+        this.pathGroup = new Group();
     }
 
     /**
@@ -37,6 +45,10 @@ export class Rail {
         let startJoint = new Joint(railPart.startPoint, railPart.startAngle, Joint.Direction.REVERSE_TO_ANGLE);
         let endJoint = new Joint(railPart.endPoint, railPart.endAngle, Joint.Direction.SAME_TO_ANGLE);
         this.joints.push(startJoint, endJoint);
+
+        this.pathGroup.addChild(railPart.path);
+        this.pathGroup.addChild(startJoint.path);
+        this.pathGroup.addChild(endJoint.path);
     }
 
     /**
@@ -44,16 +56,16 @@ export class Rail {
      * @returns {Rectangle}
      */
     getBounds() {
-        let topLeftX     = Math.min.apply(null, this.railParts.map(part => part.path.bounds.topLeft.x));
-        let topLeftY     = Math.min.apply(null, this.railParts.map(part => part.path.bounds.topLeft.y));
-        let bottomRightX = Math.max.apply(null, this.railParts.map(part => part.path.bounds.bottomRight.x));
-        let bottomRightY = Math.max.apply(null, this.railParts.map(part => part.path.bounds.bottomRight.y));
-        return new Rectangle(new Point(topLeftX, topLeftY), new Point(bottomRightX, bottomRightY));
+        return this.pathGroup.bounds;
     }
 
     moveTest(point, anchor) {
         let difference = point.subtract(anchor);
         this.moveRelatively(difference);
+    }
+
+    scale(hor, ver) {
+        this.pathGroup.scale(hor, ver);
     }
 
     /**
@@ -109,17 +121,17 @@ export class Rail {
      * @param {Joint} fromJoint こちら側のジョイント
      * @param {Joint} toJoint 接続先のジョイント
      */
-    connect(fromJoint, toJoint) {
+    connect(fromJoint, toJoint, isDruRun=false) {
         this.move(toJoint.getPosition(), fromJoint);
         let angle = toJoint.getDirection() - fromJoint.getDirection() + 180;
         // console.log(sprintf("Rotate %.3f around (%.3f, %.3f)",
         //     angle, toJoint.getPosition().x, toJoint.getPosition().y));
         this.rotateRelatively(angle, toJoint);
-        fromJoint.connect(toJoint);
+        fromJoint.connect(toJoint, isDruRun);
     }
 
     /**
-     * 全てのジョイントを切断する。
+     * このレールに属する全てのジョイントを切断する。
      */
     disconnect() {
         this.joints.forEach(elem => elem.disconnect());
@@ -158,6 +170,18 @@ export class Rail {
         });
     }
 
+    /**
+     * このレールを構成するパスグループに名前を付け、イベントハンドリング時に参照できるようにする。
+     * @param name
+     */
+    setName(name) {
+        this.pathGroup.name = name;
+    }
+
+    getName(name) {
+        return this.pathGroup.name;
+    }
+
 
     /**
      * 自らと同じレールを複製する目的で、eval()で使用するための文字列を生成する。
@@ -189,6 +213,8 @@ export class Rail {
             result = [];
         return result;
     }
+
+
 }
 
 

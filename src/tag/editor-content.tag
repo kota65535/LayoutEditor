@@ -1,10 +1,10 @@
 <editor-content>
   <style>
-    #page-content-wrapper {
+    #editor-content-wrapper{
       width: 100%;
       height: 90%;
       position: absolute;
-      padding-left: 250px;
+      margin-left: 300px;
     }
     canvas[resize] {
       width: 100%;
@@ -15,7 +15,7 @@
 
 
   <!-- Page Content -->
-  <div id="page-content-wrapper">
+  <div id="editor-content-wrapper">
     <canvas id="editor-canvas" resize></canvas>
   </div>
 
@@ -29,22 +29,28 @@
         paper.install(window);
         paper.setup("editor-canvas");
 
+        // レイヤー１にグリッドを描画
+        createGrid(50);
+
+        // レイヤー２に切り替え
+        new Layer();
+
         this.editor = new LayoutEditor();
 
         // ハンドラの登録
         var tool = new Tool();
         tool.onMouseMove = (event) => {
-            this.editor.handleEvents(event);
+            this.editor.handleMouseEvents(event);
         };
         tool.onMouseDown = (event) => {
-            this.editor.handleEvents(event);
+            this.editor.handleMouseEvents(event);
         };
 
         this.editor.selectRail(new StraightRail(new Point(100,100),0,100));
 
         this.editor.putRail(new StraightRail(new Point(200,100),0,100));
+        this.editor.putRail(new StraightRail(new Point(200,200),0,100));
 
-        createGrid(50);
     });
 
     function createGrid(size) {
