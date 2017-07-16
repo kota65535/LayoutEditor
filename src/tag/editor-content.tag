@@ -21,6 +21,7 @@
 
   <script>
     import paper from "paper";
+    import { LayoutEditor } from "../lib/LayoutEditor";
     import { StraightRail } from "../lib/rails/StraightRail";
 
     this.on("mount", () => {
@@ -28,12 +29,22 @@
         paper.install(window);
         paper.setup("editor-canvas");
 
+        this.editor = new LayoutEditor();
+
+        // ハンドラの登録
+        var tool = new Tool();
+        tool.onMouseMove = (event) => {
+            this.editor.handleEvents(event);
+        };
+        tool.onMouseDown = (event) => {
+            this.editor.handleEvents(event);
+        };
+
+        this.editor.selectRail(new StraightRail(new Point(100,100),0,100));
+
+        this.editor.putRail(new StraightRail(new Point(200,100),0,100));
+
         createGrid(50);
-
-        new StraightRail(new Point(100,100),0,100);
-
-
-
     });
 
     function createGrid(size) {

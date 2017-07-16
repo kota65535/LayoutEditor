@@ -40,6 +40,23 @@ export class Rail {
     }
 
     /**
+     * レール全体のバウンディングボックスを取得する。
+     * @returns {Rectangle}
+     */
+    getBounds() {
+        let topLeftX     = Math.min.apply(null, this.railParts.map(part => part.path.bounds.topLeft.x));
+        let topLeftY     = Math.min.apply(null, this.railParts.map(part => part.path.bounds.topLeft.y));
+        let bottomRightX = Math.max.apply(null, this.railParts.map(part => part.path.bounds.bottomRight.x));
+        let bottomRightY = Math.max.apply(null, this.railParts.map(part => part.path.bounds.bottomRight.y));
+        return new Rectangle(new Point(topLeftX, topLeftY), new Point(bottomRightX, bottomRightY));
+    }
+
+    moveTest(point, anchor) {
+        let difference = point.subtract(anchor);
+        this.moveRelatively(difference);
+    }
+
+    /**
      * 任意のジョイントを基準に、絶対座標で移動する。
      * @param {Point} point 移動先の座標
      * @param {Joint} joint 基準とするジョイント

@@ -1,8 +1,6 @@
 /**
  * Created by tozawa on 2017/07/12.
  */
-import { StraightRail, DoubleStraightRail } from "./rails/StraightRail";
-import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
 
 export class LayoutEditor {
     constructor() {

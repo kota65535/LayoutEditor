@@ -77,6 +77,13 @@ export class RailPart {
         this.rotateRelatively(relAngle, center);
     }
 
+    hide() {
+        this.path.opacity = 0;
+    }
+
+    show() {
+        this.path.opacity = 1.0;
+    }
 
     remove() {
         this.path.remove();
