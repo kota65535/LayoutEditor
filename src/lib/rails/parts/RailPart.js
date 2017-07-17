@@ -2,6 +2,9 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
+import logger from "../../../logging";
+
+let log = logger("Part");
 
 
 /**
@@ -64,7 +67,7 @@ export class RailPart {
         this._updatePoints();
         this.startAngle += difference;
         this.endAngle += difference;
-        // this.showInfo();
+        this.showInfo();
     }
 
     /**
@@ -93,7 +96,7 @@ export class RailPart {
      * 始点・始点角度、終点・終点角度を表示する。デバッグ用。
      */
     showInfo() {
-        console.log(sprintf("%s: (%.3f, %.3f | %.3f) -> (%.3f, %.3f | %.3f)",
+        log.debug(sprintf("%s: (%.3f, %.3f | %.3f) -> (%.3f, %.3f | %.3f)",
             this.constructor.name, this.startPoint.x, this.startPoint.y, this.startAngle, this.endPoint.x, this.endPoint.y, this.endAngle));
     }
 

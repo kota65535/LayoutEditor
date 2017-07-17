@@ -45,7 +45,7 @@ export class CurveRailPart extends RailPart {
             innerEndX, innerEndY,
             radius - RailPart.WIDTH/2, radius - RailPart.WIDTH/2, 0, RailPart.WIDTH/2);
 
-        console.log(sprintf("curve rail path: %s", pathData));
+        // console.log(sprintf("curve rail path: %s", pathData));
 
         this.path = new paper.Path(pathData);   // パスオブジェクト
         // this.path.strokeColor = "black";
@@ -74,7 +74,7 @@ export class CurveRailPart extends RailPart {
         // アンカーの絶対角度と指定角度の差分
         let relAngle = angle - absAngle;
 
-        console.log(sprintf("absAngle: %.3f, relAngle: %.3f ", absAngle, relAngle));
+        // console.log(sprintf("absAngle: %.3f, relAngle: %.3f ", absAngle, relAngle));
 
         this.rotateRelatively(relAngle, anchor);
     }

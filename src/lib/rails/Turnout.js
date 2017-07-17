@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 import { Rail } from "./Rail";
-import { AnchorType } from "./parts/RailPart";
+import { RailPart } from "./parts/RailPart";
 import { StraightRailPart } from "./parts/StraightRailPart";
 import { CurveRailPart } from "./parts/CurveRailPart";
 
@@ -35,7 +35,7 @@ export class SimpleTurnout extends Rail {
         this._addRailPart(new StraightRailPart(startPoint, 0, length));
         switch (direction) {
             case Direction.LEFT:
-                this._addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, AnchorType.END));
+                this._addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, RailPart.Anchor.END));
                 break;
             case Direction.RIGHT:
                 this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
@@ -72,7 +72,7 @@ export class SymmetricalTurnout extends Rail {
         this.centerAngle = centerAngle;
 
         this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
-        this._addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, AnchorType.END));
+        this._addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
@@ -111,8 +111,8 @@ export class CurvedTurnout extends Rail {
 
         switch (direction) {
             case Direction.LEFT:
-                this._addRailPart(new CurveRailPart(startPoint, 180, outerRadius, centerAngle, AnchorType.END));
-                this._addRailPart(new CurveRailPart(startPoint, 180, innerRadius, centerAngle, AnchorType.END));
+                this._addRailPart(new CurveRailPart(startPoint, 180, outerRadius, centerAngle, RailPart.Anchor.END));
+                this._addRailPart(new CurveRailPart(startPoint, 180, innerRadius, centerAngle, RailPart.Anchor.END));
                 this.angle = angle + 180;
                 anchorJoint = this.joints[1];
                 break;

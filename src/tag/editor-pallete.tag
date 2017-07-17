@@ -87,13 +87,18 @@
       import riot from "riot";
       import paper from "paper";
       import { RailFactory } from "../lib/RailFactory";
+      import logger from "../logging";
+
+      let log = logger("EditorPalette");
+
+      this.factory = new RailFactory();
 
       this.mixin("controlMixin");
 
       this.factory = new RailFactory();
 
       this.on("mount", () => {
-          console.log("editor palette mounted");
+          log.info("Editor palette mounted");
           paper.install(window);
 
           opts.items.forEach( item => {
@@ -103,7 +108,7 @@
               let bounds = rail.getBounds();
               let center = new Point(canvas.width()/2, canvas.height()/2);
               rail.moveTest(center, bounds.center);
-              console.log(rail.getBounds());
+              log.info(rail.getBounds());
 //              let scaleX = canvas.width() / bounds.width;
 //              if (scaleX < 1) {
 //                  rail.scale(scaleX, scaleX);
@@ -115,7 +120,7 @@
 
       this.handleItemClick = (item) => {
           this.selectedItem = item;
-          console.log("selected: " + this.selectedItem.name);
+          log.info("Selected: " + this.selectedItem.name);
           riot.control.trigger(riot.VE.PALETTE_ITEM_SELECTED, item.name);
       };
 

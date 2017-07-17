@@ -2,6 +2,10 @@
  * Created by tozawa on 2017/07/12.
  */
 import {Joint} from "./rails/parts/Joint";
+import logger from "../logging";
+
+let log = logger("LayoutEditor");
+
 
 export class LayoutEditor {
     static MOUSE_EVENT_HANDLERS = {
@@ -55,7 +59,7 @@ export class LayoutEditor {
         let eventType = event.event.type;
         let handlerName = LayoutEditor.MOUSE_EVENT_HANDLERS[eventType];
         if (handlerName) {
-            console.log("handler: " + handlerName);
+            // console.log("handler: " + handlerName);
             this[handlerName](event)
         }
     }
@@ -70,7 +74,7 @@ export class LayoutEditor {
             this.hideRailToPut();
             return;
         }
-        console.log(event.item);
+        // console.log(event.item);
         // レールであるか確かめる
         // let rail = this.getRail(event.item);
         // レールでない場合はレール設置ガイドを消去する
@@ -82,7 +86,7 @@ export class LayoutEditor {
 
         // ジョイント上かつ接続中でないならレール設置ガイドを表示する
         let joint = this.getJoint(event.point);
-        console.log("Joint" + joint);
+        // console.log("Joint" + joint);
         if (joint && ! (joint.getState() === Joint.State.CONNECTED)) {
             this.showRailToPut(joint);
         } else {
@@ -168,15 +172,15 @@ export class LayoutEditor {
         rail.setName(id);
         this.rails.push(rail);
 
-        console.log("PUT-----");
+        log.info("PUT begin-----");
         project.activeLayer.children.forEach( c => {
             if (c.constructor.name === "Group") {
-                console.log("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
+                log.info("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
             } else {
-                console.log("PUT " + c.id);
+                log.info("PUT " + c.id);
             }
         })
-        console.log("PUT-----");
+        log.info("PUT end-----");
     }
 
     /**
@@ -201,8 +205,8 @@ export class LayoutEditor {
         // console.log(hitResult);
         // project.selectedItems.forEach(item => item.selected = false);
         let allJoints = [].concat.apply([], this.rails.map( r => r.joints));
-        console.log("joint?: " + hitResult.item.id)
-        console.log(allJoints.map( j => j.path.id ).join(","));
+        // console.log("joint?: " + hitResult.item.id)
+        // console.log(allJoints.map( j => j.path.id ).join(","));
         // for (let i=0 ; i < allJoints.length ; i++) {
         //     console.log(allJoints[i].path.position)
         // }
@@ -218,9 +222,9 @@ export class LayoutEditor {
         };
         let hitResult = project.hitTest(point, hitOptions);
         if (hitResult) {
-            console.log(point);
-            console.log(hitResult);
-            console.log(hitResult.point);
+            // console.log(point);
+            // console.log(hitResult);
+            // console.log(hitResult.point);
         }
         return hitResult;
     }

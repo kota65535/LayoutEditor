@@ -4,7 +4,9 @@
 
 import {RectPart} from "./RectPart";
 import {sprintf} from "sprintf-js";
+import logger from "../../../logging";
 
+let log = logger("Joint", "DEBUG");
 
 /**
  * レールのジョイントを表現するクラス
@@ -141,7 +143,7 @@ export class Joint extends RectPart {
     }
 
     showInfo() {
-        console.log(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",
+        log.debug(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",
             this.getPosition().x, this.getPosition().y, this.angle, this.getDirection()));
     }
 
@@ -151,20 +153,27 @@ export class Joint extends RectPart {
      * @private
      */
     _setState(state) {
+        let angle = this.angle;
         switch(state) {
             case Joint.State.OPEN:
                 this.path.fillColor = Joint.FILL_COLOR_OPEN;
-                this.path.scale(1, 1, this.getPosition());
+                // this.path.rotate(0);
+                // this.path.scale(1, 1, this.getPosition());
+                // this.path.rotate(angle);
                 this.state = state;
                 break;
             case Joint.State.CONNECTING:
                 this.path.fillColor = Joint.FILL_COLOR_CONNECTING;
-                this.path.scale(1, 1, this.getPosition());
+                // this.path.rotate(0);
+                // this.path.scale(1, 1, this.getPosition());
+                // this.path.rotate(angle);
                 this.state = state;
                 break;
             case Joint.State.CONNECTED:
                 this.path.fillColor = Joint.FILL_COLOR_CONNECTED;
-                this.path.scale(0.5, 1, this.getPosition());
+                // this.path.rotate(0);
+                // this.path.scale(0.5, 1, this.getPosition());
+                // this.path.rotate(angle);
                 this.state = state;
                 break;
         }

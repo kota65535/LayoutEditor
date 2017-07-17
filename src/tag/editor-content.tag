@@ -24,13 +24,16 @@
     import { LayoutEditor } from "../lib/LayoutEditor";
     import { RailFactory } from "../lib/RailFactory";
     import { StraightRail } from "../lib/rails/StraightRail";
+    import {Joint} from "../lib/rails/parts/Joint";
+    import logger from "../logging";
+    let log = logger("EditorContent");
 
 
     this.mixin("controlMixin");
 
 
     this.on("mount", () => {
-        console.log("editor mounted");
+        log.info("Editor content mounted");
         paper.install(window);
         paper.setup("editor-canvas");
 
@@ -56,11 +59,13 @@
 
         this.editor.putRail(new StraightRail(new Point(140, 140),0,140));
 //        this.editor.putRail(new StraightRail(new Point(200,200),0,100));
+
+
     });
 
     this.onControl(riot.SE.PALETTE_ITEM_SELECTED, itemName => {
         this.selectedItem = itemName;
-        console.log("palette selected: " + this.selectedItem);
+        log.info("Palette selected: " + this.selectedItem);
         this.editor.selectRail(this.factory[itemName]());
     });
 

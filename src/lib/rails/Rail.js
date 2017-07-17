@@ -3,6 +3,10 @@
  */
 import {sprintf} from "sprintf-js";
 import { Joint } from "./parts/Joint.js";
+import logger from "../../logging";
+
+// let log = logger("Rail", "DEBUG");
+let log = logger("Rail");
 
 /**
  * レールの基底クラス。レールはレールパーツとジョイントにより構成される。
@@ -124,8 +128,10 @@ export class Rail {
     connect(fromJoint, toJoint, isDruRun=false) {
         this.move(toJoint.getPosition(), fromJoint);
         let angle = toJoint.getDirection() - fromJoint.getDirection() + 180;
-        // console.log(sprintf("Rotate %.3f around (%.3f, %.3f)",
-        //     angle, toJoint.getPosition().x, toJoint.getPosition().y));
+
+        log.debug(sprintf("Rotate %.3f around (%.3f, %.3f)",
+            angle, toJoint.getPosition().x, toJoint.getPosition().y));
+
         this.rotateRelatively(angle, toJoint);
         fromJoint.connect(toJoint, isDruRun);
     }
@@ -145,7 +151,7 @@ export class Rail {
     containsPath(path) {
         return !!this.railParts.find(elem => elem.path.id === path.id)
             || !!this.joints.find(elem => elem.path.id === path.id);
-        // this.railParts.forEach( elem => console.log(elem.path.id + " " + path.id));
+        // this.railParts.forEach( elem => log.debug(elem.path.id + " " + path.id));
     }
 
     /**
@@ -194,7 +200,7 @@ export class Rail {
         let paramNames = Rail._getParamNames(rail.constructor);
         paramNames = paramNames.map( p => "this." + p);
         let evalStr = sprintf("new %s(%s)", rail.constructor.name, paramNames.join(","));
-        console.log("evalStr: " + evalStr);
+        log.trace("evalStr: " + evalStr);
         return evalStr;
     }
 
