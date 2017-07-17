@@ -11,7 +11,7 @@ import {sprintf} from "sprintf-js";
 export class RailPart {
 
     static FILL_COLOR = "#333333";
-    static WIDTH = 10;
+    static WIDTH = 12;
 
     /**
      * レールパーツのコンストラクタでアンカー点を指定するための識別子。

@@ -84,8 +84,11 @@
   </div>
 
   <script>
+      import riot from "riot";
       import paper from "paper";
       import { RailFactory } from "../lib/RailFactory";
+
+      this.mixin("controlMixin");
 
       this.factory = new RailFactory();
 
@@ -113,10 +116,8 @@
       this.handleItemClick = (item) => {
           this.selectedItem = item;
           console.log("selected: " + this.selectedItem.name);
-      }
-
-
-
+          riot.control.trigger(riot.VE.PALETTE_ITEM_SELECTED, item.name);
+      };
 
 
   </script>

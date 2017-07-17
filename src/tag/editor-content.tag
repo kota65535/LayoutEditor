@@ -10,19 +10,24 @@
       width: 100%;
       height: 100%;
     }
-
   </style>
 
 
-  <!-- Page Content -->
   <div id="editor-content-wrapper">
     <canvas id="editor-canvas" resize></canvas>
   </div>
 
+
   <script>
+    import riot from "riot";
     import paper from "paper";
     import { LayoutEditor } from "../lib/LayoutEditor";
+    import { RailFactory } from "../lib/RailFactory";
     import { StraightRail } from "../lib/rails/StraightRail";
+
+
+    this.mixin("controlMixin");
+
 
     this.on("mount", () => {
         console.log("editor mounted");
@@ -30,12 +35,13 @@
         paper.setup("editor-canvas");
 
         // レイヤー１にグリッドを描画
-        createGrid(50);
+        createGrid(70);
 
         // レイヤー２に切り替え
         new Layer();
 
         this.editor = new LayoutEditor();
+        this.factory = new RailFactory();
 
         // ハンドラの登録
         var tool = new Tool();
@@ -46,11 +52,16 @@
             this.editor.handleMouseEvents(event);
         };
 
-        this.editor.selectRail(new StraightRail(new Point(100,100),0,100));
+        this.editor.selectRail(this.factory.S280());
 
-        this.editor.putRail(new StraightRail(new Point(200,100),0,100));
-        this.editor.putRail(new StraightRail(new Point(200,200),0,100));
+        this.editor.putRail(new StraightRail(new Point(140, 140),0,140));
+//        this.editor.putRail(new StraightRail(new Point(200,200),0,100));
+    });
 
+    this.onControl(riot.SE.PALETTE_ITEM_SELECTED, itemName => {
+        this.selectedItem = itemName;
+        console.log("palette selected: " + this.selectedItem);
+        this.editor.selectRail(this.factory[itemName]());
     });
 
     function createGrid(size) {

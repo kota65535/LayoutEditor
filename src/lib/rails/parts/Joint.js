@@ -11,8 +11,8 @@ import {sprintf} from "sprintf-js";
  */
 export class Joint extends RectPart {
 
-    static WIDTH = 6;
-    static HEIGHT = 12;
+    static WIDTH = 8;
+    static HEIGHT = 16;
     static FILL_COLOR_CONNECTED = "darkgray";
     static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "darkorange";
