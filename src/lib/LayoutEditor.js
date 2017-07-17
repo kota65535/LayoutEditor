@@ -6,19 +6,23 @@ import logger from "../logging";
 
 let log = logger("LayoutEditor");
 
+// [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
+Array.prototype.flatMap = function(lambda) {
+    return Array.prototype.concat.apply([], this.map(lambda));
+};
+
 
 export class LayoutEditor {
+
+    static JOINT_TOLERANCE = 2;
 
     constructor() {
         // 設置したレールのリスト
         this.rails = [];
         // 選択中のレール
-        this.selectedRail = null;
+        this.paletteRail = null;
 
         this.nextId = 1;
-
-        // レール設置ガイド表示中か否か
-        this.isShowingRailToPut = false;
     }
 
 
@@ -28,8 +32,53 @@ export class LayoutEditor {
      */
     selectRail(rail) {
         // 接続可能なジョイントに近づくまで透明化する
-        this.selectedRail = rail;
-        this.selectedRail.setOpacity(0);
+        this.paletteRail = rail;
+        this.paletteRail.setOpacity(0);
+    }
+
+    /**
+     * レール設置時に、逆側のジョイントが他の未接続のジョイントと十分に近ければ接続する。
+     */
+    connectOtherJoints() {
+        let openFromJoints = this.paletteRail.joints.filter(j => j.getState() === Joint.State.OPEN);
+        let openToJoints = this.rails.flatMap( r => r.joints ).filter(j => j.getState() === Joint.State.OPEN);
+
+        openFromJoints.forEach( fj => {
+            openToJoints.forEach( tj => {
+                let distance = fj.getPosition().getDistance(tj.getPosition());
+                log.info("Distance:", distance);
+                if (distance < LayoutEditor.JOINT_TOLERANCE) {
+                    log.info("Connected other joint");
+                    fj.connect(tj);
+                }
+            })
+        })
+    }
+
+
+    /**
+     * レール設置時に他のレールに重なっていないか確認する。
+     * TODO: 判別条件がイケてないので修正
+     * @returns {boolean}
+     */
+    canPutSelectedRail() {
+        let intersections = [];
+        this.paletteRail.railParts.forEach(part => {
+            this.rails.forEach( rail => {
+                rail.railParts.forEach( otherPart => {
+                    intersections = intersections.concat(part.path.getIntersections(otherPart.path));
+                })
+            })
+        });
+        log.info("Intersections:", intersections.length, intersections.map( i => i.point));
+        // intersections.forEach( i => {
+        //     new Path.Circle({
+        //         center: i.point,
+        //         radius: 5,
+        //         fillColor: '#009dec'});
+        //     log.info(i.isTouching(), i.isCrossing(), i.hasOverlap());
+        // });
+        return intersections.length <= this.paletteRail.joints.length * 3;
     }
 
     /**
@@ -37,11 +86,16 @@ export class LayoutEditor {
      * @param {Joint} toJoint
      */
     putSelectedRail(toJoint) {
-        this.selectedRail.setOpacity(1.0);
-        this.selectedRail.connect(this.selectedRail.getCurrentJoint(), toJoint);
-        this.putRail(this.selectedRail);
-        this.selectRail(this.selectedRail.clone());
-        // this.selectedRail.move(new Point(0, 0), this.selectedRail.joints[0]);
+        if (!this.canPutSelectedRail()) {
+            log.warn("The rail cannot be put because of intersection.");
+            return;
+        }
+        this.canPutSelectedRail();
+        this.paletteRail.connect(this.paletteRail.getCurrentJoint(), toJoint);
+        this.paletteRail.setOpacity(1.0);
+        this.connectOtherJoints();
+        this.putRail(this.paletteRail);
+        this.selectRail(this.paletteRail.clone());
     }
 
     /**
@@ -90,29 +144,63 @@ export class LayoutEditor {
     }
 
     /**
-     * マウス左クリック時のハンドラ
+     * マウス左クリックされた時のハンドラ。以下の処理を行う。
+     *   - 未接続のジョイント上ならば、現在選択中のレールと接続する。
+     *   - レールならば、そのレールを選択する。
+     *
      * @param {ToolEvent} event
      * @param {Path} path
      */
     handleMouseDownLeft(event) {
-        // event.item.selected = true;
         let joint = this.getJoint(event.point);
-        if (joint && this.isShowingRailToPut) {
+        if (joint && joint.getState() !== Joint.State.CONNECTED) {
             this.putSelectedRail(joint);
+            return;
+        }
+
+        // 何もなければ何もしない
+        if (!event.item) {
+            return;
+        }
+
+        let rail = this.getRail(event.item);
+        if (rail) {
+            event.item.selected = !event.item.selected; // 選択を反転
+            return;
         }
     }
 
     /**
-     * マウス右クリック時のハンドラ
+     * マウス右クリックされた時のハンドラ。以下の処理を行う。
+     *   - 未接続のジョイント上ならば、現在選択中のレールの向きを変える。
+     *
      * @param {MouseEvent} event
      * @param {Path} path
      */
     handleMouseDownRight(event) {
         let joint = this.getJoint(event.point);
         if (joint && joint.getState() !== Joint.State.CONNECTED) {
-            this.selectedRail.getNextJoint();
+            this.paletteRail.getNextJoint();
             joint.disconnect();
             this.showRailToPut(joint);
+        }
+    }
+
+    /**
+     * キーボード押下された時のハンドラ。以下の処理を行う。
+     *   - DEL: 選択中のレールを削除する。
+     *
+     * @param {KeyEvent} event
+     */
+    handleKeyEvent(event) {
+        switch (event.key) {
+            case "backspace":
+                log.info(project.selectedItems);
+                let selectedRails = project.selectedItems
+                    .map(item => this.getRail(item))
+                    .filter(Boolean);
+                selectedRails.forEach(r => this.removeRail(r));
+                break;
         }
     }
 
@@ -122,25 +210,18 @@ export class LayoutEditor {
      * @param toJoint
      */
     showRailToPut(toJoint) {
-        this.selectedRail.setOpacity(0.5);
-        this.selectedRail.connect(this.selectedRail.getCurrentJoint(), toJoint, true);
-        this.isShowingRailToPut = true;
+        this.paletteRail.setOpacity(0.5);
+        this.paletteRail.connect(this.paletteRail.getCurrentJoint(), toJoint, true);
     }
 
     /**
      * 設置されるレールのガイドを消去する。
-     * @param toJoint
      */
     hideRailToPut() {
-        this.selectedRail.setOpacity(0);
-        this.selectedRail.disconnect();
-        this.selectedRail.move(new Point(0,0), this.selectedRail.joints[0]);
-        this.isShowingRailToPut = false;
+        this.paletteRail.setOpacity(0);
+        this.paletteRail.disconnect();
+        this.paletteRail.move(new Point(0,0), this.paletteRail.joints[0]);
     }
-
-    // _getNextDirectionOfSelectedRail() {
-    //     this.selectedRailDirection = (this.selectedRailDirection + 1) % this.selectedRail.joints.length;
-    // }
 
     /**
      * レールオブジェクトを設置し、管理下におく。
@@ -159,8 +240,20 @@ export class LayoutEditor {
             } else {
                 log.info("PUT " + c.id);
             }
-        })
+        });
         log.info("PUT end-----");
+    }
+
+    /**
+     * レールを削除する。
+     * @param {Rail} rail
+     */
+    removeRail(rail) {
+        rail.remove()
+        let index = this.rails.indexOf(rail);
+        if(index !== -1) {
+            this.rails.splice(index, 1);
+        }
     }
 
     /**

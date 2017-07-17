@@ -165,8 +165,9 @@ export class Rail {
      * このレールを削除する。
      */
     remove() {
-        this.railParts.forEach(elem => elem.remove());
         this.disconnect();
+        this.railParts.forEach(elem => elem.remove());
+        this.joints.forEach(elem => elem.remove());
     }
 
     /**
@@ -221,7 +222,7 @@ export class Rail {
         let index = this.currentJointIndex % this.joints.length;
         this.currentJointIndex = index;
         if (this.jointOrder.length !== this.joints.length) {
-            log.warn("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
+            log.info("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
             return index;
         }
         return this.jointOrder[index];
@@ -232,7 +233,7 @@ export class Rail {
         let index = this.currentJointIndex % this.joints.length;
         this.currentJointIndex = index + 1;
         if (this.jointOrder.length !== this.joints.length) {
-            log.warn("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
+            log.info("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
             return index;
         }
         return this.jointOrder[index];

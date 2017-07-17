@@ -46,7 +46,7 @@
         this.editor = new LayoutEditor();
         this.factory = new RailFactory();
 
-        // ハンドラの登録
+        // 各種ハンドラの登録
         var tool = new Tool();
         tool.onMouseMove = (event) => {
             this.editor.handleMouseMove(event);
@@ -55,11 +55,13 @@
             this.editor.handleMouseDown(event);
         };
 
+        tool.onKeyDown = (event) => {
+            this.editor.handleKeyEvent(event);
+        }
+
         this.editor.selectRail(this.factory.S280());
 
-        this.editor.putRail(new StraightRail(new Point(140, 140),0,140));
-//        this.editor.putRail(new StraightRail(new Point(200,200),0,100));
-
+        this.editor.putRail(new StraightRail(new Point(280, 140),0,140));
 
     });
 
