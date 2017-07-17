@@ -36,6 +36,8 @@ export class Rail {
         this.angle = angle;
 
         this.pathGroup = new Group();
+        this.jointOrder = [];
+        this.currentJointIndex = 0;
     }
 
     /**
@@ -55,6 +57,11 @@ export class Rail {
         this.pathGroup.addChild(endJoint.path);
     }
 
+    _removeJoint(index) {
+        this.joints[index].remove();
+        this.joints.splice(index, 1);
+    }
+
     /**
      * レール全体のバウンディングボックスを取得する。
      * @returns {Rectangle}
@@ -63,10 +70,6 @@ export class Rail {
         return this.pathGroup.bounds;
     }
 
-    moveTest(point, anchor) {
-        let difference = point.subtract(anchor);
-        this.moveRelatively(difference);
-    }
 
     scale(hor, ver) {
         this.pathGroup.scale(hor, ver);
@@ -75,10 +78,13 @@ export class Rail {
     /**
      * 任意のジョイントを基準に、絶対座標で移動する。
      * @param {Point} point 移動先の座標
-     * @param {Joint} joint 基準とするジョイント
+     * @param {Point,Joint} anchor 基準とする座標またはジョイント
      */
-    move(point, joint) {
-        let difference = point.subtract(joint.getPosition());
+    move(point, anchor) {
+        if (anchor.constructor.name === "Joint") {
+            anchor = anchor.getPosition();
+        }
+        let difference = point.subtract(anchor);
         this.moveRelatively(difference);
     }
 
@@ -126,6 +132,7 @@ export class Rail {
      * @param {Joint} toJoint 接続先のジョイント
      */
     connect(fromJoint, toJoint, isDruRun=false) {
+
         this.move(toJoint.getPosition(), fromJoint);
         let angle = toJoint.getDirection() - fromJoint.getDirection() + 180;
 
@@ -162,6 +169,10 @@ export class Rail {
         this.disconnect();
     }
 
+    /**
+     * このレールの透明度を設定する
+     * @param value
+     */
     setOpacity(value) {
         this.railParts.forEach(elem => elem.path.opacity = value);
         this.joints.forEach(elem => elem.path.opacity = value);
@@ -190,6 +201,45 @@ export class Rail {
 
 
     /**
+     * 現在のジョイント
+     * @returns {*}
+     */
+    getCurrentJoint() {
+        let jointIndex = this._getCurrentJointIndex();
+        log.info("JointIndex:", jointIndex, this.joints[jointIndex]);
+        return this.joints[jointIndex];
+    }
+
+    getNextJoint() {
+        let jointIndex = this._getNextJointIndex();
+        log.info("JointIndex:", jointIndex, this.joints[jointIndex]);
+        return this.joints[jointIndex];
+    }
+
+
+    _getCurrentJointIndex() {
+        let index = this.currentJointIndex % this.joints.length;
+        this.currentJointIndex = index;
+        if (this.jointOrder.length !== this.joints.length) {
+            log.warn("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
+            return index;
+        }
+        return this.jointOrder[index];
+
+    }
+
+    _getNextJointIndex() {
+        let index = this.currentJointIndex % this.joints.length;
+        this.currentJointIndex = index + 1;
+        if (this.jointOrder.length !== this.joints.length) {
+            log.warn("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
+            return index;
+        }
+        return this.jointOrder[index];
+    }
+
+
+    /**
      * 自らと同じレールを複製する目的で、eval()で使用するための文字列を生成する。
      * 子クラスでこの文字列をevalすると、constructorの引数名と同名のプロパティの値を利用してオブジェクトを生成する。
      * DeepCopyではnewを呼び出さないため、paper.Pathの生成が行われないため作成した。
@@ -200,7 +250,7 @@ export class Rail {
         let paramNames = Rail._getParamNames(rail.constructor);
         paramNames = paramNames.map( p => "this." + p);
         let evalStr = sprintf("new %s(%s)", rail.constructor.name, paramNames.join(","));
-        log.trace("evalStr: " + evalStr);
+        log.info("Cloning by: " + evalStr);
         return evalStr;
     }
 

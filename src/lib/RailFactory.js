@@ -3,7 +3,7 @@
  */
 import { StraightRail, DoubleStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
-import { SimpleTurnout, Direction } from "./rails/Turnout";
+import { SimpleTurnout, SymmetricalTurnout, Direction } from "./rails/Turnout";
 
 export class RailFactory {
     constructor() {
@@ -26,5 +26,14 @@ export class RailFactory {
     }
     PL541_15() {
         return new SimpleTurnout(new Point(0, 0), 0, 140, 541, 15, Direction.LEFT);
+    }
+    PR541_15() {
+        return new SimpleTurnout(new Point(0, 0), 0, 140, 541, 15, Direction.RIGHT);
+    }
+    PR541_15() {
+        return new SimpleTurnout(new Point(0, 0), 0, 140, 541, 15, Direction.RIGHT);
+    }
+    PY280_15() {
+        return new SymmetricalTurnout(new Point(0, 0), 0, 280, 15);
     }
 }

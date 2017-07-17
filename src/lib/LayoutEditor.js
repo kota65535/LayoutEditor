@@ -8,18 +8,12 @@ let log = logger("LayoutEditor");
 
 
 export class LayoutEditor {
-    static MOUSE_EVENT_HANDLERS = {
-        "mousemove": "handleMouseMove",
-        "mousedown": "handleMouseDown"
-    };
 
     constructor() {
         // 設置したレールのリスト
         this.rails = [];
         // 選択中のレール
         this.selectedRail = null;
-        // 選択中のレールの向き
-        this.selectedRailDirection = 0;
 
         this.nextId = 1;
 
@@ -44,24 +38,10 @@ export class LayoutEditor {
      */
     putSelectedRail(toJoint) {
         this.selectedRail.setOpacity(1.0);
-        this.selectedRail.connect(this.selectedRail.joints[this.selectedRailDirection], toJoint);
+        this.selectedRail.connect(this.selectedRail.getCurrentJoint(), toJoint);
         this.putRail(this.selectedRail);
         this.selectRail(this.selectedRail.clone());
         // this.selectedRail.move(new Point(0, 0), this.selectedRail.joints[0]);
-    }
-
-    /**
-     *
-     * @param {ToolEvent} event
-     */
-    handleMouseEvents(event) {
-        // let eventName = event.event.constructor.name;
-        let eventType = event.event.type;
-        let handlerName = LayoutEditor.MOUSE_EVENT_HANDLERS[eventType];
-        if (handlerName) {
-            // console.log("handler: " + handlerName);
-            this[handlerName](event)
-        }
     }
 
     /**
@@ -129,8 +109,8 @@ export class LayoutEditor {
      */
     handleMouseDownRight(event) {
         let joint = this.getJoint(event.point);
-        if (joint && joint.getState()) {
-            this._getNextDirectionOfSelectedRail();
+        if (joint && joint.getState() !== Joint.State.CONNECTED) {
+            this.selectedRail.getNextJoint();
             joint.disconnect();
             this.showRailToPut(joint);
         }
@@ -143,7 +123,7 @@ export class LayoutEditor {
      */
     showRailToPut(toJoint) {
         this.selectedRail.setOpacity(0.5);
-        this.selectedRail.connect(this.selectedRail.joints[this.selectedRailDirection], toJoint, true);
+        this.selectedRail.connect(this.selectedRail.getCurrentJoint(), toJoint, true);
         this.isShowingRailToPut = true;
     }
 
@@ -152,15 +132,15 @@ export class LayoutEditor {
      * @param toJoint
      */
     hideRailToPut() {
-        this.selectedRail.setOpacity(0.1);
+        this.selectedRail.setOpacity(0);
         this.selectedRail.disconnect();
-        this.selectedRail.move(new Point(100,100), this.selectedRail.joints[0]);
+        this.selectedRail.move(new Point(0,0), this.selectedRail.joints[0]);
         this.isShowingRailToPut = false;
     }
 
-    _getNextDirectionOfSelectedRail() {
-        this.selectedRailDirection = (this.selectedRailDirection + 1) % this.selectedRail.joints.length;
-    }
+    // _getNextDirectionOfSelectedRail() {
+    //     this.selectedRailDirection = (this.selectedRailDirection + 1) % this.selectedRail.joints.length;
+    // }
 
     /**
      * レールオブジェクトを設置し、管理下におく。

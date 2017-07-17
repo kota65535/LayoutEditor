@@ -15,6 +15,12 @@ export const Direction = {
     RIGHT: Symbol()
 }
 
+
+/**
+ * TODO: ジョイントオーダーは左回りで統一すべきか、分岐方向で統一すべきか決める。
+ */
+
+
 export class SimpleTurnout extends Rail {
     /**
      * 片開きのポイントを生成する。
@@ -31,14 +37,20 @@ export class SimpleTurnout extends Rail {
         this.length = length;
         this.radius = radius;
         this.centerAngle = centerAngle;
+        this.direction = direction;
 
         this._addRailPart(new StraightRailPart(startPoint, 0, length));
         switch (direction) {
             case Direction.LEFT:
                 this._addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, RailPart.Anchor.END));
+                // 重複したジョイントを削除し、ジョイントの順番を設定
+                this._removeJoint(0);
+                this.jointOrder = [2,0,1];
                 break;
             case Direction.RIGHT:
                 this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
+                this._removeJoint(0);
+                this.jointOrder = [1,0,2];
                 break;
         }
 
@@ -73,6 +85,8 @@ export class SymmetricalTurnout extends Rail {
 
         this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
         this._addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END));
+        this._removeJoint(0);
+        this.jointOrder = [2,0,1];
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
@@ -107,6 +121,8 @@ export class CurvedTurnout extends Rail {
         this.innerRadius = innerRadius;
         this.outerRadius = outerRadius;
         this.centerAngle = centerAngle;
+        this.direction = direction;
+
         let anchorJoint;
 
         switch (direction) {

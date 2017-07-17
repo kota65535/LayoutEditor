@@ -18,7 +18,9 @@
           { name: "S70" },
           { name: "C280_45" },
           { name: "C541_15" },
-          { name: "PL541_15" }
+          { name: "PL541_15" },
+          { name: "PR541_15" },
+          { name: "PY280_15" }
       ];
   </script>
 </editor-view>

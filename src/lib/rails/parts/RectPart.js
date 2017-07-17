@@ -83,4 +83,8 @@ export class RectPart {
     getPosition() {
         return this.path.position;
     }
+
+    remove() {
+        this.path.remove();
+    }
 }

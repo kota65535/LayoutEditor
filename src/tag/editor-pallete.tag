@@ -91,8 +91,6 @@
 
       let log = logger("EditorPalette");
 
-      this.factory = new RailFactory();
-
       this.mixin("controlMixin");
 
       this.factory = new RailFactory();
@@ -107,14 +105,9 @@
               let rail = this.factory[item.name]();
               let bounds = rail.getBounds();
               let center = new Point(canvas.width()/2, canvas.height()/2);
-              rail.moveTest(center, bounds.center);
-              log.info(rail.getBounds());
-//              let scaleX = canvas.width() / bounds.width;
-//              if (scaleX < 1) {
-//                  rail.scale(scaleX, scaleX);
-//              }
-
-//              rail.path.position = center;
+              rail.move(center, bounds.center);
+              rail.scale(0.4, 0.4);
+//              log.info(rail.getBounds());
           });
       });
 

@@ -49,10 +49,10 @@
         // ハンドラの登録
         var tool = new Tool();
         tool.onMouseMove = (event) => {
-            this.editor.handleMouseEvents(event);
+            this.editor.handleMouseMove(event);
         };
         tool.onMouseDown = (event) => {
-            this.editor.handleMouseEvents(event);
+            this.editor.handleMouseDown(event);
         };
 
         this.editor.selectRail(this.factory.S280());
