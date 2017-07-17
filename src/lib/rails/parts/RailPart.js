@@ -35,6 +35,8 @@ export class RailPart {
         this.startAngle = this.endAngle = 0;
 
         this.path = null;
+
+        this.conducted = true;
     }
 
     /**
@@ -131,5 +133,9 @@ export class RailPart {
                 break;
         }
         return anchor;
+    }
+
+    isConducted() {
+        return this.conducted;
     }
 }

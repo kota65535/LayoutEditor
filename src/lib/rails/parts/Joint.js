@@ -44,12 +44,14 @@ export class Joint extends RectPart {
      * @param {Point} position 位置
      * @param {number} angle X軸に対する絶対角度
      * @param {Direction} direction 接続方向
+     * @param {Rail} rail ジョイントが属するレールオブジェクト
      */
-    constructor(position, angle, direction=Joint.Direction.SAME_TO_ANGLE) {
+    constructor(position, angle, direction, rail) {
         super(position, angle, Joint.WIDTH, Joint.HEIGHT, Joint.FILL_COLOR_OPEN);
 
         this.direction = direction;
         this.connectedJoint = null;
+        this.rail = rail;
 
         this.move(position);
         this.rotate(angle, this.getPosition());

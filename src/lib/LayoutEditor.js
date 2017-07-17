@@ -149,7 +149,6 @@ export class LayoutEditor {
      *   - レールならば、そのレールを選択する。
      *
      * @param {ToolEvent} event
-     * @param {Path} path
      */
     handleMouseDownLeft(event) {
         let joint = this.getJoint(event.point);
@@ -174,8 +173,7 @@ export class LayoutEditor {
      * マウス右クリックされた時のハンドラ。以下の処理を行う。
      *   - 未接続のジョイント上ならば、現在選択中のレールの向きを変える。
      *
-     * @param {MouseEvent} event
-     * @param {Path} path
+     * @param {ToolEvent} event
      */
     handleMouseDownRight(event) {
         let joint = this.getJoint(event.point);
@@ -188,22 +186,76 @@ export class LayoutEditor {
 
     /**
      * キーボード押下された時のハンドラ。以下の処理を行う。
-     *   - DEL: 選択中のレールを削除する。
+     *   - DEL:   選択中のレールを削除する。
+     *   - F:     選択中のレールにフィーダーを差す。
+     *   - SPACE: 導通を確認する。
+     *   - S:     選択中のレールの導通方向を切り替える。切り替え後は導通確認を再度実行する。
      *
      * @param {KeyEvent} event
      */
     handleKeyEvent(event) {
+        // log.info(project.selectedItems);
+        let selectedRails = project.selectedItems
+            .map(item => this.getRail(item))
+            .filter(Boolean);
+        log.info(selectedRails);
         switch (event.key) {
             case "backspace":
-                log.info(project.selectedItems);
-                let selectedRails = project.selectedItems
-                    .map(item => this.getRail(item))
-                    .filter(Boolean);
                 selectedRails.forEach(r => this.removeRail(r));
+                break;
+            case "space":
+                // 全てのレールを未チェック状態にする
+                this.rails.forEach( r => r.resetConduction() );
+                this.getFeederedRails().forEach(r => {
+                    this.checkConduction(r)
+                });
+                break;
+            case "f":
+                selectedRails.forEach(r => r.putFeeder());
+                break;
+            case "s":
+                selectedRails.forEach( r => r.toggleSwitch() );
+                this.rails.forEach( r => r.resetConduction() );
+                this.getFeederedRails().forEach(r => {
+                    this.checkConduction(r)
+                });
                 break;
         }
     }
 
+
+    /**
+     * フィーダーが挿さっているレールを取得する。
+     * @returns {Array.<Rail>}
+     */
+    getFeederedRails() {
+        return this.rails.filter( r => r.feeder )
+    }
+
+
+    /**
+     * 与えられたレールから導通している全てのレールを描画する。
+     * @param rail
+     */
+    checkConduction(rail) {
+        rail.renderConduction();
+        rail.joints.forEach( joint => this._checkConductionInner(joint))
+    }
+
+    /**
+     * @param {Joint} joint
+     */
+    _checkConductionInner(joint) {
+        joint.rail.renderConduction();
+        let conductiveJoints = joint.rail.getConductiveJoints(joint);
+        if (conductiveJoints) {
+            let nextJointsToRender = conductiveJoints
+                .filter(condJ => condJ.connectedJoint)
+                .map(condJ => condJ.connectedJoint)
+                .filter( nextJ => nextJ.rail.rendered === false);
+            nextJointsToRender.forEach(nextJ => this._checkConductionInner(nextJ));
+        }
+    }
 
     /**
      * 設置されるレールのガイドを半透明で表示する。

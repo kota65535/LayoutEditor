@@ -16,6 +16,12 @@ export const Direction = {
 }
 
 
+export class Turnout extends Rail {
+    constructor(startPoint, angle) {
+        super(startPoint, angle);
+    }
+}
+
 /**
  * TODO: ジョイントオーダーは左回りで統一すべきか、分岐方向で統一すべきか決める。
  */
@@ -43,22 +49,29 @@ export class SimpleTurnout extends Rail {
         switch (direction) {
             case Direction.LEFT:
                 this._addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, RailPart.Anchor.END));
-                // 重複したジョイントを削除し、ジョイントの順番を設定
-                this._removeJoint(0);
-                this.jointOrder = [2,0,1];
                 break;
             case Direction.RIGHT:
                 this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
-                this._removeJoint(0);
-                this.jointOrder = [1,0,2];
                 break;
         }
+
+        this.conductionMap = {
+            0: [
+                [0, 1],
+            ],
+            1: [
+                [0, 2]
+            ]
+        };
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
 
         this.showJoints();
+
+        this.conductionState = 0;
     }
+
 
     /**
      * レールを複製する。
@@ -85,8 +98,15 @@ export class SymmetricalTurnout extends Rail {
 
         this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
         this._addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END));
-        this._removeJoint(0);
-        this.jointOrder = [2,0,1];
+
+        this.conductionMap = {
+            0: [
+                [0, 1],
+            ],
+            1: [
+                [0, 2]
+            ]
+        };
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
