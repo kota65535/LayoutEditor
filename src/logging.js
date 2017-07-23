@@ -8,9 +8,10 @@ import prefix from "loglevel-plugin-prefix";
 
 
 export default function getLogger(name, level = "INFO") {
-    prefix.apply(loglevel, {
-        template: "[%t] %l (%n):"
-    });
+    // ログの出力元のファイル名・行数が上書きされてしまって不便
+    // prefix.apply(loglevel, {
+    //     template: "[%t] %l (%n):"
+    // });
     let logger = loglevel.getLogger(name);
     logger.setLevel(level);
     return logger;

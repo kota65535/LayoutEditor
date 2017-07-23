@@ -2,6 +2,8 @@
  * Created by tozawa on 2017/07/12.
  */
 import {Joint} from "./rails/parts/Joint";
+import {Rail} from "./rails/Rail";
+import { cloneRail, serialize, deserialize } from "./RailUtil";
 import logger from "../logging";
 
 let log = logger("LayoutEditor", "DEBUG");
@@ -95,7 +97,8 @@ export class LayoutEditor {
         this.paletteRail.setOpacity(1.0);
         this.connectOtherJoints();
         this.putRail(this.paletteRail);
-        this.selectRail(this.paletteRail.clone());
+        // this.selectRail(this.paletteRail.clone());
+        this.selectRail(cloneRail(this.paletteRail));
     }
 
     /**
@@ -188,18 +191,6 @@ export class LayoutEditor {
         log.info("down point: ", event.downPoint);
         log.info("event point: ", event.point);
         log.info("delta ", event.delta);
-        let diff = event.point.subtract(event.downPoint);
-        // window.scrollTo(event.downPoint);
-        // window.scrollBy(event.delta.x, event.delta.y);
-        view.center = view.center.add(diff);
-        let hitResult = this._hitTest(event.point);
-        if (!hitResult) {
-            return null;
-        }
-        // log.debug("Hit Test:");
-        // log.debug(event.point);
-        // log.debug(hitResult);
-        // log.debug(hitResult.point);
     }
 
     /**
@@ -336,16 +327,25 @@ export class LayoutEditor {
         rail.setName(id);
         this.rails.push(rail);
 
-        log.info("PUT begin-----");
+        log.info("Added: ", serialize(rail));
+        //
+        rail.startPoint = rail.startPoint.add(new Point(0, 140));
+        let str = serialize(rail);
+        let a = deserialize(str);
+        this.rails.push(a);
+
+
+        log.debug("ActiveLayer.children begin-----");
         project.activeLayer.children.forEach( c => {
             if (c.constructor.name === "Group") {
-                log.info("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
+                log.debug("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
             } else {
-                log.info("PUT " + c.id);
+                log.debug("PUT " + c.id);
             }
         });
-        log.info("PUT end-----");
+        log.debug("ActiveLayer.children end  -----");
     }
+
 
     /**
      * レールを削除する。

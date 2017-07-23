@@ -37,3 +37,4 @@ export class RailFactory {
         return new SymmetricalTurnout(new Point(0, 0), 0, 280, 15);
     }
 }
+

@@ -42,7 +42,7 @@
 
     const BOARD_WIDTH = 6000;     // ボード幅
     const BOARD_HEIGHT = 4000;    // ボード高さ
-    const GRID_SIZE = 50;
+    const GRID_SIZE = 70;
     const INITIAL_ZOOM = 0.7;
     const ZOOM_UNIT = 0.002;
     const AVAILABLE_ZOOM_MIN = 0.2;
@@ -58,7 +58,7 @@
             INITIAL_ZOOM, ZOOM_UNIT, AVAILABLE_ZOOM_MIN, AVAILABLE_ZOOM_MAX);
 
         // レイヤー２に切り替え
-        new Layer();
+//        new Layer();
 
         this.editor = new LayoutEditor();
         this.factory = new RailFactory();

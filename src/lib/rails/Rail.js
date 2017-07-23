@@ -213,19 +213,6 @@ export class Rail {
 
 
     /**
-     * レール全体のバウンディングボックスを取得する。
-     * @returns {Rectangle}
-     */
-    getBounds() {
-        return this.pathGroup.bounds;
-    }
-
-
-    scale(hor, ver) {
-        this.pathGroup.scale(hor, ver);
-    }
-
-    /**
      * 任意のジョイントを基準に、絶対座標で移動する。
      * @param {Point} point 移動先の座標
      * @param {Point,Joint} anchor 基準とする座標またはジョイント
@@ -249,31 +236,39 @@ export class Rail {
         this.joints.forEach( joint => {
             joint.moveRelatively(difference);
         })
+        this._updatePoints();
     }
 
     /**
      * 任意のジョイントを中心に、X軸から時計回りの絶対角度で回転する。
      * @param {number} angle 回転角度
-     * @param {Joint} joint 基準とするジョイント
+     * @param {Point,Joint} anchor 基準とするジョイント
      */
-    rotate(angle, joint) {
+    rotate(angle, anchor) {
+        if (anchor.constructor.name === "Joint") {
+            anchor = anchor.getPosition();
+        }
         let relAngle = angle - this.angle;
-        this.rotateRelatively(relAngle, joint);
+        this.rotateRelatively(relAngle, anchor);
     }
 
     /**
      * 任意のジョイントを中心に、X軸から時計回りで現在からの相対角度で回転する。
      * @param {number} angle 回転角度
-     * @param {Joint} joint 基準とするジョイント
+     * @param {Point,Joint} anchor 基準とするジョイント
      */
-    rotateRelatively(angle, joint) {
+    rotateRelatively(angle, anchor) {
+        if (anchor.constructor.name === "Joint") {
+            anchor = anchor.getPosition();
+        }
         this.railParts.forEach( part => {
-            part.rotateRelatively(angle, joint.getPosition())
+            part.rotateRelatively(angle, anchor)
         });
         this.joints.forEach( j => {
-            j.rotateRelatively(angle, joint.getPosition());
+            j.rotateRelatively(angle, anchor);
         })
         this.angle += angle;
+        this._updatePoints();
     }
 
     /**
@@ -357,13 +352,13 @@ export class Rail {
      */
     getCurrentJoint() {
         let jointIndex = this._getCurrentJointIndex();
-        log.info("JointIndex:", jointIndex, this.joints[jointIndex]);
+        log.debug("JointIndex:", jointIndex, this.joints[jointIndex]);
         return this.joints[jointIndex];
     }
 
     getNextJoint() {
         let jointIndex = this._getNextJointIndex();
-        log.info("JointIndex:", jointIndex, this.joints[jointIndex]);
+        log.debug("JointIndex:", jointIndex, this.joints[jointIndex]);
         return this.joints[jointIndex];
     }
 
@@ -372,7 +367,7 @@ export class Rail {
         let index = this.currentJointIndex % this.joints.length;
         this.currentJointIndex = index;
         if (this.jointOrder.length !== this.joints.length) {
-            log.info("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
+            log.debug("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
             return index;
         }
         return this.jointOrder[index];
@@ -383,7 +378,7 @@ export class Rail {
         let index = this.currentJointIndex % this.joints.length;
         this.currentJointIndex = index + 1;
         if (this.jointOrder.length !== this.joints.length) {
-            log.info("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
+            log.debug("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
             return index;
         }
         return this.jointOrder[index];
@@ -391,37 +386,29 @@ export class Rail {
 
 
     /**
-     * 自らと同じレールを複製する目的で、eval()で使用するための文字列を生成する。
-     * 子クラスでこの文字列をevalすると、constructorの引数名と同名のプロパティの値を利用してオブジェクトを生成する。
-     * DeepCopyではnewを呼び出さないため、paper.Pathの生成が行われないため作成した。
-     * @param rail {Rail}
-     * @returns {string}
+     * 内部情報を更新する。開始点のみ。
+     * @private
      */
-    static evalMeToClone(rail) {
-        let paramNames = Rail._getParamNames(rail.constructor);
-        paramNames = paramNames.map( p => "this." + p);
-        let evalStr = sprintf("new %s(%s)", rail.constructor.name, paramNames.join(","));
-        log.info("Cloning by: " + evalStr);
-        return evalStr;
+    _updatePoints() {
+        this.startPoint = this.railParts[0].startPoint;
+    }
+
+
+    /**
+     * レール全体のバウンディングボックスを取得する。パレット用。
+     * @returns {Rectangle}
+     */
+    getBounds() {
+        return this.pathGroup.bounds;
     }
 
     /**
-     * ある関数の引数名を、文字列の配列として取得する。
-     * @param func
-     * @returns {Array|{index: number, input: string}}
-     * @private
+     * レールの拡大縮小を行う。パレット用。
+     * @param hor
+     * @param ver
      */
-    static _getParamNames(func) {
-        var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-        var ARGUMENT_NAMES = /([^\s,]+)/g;
-        var fnStr = func.toString().replace(STRIP_COMMENTS, '');
-        var result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-        if (result === null)
-            result = [];
-        return result;
+    scale(hor, ver) {
+        this.pathGroup.scale(hor, ver);
     }
-
-
 }
-
 
