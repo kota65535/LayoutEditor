@@ -26,11 +26,16 @@ riot.mixin('controlMixin', {
 // since riot is auto loaded by ProvidePlugin, merge the control into the riot object
 riot.control = RiotControl;
 
-riot.VE = {
-    PALETTE_ITEM_SELECTED: "ve_palette_item_selected",
-}
-
 riot.SE = {
     PALETTE_ITEM_SELECTED: "se_palette_item_selected",
+    LAYOUT_UPDATED: "se_layout_updated"
 }
+
+riot.VE = {
+    PALETTE_ITEM_SELECTED: "ve_palette_item_selected",
+    MENU_SAVE_LAYOUT: "ve_menu_save_layout",
+    SAVE_LAYOUT: "ve_save_layout",
+    LOAD_LAYOUT: "ve_load_layout"
+}
+
 

@@ -52,6 +52,7 @@ export class Joint extends RectPart {
         this.direction = direction;
         this.connectedJoint = null;
         this.rail = rail;
+        this.rendered = false;
 
         this.move(position);
         this.rotate(angle, this.getPosition());

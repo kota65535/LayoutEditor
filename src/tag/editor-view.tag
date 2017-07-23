@@ -20,7 +20,13 @@
           { name: "C541_15" },
           { name: "PL541_15" },
           { name: "PR541_15" },
-          { name: "PY280_15" }
+          { name: "PR541_15" },
+          { name: "PR541_15" },
+          { name: "PR541_15" }
       ];
+
+      // スクロール禁止
+      var scroll_event = 'onwheel' in document ? 'wheel' : 'onmousewheel' in document ? 'mousewheel' : 'DOMMouseScroll';
+      $(document).on(scroll_event,function(e){e.preventDefault();});
   </script>
 </editor-view>

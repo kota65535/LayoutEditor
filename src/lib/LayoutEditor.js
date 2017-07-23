@@ -4,7 +4,7 @@
 import {Joint} from "./rails/parts/Joint";
 import logger from "../logging";
 
-let log = logger("LayoutEditor");
+let log = logger("LayoutEditor", "DEBUG");
 
 // [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
 Array.prototype.flatMap = function(lambda) {
@@ -184,6 +184,24 @@ export class LayoutEditor {
         }
     }
 
+    handleMouseDrag(event) {
+        log.info("down point: ", event.downPoint);
+        log.info("event point: ", event.point);
+        log.info("delta ", event.delta);
+        let diff = event.point.subtract(event.downPoint);
+        // window.scrollTo(event.downPoint);
+        // window.scrollBy(event.delta.x, event.delta.y);
+        view.center = view.center.add(diff);
+        let hitResult = this._hitTest(event.point);
+        if (!hitResult) {
+            return null;
+        }
+        // log.debug("Hit Test:");
+        // log.debug(event.point);
+        // log.debug(hitResult);
+        // log.debug(hitResult.point);
+    }
+
     /**
      * キーボード押下された時のハンドラ。以下の処理を行う。
      *   - DEL:   選択中のレールを削除する。
@@ -205,20 +223,43 @@ export class LayoutEditor {
                 break;
             case "space":
                 // 全てのレールを未チェック状態にする
-                this.rails.forEach( r => r.resetConduction() );
-                this.getFeederedRails().forEach(r => {
-                    this.checkConduction(r)
-                });
+                this.rails.forEach(r => r.resetConduction());
+                // this.getFeederedRails().forEach(r => {
+                //     this.checkConduction(r)
+                // });
                 break;
             case "f":
                 selectedRails.forEach(r => r.putFeeder());
-                break;
-            case "s":
-                selectedRails.forEach( r => r.toggleSwitch() );
-                this.rails.forEach( r => r.resetConduction() );
+                selectedRails.forEach(r => r.toggleSwitch());
+                this.rails.forEach(r => r.resetConduction());
                 this.getFeederedRails().forEach(r => {
                     this.checkConduction(r)
                 });
+                break;
+            case "s":
+                let request = new XMLHttpRequest();
+                request.open("POST", "http://0.0.0.0:5000/serial");
+                request.send("t 0");
+                selectedRails.forEach(r => r.toggleSwitch());
+                this.rails.forEach(r => r.resetConduction());
+                this.getFeederedRails().forEach(r => {
+                    this.checkConduction(r)
+                });
+                break;
+            case "up":
+                request = new XMLHttpRequest();
+                request.open("POST", "http://0.0.0.0:5000/serial");
+                request.send("f 1 c 30");
+                break;
+            case "down":
+                request = new XMLHttpRequest();
+                request.open("POST", "http://0.0.0.0:5000/serial");
+                request.send("f 1 c -30");
+                break;
+            case "d":
+                request = new XMLHttpRequest();
+                request.open("POST", "http://0.0.0.0:5000/serial");
+                request.send("f 1 d");
                 break;
         }
     }
@@ -235,24 +276,34 @@ export class LayoutEditor {
 
     /**
      * 与えられたレールから導通している全てのレールを描画する。
-     * @param rail
+     * @param {Rail} rail
      */
     checkConduction(rail) {
         rail.renderConduction();
-        rail.joints.forEach( joint => this._checkConductionInner(joint))
+        rail.joints.forEach( joint => {
+            joint.rendered = true;
+            if (joint.connectedJoint) {
+                this._checkConductionInner(joint.connectedJoint);
+            }
+        });
+        // this._checkConductionInner()
+        // rail.renderConduction();
+        // rail.joints.forEach( joint => this._checkConductionInner(joint))
     }
 
     /**
      * @param {Joint} joint
      */
     _checkConductionInner(joint) {
+        if (!joint) return;
         joint.rail.renderConduction();
-        let conductiveJoints = joint.rail.getConductiveJoints(joint);
+        joint.rendered = true;
+        let conductiveJoints = joint.rail.getConductiveJointsToRender(joint);
         if (conductiveJoints) {
             let nextJointsToRender = conductiveJoints
                 .filter(condJ => condJ.connectedJoint)
-                .map(condJ => condJ.connectedJoint)
-                .filter( nextJ => nextJ.rail.rendered === false);
+                .map(condJ => condJ.connectedJoint);
+                // .filter( nextJ => nextJ.rail.rendered === false);
             nextJointsToRender.forEach(nextJ => this._checkConductionInner(nextJ));
         }
     }
@@ -347,9 +398,10 @@ export class LayoutEditor {
         };
         let hitResult = project.hitTest(point, hitOptions);
         if (hitResult) {
-            // console.log(point);
-            // console.log(hitResult);
-            // console.log(hitResult.point);
+            // log.debug("Hit Test:");
+            // log.debug(point);
+            // log.debug(hitResult);
+            // log.debug(hitResult.point);
         }
         return hitResult;
     }

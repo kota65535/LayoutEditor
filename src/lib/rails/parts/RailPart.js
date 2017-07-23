@@ -36,7 +36,7 @@ export class RailPart {
 
         this.path = null;
 
-        this.conducted = true;
+        this.rendered = false;
     }
 
     /**
@@ -133,9 +133,5 @@ export class RailPart {
                 break;
         }
         return anchor;
-    }
-
-    isConducted() {
-        return this.conducted;
     }
 }

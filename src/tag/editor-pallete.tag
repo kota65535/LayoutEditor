@@ -1,12 +1,17 @@
 <editor-pallete>
   <style>
-    #sidebar-wrapper {
+    #editor-sidebar-wrapper {
+      /* position */
       position: fixed;
+      margin-top: 50px;
       width: 300px;
-      height: 100%;
-      overflow-y: auto;
-      background: #000;
-
+      /* for scroll */
+      overflow-y: scroll;
+      top: 0;
+      bottom: 0;
+      /* above content */
+      z-index: 9901;
+      /*background: #000;*/
     }
 
     [class*="col-"] {
@@ -64,7 +69,7 @@
     /*}*/
   </style>
 
-  <div class="container-fluid" id="sidebar-wrapper">
+  <div class="container-fluid" id="editor-sidebar-wrapper">
     <!--<span class="sidebar-nav">Rails</span>-->
 
     <div class="row">

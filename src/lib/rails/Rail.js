@@ -84,9 +84,19 @@ export class Rail {
     }
 
     /**
-     * 与えられたジョイントから導通しているジョイントを取得する。
+     * 与えられたジョイントから未描画の導通しているジョイントを取得する。
      * @param joint
      * @returns {*}
+     */
+    getConductiveJointsToRender(joint) {
+        let joints = this.getConductiveJoints(joint);
+        return joints.filter(j => j.rendered === false)
+    }
+
+    /**
+     * 与えられたジョイントから導通しているジョイントを取得する。
+     * @param joint
+     * @returns {Array<Joint>}
      */
     getConductiveJoints(joint) {
         let conductiveJointPairs = this.conductionMap[this.conductionState];
@@ -148,7 +158,7 @@ export class Rail {
     }
 
     /**
-     * 導通状態を描画する。
+     * このレールの導通状態にもとづいて、これを描画する。
      * @private
      */
     renderConduction() {
@@ -175,6 +185,7 @@ export class Rail {
     resetConduction() {
         this.rendered = false;
         this.railParts.forEach(part => part.path.fillColor = "black");
+        this.joints.forEach(joint => joint.rendered = false);
     }
 
 

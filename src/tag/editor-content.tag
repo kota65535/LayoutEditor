@@ -2,9 +2,16 @@
   <style>
     #editor-content-wrapper{
       width: 100%;
-      height: 90%;
-      position: absolute;
-      margin-left: 300px;
+      height: 100%;
+      margin-top: 50px;
+      /*width: 1000px;*/
+      /*height: 800px;*/
+      /*position: absolute;*/
+      /*margin-left: 300px;*/
+      /*margin-right: 0px;*/
+      /*right: 0px;*/
+      z-index: 9900;
+      /*overflow: hidden;*/
     }
     canvas[resize] {
       width: 100%;
@@ -13,7 +20,7 @@
   </style>
 
 
-  <div id="editor-content-wrapper">
+  <div class="container" id="editor-content-wrapper">
     <canvas id="editor-canvas" resize></canvas>
   </div>
 
@@ -23,14 +30,23 @@
     import paper from "paper";
     import { LayoutEditor } from "../lib/LayoutEditor";
     import { RailFactory } from "../lib/RailFactory";
+    import { GridPaper } from "../lib/GridPaper";
     import { StraightRail } from "../lib/rails/StraightRail";
     import {Joint} from "../lib/rails/parts/Joint";
+
     import logger from "../logging";
     let log = logger("EditorContent");
 
 
     this.mixin("controlMixin");
 
+    const BOARD_WIDTH = 6000;     // ボード幅
+    const BOARD_HEIGHT = 4000;    // ボード高さ
+    const GRID_SIZE = 50;
+    const INITIAL_ZOOM = 0.7;
+    const ZOOM_UNIT = 0.002;
+    const AVAILABLE_ZOOM_MIN = 0.2;
+    const AVAILABLE_ZOOM_MAX = 5;
 
     this.on("mount", () => {
         log.info("Editor content mounted");
@@ -38,7 +54,8 @@
         paper.setup("editor-canvas");
 
         // レイヤー１にグリッドを描画
-        createGrid(70);
+        this.grid = new GridPaper("editor-canvas", BOARD_WIDTH, BOARD_HEIGHT, GRID_SIZE,
+            INITIAL_ZOOM, ZOOM_UNIT, AVAILABLE_ZOOM_MIN, AVAILABLE_ZOOM_MAX);
 
         // レイヤー２に切り替え
         new Layer();
@@ -47,7 +64,7 @@
         this.factory = new RailFactory();
 
         // 各種ハンドラの登録
-        var tool = new Tool();
+        let tool = new Tool();
         tool.onMouseMove = (event) => {
             this.editor.handleMouseMove(event);
         };
@@ -57,13 +74,28 @@
 
         tool.onKeyDown = (event) => {
             this.editor.handleKeyEvent(event);
-        }
+        };
+
+        tool.onMouseDrag = (event) => {
+            this.grid.paperOnMouseDrag(event);
+        };
+
+        window.addEventListener('mousemove', (e) => {
+            this.grid.windowOnMouseMove(e);
+        });
+
+        window.addEventListener("mousewheel", (e) => {
+            this.grid.windowOnMouseWheel(e);
+        });
 
         this.editor.selectRail(this.factory.S280());
-
-        this.editor.putRail(new StraightRail(new Point(280, 140),0,140));
+        this.editor.putRail(new StraightRail(new Point(560, 140),0,140));
 
     });
+
+    //====================
+    // イベントハンドラ
+    //====================
 
     this.onControl(riot.SE.PALETTE_ITEM_SELECTED, itemName => {
         this.selectedItem = itemName;
@@ -71,19 +103,14 @@
         this.editor.selectRail(this.factory[itemName]());
     });
 
-    function createGrid(size) {
-        let canvas = $("#editor-canvas");
-        let numX = canvas.width() / size;
-        let numY = canvas.height() / size;
-        for (let i=0 ; i <= numX ; i++) {
-            let line = new Path.Line(new paper.Point(size * i, 0), new paper.Point(size * i, canvas.height()));
-            line.strokeColor = 'grey';
-        }
-        for (let i=0 ; i <= numY ; i++) {
-            let line = new Path.Line(new paper.Point(0, size*i), new paper.Point(canvas.width(), size*i));
-            line.strokeColor = 'grey';
-        }
-    }
+    this.onControl(riot.VE.MENU_SAVE_LAYOUT, itemName => {
+        log.info("save layout");
+        let json1 = JSON.stringify(this.editor.rails);
+        let json2 = project.exportJSON();
+        riot.control.trigger(riot.VE.SAVE_LAYOUT, json1, json2);
+    });
+
+
   </script>
 
 </editor-content>

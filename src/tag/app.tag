@@ -1,11 +1,36 @@
 <app>
-  <editor-view></editor-view>
+  <div id="mainview"></div>
+  <!--<editor-view></editor-view>-->
 
   <script>
-    this.urls = [
-      { title: 'GitHub',   url: 'https://github.com/osscafe' },
-      { title: 'Twitter',  url: 'https://twitter.com/osscafe' },
-      { title: 'Facebook', url: 'https://www.facebook.com/shimokitazawa.osscafe' }
-    ]
+      import riot from "riot";
+      import route from "riot-route";
+
+      this._currentView = null;
+
+      this.loadView = (viewName, id) => {
+          if (this._currentView) {
+              this._currentView.unmount(true)
+          }
+          this._currentView = riot.mount('div#mainview', viewName);
+      }
+
+      this.studyRoute = (view, id) => {
+          switch (view) {
+              case "editor":
+                  this.loadView("editor-view");
+                  break;
+              case "simulator":
+                  this.loadView("simulator-view");
+                  break;
+          }
+      }
+
+      route(this.studyRoute);
+
+      this.on('mount', () => {
+          route.start(true);
+      })
+
   </script>
 </app>
