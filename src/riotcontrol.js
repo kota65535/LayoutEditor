@@ -28,12 +28,13 @@ riot.control = RiotControl;
 
 riot.SE = {
     PALETTE_ITEM_SELECTED: "se_palette_item_selected",
-    LAYOUT_UPDATED: "se_layout_updated"
+    LAYOUT_LOADED: "se_layout_loaded"
 }
 
 riot.VE = {
     PALETTE_ITEM_SELECTED: "ve_palette_item_selected",
     MENU_SAVE_LAYOUT: "ve_menu_save_layout",
+    MENU_LOAD_LAYOUT: "ve_load_layout",
     SAVE_LAYOUT: "ve_save_layout",
     LOAD_LAYOUT: "ve_load_layout"
 }

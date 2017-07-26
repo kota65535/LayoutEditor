@@ -29,12 +29,12 @@ export class PaletteStore {
             this.saveToStorage();
             this.trigger(riot.SE.PALETTE_ITEM_SELECTED, this.getSelectedItem())
         });
-        this.on(riot.VE.SAVE_LAYOUT, (json1, json2) => {
-            this.setLayout(json1, json2);
+        this.on(riot.VE.SAVE_LAYOUT, (layoutData) => {
+            this.setLayout(layoutData);
             this.saveToStorage();
         });
-        this.on(riot.VE.LOAD_LAYOUT, () => {
-            this.trigger(riot.SE.LAYOUT_UPDATED, this.data);
+        this.on(riot.VE.MENU_LOAD_LAYOUT, () => {
+            this.trigger(riot.SE.LAYOUT_LOADED, this.data["layout"]);
         });
     }
 
@@ -46,9 +46,8 @@ export class PaletteStore {
         return this.data["selectedItem"];
     }
 
-    setLayout(json1, json2) {
-        this.data["json1"] = json1;
-        this.data["json2"] = json2;
+    setLayout(layoutData) {
+        this.data["layout"] = layoutData;
     }
 
     saveToStorage() {

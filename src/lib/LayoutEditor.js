@@ -21,10 +21,37 @@ export class LayoutEditor {
     constructor() {
         // 設置したレールのリスト
         this.rails = [];
+        this.railData = [];
         // 選択中のレール
         this.paletteRail = null;
 
         this.nextId = 1;
+    }
+
+    /**
+     * レイアウト上のレールを全て削除する。
+     */
+    destroyLayout() {
+        this.rails.forEach( r => {
+            r.remove();
+        });
+        this.rails = [];
+        this.railData = [];
+        this.paletteRail = null;
+        this.nextId = 1;
+    }
+
+    /**
+     * 保存されていたレイアウトをロードし、エディタ上に配置する。
+     *
+     * @param layoutData
+     */
+    loadLayout(layoutData) {
+        this.destroyLayout();
+        layoutData.forEach( rail => {
+            let railObject = deserialize(rail);
+            this.putRail(railObject);
+        })
     }
 
 
@@ -92,7 +119,7 @@ export class LayoutEditor {
             log.warn("The rail cannot be put because of intersection.");
             return;
         }
-        this.canPutSelectedRail();
+        // this.canPutSelectedRail();
         this.paletteRail.connect(this.paletteRail.getCurrentJoint(), toJoint);
         this.paletteRail.setOpacity(1.0);
         this.connectOtherJoints();
@@ -327,13 +354,11 @@ export class LayoutEditor {
         rail.setName(id);
         this.rails.push(rail);
 
-        log.info("Added: ", serialize(rail));
-        //
-        rail.startPoint = rail.startPoint.add(new Point(0, 140));
-        let str = serialize(rail);
-        let a = deserialize(str);
-        this.rails.push(a);
+        let serializedRail = serialize(rail);
 
+        log.info("Added: ", serialize(rail));
+
+        this.railData.push(serializedRail);
 
         log.debug("ActiveLayer.children begin-----");
         project.activeLayer.children.forEach( c => {

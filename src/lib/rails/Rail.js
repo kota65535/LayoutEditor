@@ -29,7 +29,7 @@ export class Rail {
      * @param {Point} startPoint
      * @param {number} angle
      */
-    constructor(startPoint, angle) {
+    constructor(startPoint, angle, hasFeederSlot) {
         this.railParts = [];
         this.joints = [];
         this.startPoint = startPoint;
@@ -49,66 +49,6 @@ export class Rail {
         this.feeder = false;
     }
 
-    /**
-     * フィーダーをレールに挿す。
-     */
-    putFeeder() {
-        this.feeder = true;
-        let text = new PointText(this.pathGroup.position.subtract(new Point(0, 10)));
-        text.justification = "center";
-        text.content = "Feeder";
-    }
-
-    /**
-     * 導通状態をトグルスイッチ的に変更する。
-     */
-    toggleSwitch() {
-        let numStates = Object.keys(this.conductionMap).length;
-        this.conductionState = (this.conductionState + 1) % numStates;
-        this.switch(this.conductionState);
-    }
-
-    /**
-     * 導通状態を変更する。
-     * @param state
-     */
-    switch(state) {
-        let numStates = Object.keys(this.conductionMap).length;
-        if (state > numStates) {
-            log.error("No conduction state", state);
-            return;
-        }
-        this.conductionState = state;
-        this.resetConduction()
-        this.renderConduction();
-    }
-
-    /**
-     * 与えられたジョイントから未描画の導通しているジョイントを取得する。
-     * @param joint
-     * @returns {*}
-     */
-    getConductiveJointsToRender(joint) {
-        let joints = this.getConductiveJoints(joint);
-        return joints.filter(j => j.rendered === false)
-    }
-
-    /**
-     * 与えられたジョイントから導通しているジョイントを取得する。
-     * @param joint
-     * @returns {Array<Joint>}
-     */
-    getConductiveJoints(joint) {
-        let conductiveJointPairs = this.conductionMap[this.conductionState];
-        let givenIndex = this.joints.indexOf(joint);
-        let conductiveJoints = conductiveJointPairs
-            .filter( pair => pair.includes(givenIndex) )
-            .map( pair => pair.find(v => v !== givenIndex))
-            .map( i => this.joints[i]);
-
-        log.info(conductiveJoints);
-        return conductiveJoints;
-    }
 
     /**
      *
@@ -345,7 +285,66 @@ export class Rail {
         return this.pathGroup.name;
     }
 
+    /**
+     * フィーダーをレールに挿す。
+     */
+    putFeeder() {
+        this.feeder = true;
+        let text = new PointText(this.pathGroup.position.subtract(new Point(0, 10)));
+        text.justification = "center";
+        text.content = "Feeder";
+    }
 
+    /**
+     * 導通状態をトグルスイッチ的に変更する。
+     */
+    toggleSwitch() {
+        let numStates = Object.keys(this.conductionMap).length;
+        this.conductionState = (this.conductionState + 1) % numStates;
+        this.switch(this.conductionState);
+    }
+
+    /**
+     * 導通状態を変更する。
+     * @param state
+     */
+    switch(state) {
+        let numStates = Object.keys(this.conductionMap).length;
+        if (state > numStates) {
+            log.error("No conduction state", state);
+            return;
+        }
+        this.conductionState = state;
+        this.resetConduction()
+        this.renderConduction();
+    }
+
+    /**
+     * 与えられたジョイントから未描画の導通しているジョイントを取得する。
+     * @param joint
+     * @returns {*}
+     */
+    getConductiveJointsToRender(joint) {
+        let joints = this.getConductiveJoints(joint);
+        return joints.filter(j => j.rendered === false)
+    }
+
+    /**
+     * 与えられたジョイントから導通しているジョイントを取得する。
+     * @param joint
+     * @returns {Array<Joint>}
+     */
+    getConductiveJoints(joint) {
+        let conductiveJointPairs = this.conductionMap[this.conductionState];
+        let givenIndex = this.joints.indexOf(joint);
+        let conductiveJoints = conductiveJointPairs
+            .filter( pair => pair.includes(givenIndex) )
+            .map( pair => pair.find(v => v !== givenIndex))
+            .map( i => this.joints[i]);
+
+        log.info(conductiveJoints);
+        return conductiveJoints;
+    }
     /**
      * 現在のジョイント
      * @returns {*}

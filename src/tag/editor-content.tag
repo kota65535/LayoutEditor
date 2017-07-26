@@ -103,13 +103,15 @@
         this.editor.selectRail(this.factory[itemName]());
     });
 
-    this.onControl(riot.VE.MENU_SAVE_LAYOUT, itemName => {
-        log.info("save layout");
-        let json1 = JSON.stringify(this.editor.rails);
-        let json2 = project.exportJSON();
-        riot.control.trigger(riot.VE.SAVE_LAYOUT, json1, json2);
+    this.onControl(riot.VE.MENU_SAVE_LAYOUT, () => {
+        log.info("Saving layout...");
+        riot.control.trigger(riot.VE.SAVE_LAYOUT, this.editor.railData);
     });
 
+    this.onControl(riot.SE.LAYOUT_LOADED, (layoutData) => {
+        log.info("Loading layout...");
+        this.editor.loadLayout(layoutData);
+    });
 
   </script>
 

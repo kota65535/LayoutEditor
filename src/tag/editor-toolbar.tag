@@ -27,6 +27,7 @@
               <li><a href="#">New</a></li>
               <li><a href="#">Open</a></li>
               <li><a href="#save">Save</a></li>
+              <li><a href="#load">Load</a></li>
               <li role="separator" class="divider"></li>
               <li class="dropdown-header">Nav header</li>
               <li><a href="#">Separated link</a></li>
@@ -60,6 +61,10 @@
               case "save":
                   riot.control.trigger(riot.VE.MENU_SAVE_LAYOUT);
                   break;
+              case "load":
+                  riot.control.trigger(riot.VE.MENU_LOAD_LAYOUT);
+                  break;
+
           }
       };
 
