@@ -43,15 +43,15 @@ export class SimpleTurnout extends Rail {
         this.length = length;
         this.radius = radius;
         this.centerAngle = centerAngle;
-        this.direction = direction;
+        this.flowDirection = direction;
 
-        this._addRailPart(new StraightRailPart(startPoint, 0, length));
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, false));
         switch (direction) {
             case Direction.LEFT:
-                this._addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, RailPart.Anchor.END));
+                this.addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, RailPart.Anchor.END, false));
                 break;
             case Direction.RIGHT:
-                this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
+                this.addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle, RailPart.Anchor.START, false));
                 break;
         }
 
@@ -96,8 +96,8 @@ export class SymmetricalTurnout extends Rail {
         this.radius = radius;
         this.centerAngle = centerAngle;
 
-        this._addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle));
-        this._addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END));
+        this.addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle, RailPart.Anchor.START, false));
+        this.addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END, false));
 
         this.conductionMap = {
             0: [
@@ -141,20 +141,20 @@ export class CurvedTurnout extends Rail {
         this.innerRadius = innerRadius;
         this.outerRadius = outerRadius;
         this.centerAngle = centerAngle;
-        this.direction = direction;
+        this.flowDirection = direction;
 
         let anchorJoint;
 
         switch (direction) {
             case Direction.LEFT:
-                this._addRailPart(new CurveRailPart(startPoint, 180, outerRadius, centerAngle, RailPart.Anchor.END));
-                this._addRailPart(new CurveRailPart(startPoint, 180, innerRadius, centerAngle, RailPart.Anchor.END));
+                this.addRailPart(new CurveRailPart(startPoint, 180, outerRadius, centerAngle, RailPart.Anchor.END, false));
+                this.addRailPart(new CurveRailPart(startPoint, 180, innerRadius, centerAngle, RailPart.Anchor.END, false));
                 this.angle = angle + 180;
                 anchorJoint = this.joints[1];
                 break;
             case Direction.RIGHT:
-                this._addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle));
-                this._addRailPart(new CurveRailPart(startPoint, 0, innerRadius, centerAngle));
+                this.addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPart.Anchor.START, false));
+                this.addRailPart(new CurveRailPart(startPoint, 0, innerRadius, centerAngle, RailPart.Anchor.START, false));
                 this.angle = angle;
                 anchorJoint = this.joints[0];
                 break;

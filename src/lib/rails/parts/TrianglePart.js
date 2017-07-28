@@ -5,12 +5,12 @@
 import {sprintf} from "sprintf-js";
 
 /**
- * 矩形パーツの基底クラス。
+ * 三角形パーツの基底クラス
  */
-export class RectPart {
+export class TrianglePart {
 
     /**
-     * 矩形パーツを指定の位置・角度で作成する。
+     * 三角形パーツを指定の位置・角度で作成する。
      * @param {Point} position  中心点の位置
      * @param {number} angle    X軸に対する絶対角度
      * @param {number} width    幅
@@ -23,12 +23,9 @@ export class RectPart {
         this.height = height;
 
         // パスの生成
-        let pathData = sprintf("M 0 0 L %f %f L %f %f L %f %f L %f %f L %f %f Z",
-            0, -this.height/2,
-            this.width, -this.height/2,
-            this.width, 0,
-            this.width, this.height/2,
-            0, this.height/2
+        let pathData = sprintf("M 0 0 L %f %f L %f %f Z",
+            this.width/2, this.height,
+            -this.width/2, this.height,
         );
         this.path = new paper.Path(pathData);
         this.path.fillColor = fillColor;
@@ -77,8 +74,7 @@ export class RectPart {
     }
 
     /**
-     * 現在位置(この矩形の中心点)を返す。
-     *
+     * 現在位置を返す。
      * @return {Point}
      */
     getPosition() {
@@ -86,24 +82,13 @@ export class RectPart {
     }
 
     getCenterOfTop() {
-        return this.path.curves[1].getLocationAt(this.path.curves[1].length/2).point;
+        return this.path.segments[0].point;
     }
 
     getCenterOfBottom() {
-        return this.path.curves[4].getLocationAt(this.path.curves[4].length/2).point;
+        return this.path.curves[1].getLocationAt(this.path.curves[1].length/2).point;
     }
 
-    getCenterOfLeft() {
-        return this.path.segments[0].point
-    }
-
-    getCenterOfRight() {
-        return this.path.segments[3].point
-    }
-
-    /**
-     * パスを削除する。
-     */
     remove() {
         this.path.remove();
     }

@@ -2,6 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 import { Rail } from "./Rail";
+import { RailPart } from "./parts/RailPart";
 import { StraightRailPart } from "./parts/StraightRailPart";
 
 
@@ -18,7 +19,7 @@ export class StraightRail extends Rail {
 
         this.length = length;
 
-        this._addRailPart(new StraightRailPart(startPoint, 0, length));
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
@@ -49,8 +50,8 @@ export class DoubleStraightRail extends Rail {
 
         this.length = length;
 
-        this._addRailPart(new StraightRailPart(startPoint, 0, length));
-        this._addRailPart(new StraightRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, length));
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, true));
+        this.addRailPart(new StraightRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, length, RailPart.Anchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);

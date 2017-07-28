@@ -6,6 +6,11 @@ import logger from "../../../logging";
 
 let log = logger("Part");
 
+const FlowDirection = {
+    NONE: Symbol(),
+    START_TO_END: Symbol(),
+    END_TO_START: Symbol()
+};
 
 /**
  * レールパーツの基底クラス。全てのレールは複数のレールパーツとジョイントにより構成される。
@@ -15,6 +20,9 @@ export class RailPart {
 
     static FILL_COLOR = "#333333";
     static WIDTH = 12;
+    static FLOW_COLOR_1 = "royalblue";
+    static FLOW_COLOR_2 = "greenyellow";
+
 
     /**
      * レールパーツのコンストラクタでアンカー点を指定するための識別子。
@@ -30,13 +38,17 @@ export class RailPart {
      * レールパーツの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでパスの生成・移動・回転を行う。
      */
-    constructor() {
+    constructor(hasFeederSocket) {
         this.startPoint = this.endPoint = new Point(0, 0);
         this.startAngle = this.endAngle = 0;
 
         this.path = null;
 
         this.rendered = false;
+
+        this._hasFeederSocket = hasFeederSocket;
+
+        this.flowDirection = FlowDirection.NONE;
     }
 
     /**
@@ -109,6 +121,9 @@ export class RailPart {
     _updatePoints() {
         this.startPoint = this.path.segments[0].point;
         this.endPoint = this.path.segments[3].point;
+        let centerOfOuterCurve = this.path.curves[1].getLocationAt(this.path.curves[1].length/2).point;
+        let centerOfInnerCurve = this.path.curves[4].getLocationAt(this.path.curves[4].length/2).point;
+        this.middlePoint = centerOfOuterCurve.add(centerOfInnerCurve).divide(2);
     }
 
     /**
@@ -133,5 +148,44 @@ export class RailPart {
                 break;
         }
         return anchor;
+    }
+
+    hasFeederSocket() {
+        return this._hasFeederSocket;
+    }
+
+    setFlowDirection(flowDirection) {
+        this.flowDirection = flowDirection;
+    }
+
+
+    animate(event) {
+        let ratio = event.count % 60 / 60;
+        let currentOrigin = this.startPoint.multiply(2 - ratio).add(this.endPoint.multiply(ratio - 1));
+        let currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
+
+        switch (this.flowDirection) {
+            case FlowDirection.START_TO_END:
+                this.path.fillColor = {
+                    gradient: {
+                        stops: [RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1]
+                    },
+                    origin: currentOrigin,
+                    destination: currentDestination
+                };
+                break;
+            case FlowDirection.END_TO_START:
+                this.path.fillColor = {
+                    gradient: {
+                        stops: [RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1]
+                    },
+                    origin: currentDestination,
+                    destination: currentOrigin
+                };
+                break;
+            case FlowDirection.NONE:
+                this.path.fillColor = "black";
+                break;
+        }
     }
 }

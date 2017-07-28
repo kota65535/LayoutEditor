@@ -80,6 +80,10 @@
             this.grid.paperOnMouseDrag(event);
         };
 
+        view.onFrame = (event) => {
+            this.editor.handleOnFrame(event);
+        }
+
         window.addEventListener('mousemove', (e) => {
             this.grid.windowOnMouseMove(e);
         });
@@ -89,7 +93,7 @@
         });
 
         this.editor.selectRail(this.factory.S280());
-        this.editor.putRail(new StraightRail(new Point(560, 140),0,140));
+        this.editor.layoutManager.putRail(new StraightRail(new Point(560, 140),0,140), new Point(140,140));
 
     });
 

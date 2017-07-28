@@ -15,9 +15,10 @@ export class CurveRailPart extends RailPart {
      * @param {number} radius
      * @param {number} centerAngle
      * @param {AnchorType} anchorType
+     * @param {boolean} hasFeederSocket
      */
-    constructor(point, angle, radius, centerAngle, anchorType=RailPart.Anchor.START) {
-        super();
+    constructor(point, angle, radius, centerAngle, anchorType, hasFeederSocket) {
+        super(hasFeederSocket);
 
         this.radius = radius;               // 半径
         this.centerAngle = centerAngle;     // 中心角

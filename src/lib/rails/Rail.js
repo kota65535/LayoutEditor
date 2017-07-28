@@ -3,9 +3,9 @@
  */
 import {sprintf} from "sprintf-js";
 import { Joint } from "./parts/Joint.js";
+import { FeederSocket } from "./parts/FeederSocket";
 import logger from "../../logging";
 
-// let log = logger("Rail", "DEBUG");
 let log = logger("Rail");
 
 /**
@@ -29,9 +29,10 @@ export class Rail {
      * @param {Point} startPoint
      * @param {number} angle
      */
-    constructor(startPoint, angle, hasFeederSlot) {
+    constructor(startPoint, angle) {
         this.railParts = [];
         this.joints = [];
+        this.feeders = [];
         this.startPoint = startPoint;
         this.angle = angle;
 
@@ -46,7 +47,6 @@ export class Rail {
         this.conductionState = 0;
 
         this.rendered = false;
-        this.feeder = false;
     }
 
 
@@ -65,9 +65,8 @@ export class Rail {
      * レールを構成するレールパーツを追加し、さらにその両端にジョイントを追加する。
      * Constructorからのみ呼ばれることを想定。
      * @param {RailPart} railPart
-     * @private
      */
-    _addRailPart(railPart) {
+    addRailPart(railPart) {
         this.railParts.push(railPart);
         // レールパーツは最も下に描画
         this.pathGroup.insertChild(0, railPart.path);
@@ -84,6 +83,14 @@ export class Rail {
             this.joints.push(endJoint);
             this.pathGroup.addChild(endJoint.path);
         }
+
+        this.railParts.forEach(part => {
+            if (part.hasFeederSocket()) {
+                let feederSocket = new FeederSocket(part);
+                this.feeders.push(feederSocket);
+                this.pathGroup.addChild(feederSocket.path)
+            }
+        });
     }
 
     /**
@@ -175,7 +182,10 @@ export class Rail {
         });
         this.joints.forEach( joint => {
             joint.moveRelatively(difference);
-        })
+        });
+        this.feeders.forEach( feeder => {
+            feeder.moveRelatively(difference);
+        });
         this._updatePoints();
     }
 
@@ -206,6 +216,9 @@ export class Rail {
         });
         this.joints.forEach( j => {
             j.rotateRelatively(angle, anchor);
+        })
+        this.feeders.forEach( f => {
+            f.rotateRelatively(angle, anchor);
         })
         this.angle += angle;
         this._updatePoints();
@@ -253,6 +266,7 @@ export class Rail {
         this.disconnect();
         this.railParts.forEach(elem => elem.remove());
         this.joints.forEach(elem => elem.remove());
+        this.feeders.forEach(elem => elem.remove());
     }
 
     /**
@@ -262,6 +276,7 @@ export class Rail {
     setOpacity(value) {
         this.railParts.forEach(elem => elem.path.opacity = value);
         this.joints.forEach(elem => elem.path.opacity = value);
+        this.feeders.forEach(elem => elem.path.opacity = value);
     }
 
     /**
@@ -292,7 +307,7 @@ export class Rail {
         this.feeder = true;
         let text = new PointText(this.pathGroup.position.subtract(new Point(0, 10)));
         text.justification = "center";
-        text.content = "Feeder";
+        text.content = "FeederSocket";
     }
 
     /**
@@ -408,6 +423,10 @@ export class Rail {
      */
     scale(hor, ver) {
         this.pathGroup.scale(hor, ver);
+    }
+
+    animate(event) {
+        this.railParts.forEach(rp => rp.animate(event));
     }
 }
 

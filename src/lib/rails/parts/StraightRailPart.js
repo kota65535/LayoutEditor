@@ -15,9 +15,10 @@ export class StraightRailPart extends RailPart {
      * @param {number} angle
      * @param {number} length
      * @param {AnchorType} anchorType
+     * @param {boolean} hasFeederSocket
      */
-    constructor(point, angle, length, anchorType=RailPart.Anchor.START) {
-        super();
+    constructor(point, angle, length, anchorType, hasFeederSocket) {
+        super(hasFeederSocket);
 
         this.length = length;
 
