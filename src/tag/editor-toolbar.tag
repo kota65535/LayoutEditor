@@ -73,7 +73,7 @@
       this.on('mount', () => {
           log.info("Editor toolbar mounted");
           route.start(true);
-      })
+      });
 
 
   </script>

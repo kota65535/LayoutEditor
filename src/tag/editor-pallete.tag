@@ -4,14 +4,14 @@
       /* position */
       position: fixed;
       margin-top: 50px;
-      width: 300px;
+      width: 250px;
       /* for scroll */
       overflow-y: scroll;
       top: 0;
       bottom: 0;
       /* above content */
       z-index: 9901;
-      /*background: #000;*/
+      background: #999;
     }
 
     [class*="col-"] {
@@ -43,7 +43,7 @@
     }
 
     .palette-item {
-      height: 150px;
+      height: 125px;
       /*line-height: 125px;*/
       background: #eee;
       padding: 10px;
@@ -70,10 +70,9 @@
   </style>
 
   <div class="container-fluid" id="editor-sidebar-wrapper">
-    <!--<span class="sidebar-nav">Rails</span>-->
-
+    <span class="sidebar-nav">Straight Rails</span>
     <div class="row">
-      <div class="col-sm-6 palette-item" each={ item in opts.items }>
+      <div class="col-sm-6 palette-item" each={ item in opts.items["StraightRails"] }>
         <button type="button" class="btn btn-primary btn-block" onClick={ handleItemClick.bind(this, item) }>
           <div class="item-icon">
             <canvas class="button-canvas" id="{ item.name }-canvas"></canvas>
@@ -81,10 +80,28 @@
           <div class="item-title">{ item.name }</div>
         </button>
       </div>
-      <!--<div class="col-sm-6" each={ item in opts.items }>-->
-        <!--<editor-palette-item id={ item.name } item={ item } onClick={selectItem(this)} ></editor-palette-item>-->
-      <!--</div>-->
-
+    </div>
+    <span class="sidebar-nav">Curve Rails</span>
+    <div class="row">
+      <div class="col-sm-6 palette-item" each={ item in opts.items["CurveRails"] }>
+        <button type="button" class="btn btn-primary btn-block" onClick={ handleItemClick.bind(this, item) }>
+          <div class="item-icon">
+            <canvas class="button-canvas" id="{ item.name }-canvas"></canvas>
+          </div>
+          <div class="item-title">{ item.name }</div>
+        </button>
+      </div>
+    </div>
+    <span class="sidebar-nav">Turnouts</span>
+    <div class="row">
+      <div class="col-sm-6 palette-item" each={ item in opts.items["Turnouts"] }>
+        <button type="button" class="btn btn-primary btn-block" onClick={ handleItemClick.bind(this, item) }>
+          <div class="item-icon">
+            <canvas class="button-canvas" id="{ item.name }-canvas"></canvas>
+          </div>
+          <div class="item-title">{ item.name }</div>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -104,18 +121,21 @@
           log.info("Editor palette mounted");
           paper.install(window);
 
-          opts.items.forEach( item => {
-              paper.setup(item.name + "-canvas");
-              let canvas = $("#" + item.name + "-canvas");
-              let rail = this.factory[item.name]();
-              let bounds = rail.getBounds();
-              let center = new Point(canvas.width()/2, canvas.height()/2);
-              rail.move(center, bounds.center);
-              rail.scale(0.4, 0.4);
-//              log.info(rail.getBounds());
-          });
+          // 各パレットアイテムのアイコン描画
+          for (let [key, value] of Object.entries(opts.items)) {
+              value.forEach(item => {
+                  paper.setup(item.name + "-canvas");
+                  let canvas = $("#" + item.name + "-canvas");
+                  let rail = this.factory[item.name]();
+                  let bounds = rail.getBounds();
+                  let center = new Point(canvas.width() / 2, canvas.height() / 2);
+                  rail.move(center, bounds.center);
+                  rail.scale(0.4, 0.4);
+              });
+          }
       });
 
+      // パレットアイテムをクリックすると、そのアイテムを選択する
       this.handleItemClick = (item) => {
           this.selectedItem = item;
           log.info("Selected: " + this.selectedItem.name);

@@ -1,17 +1,13 @@
 <editor-content>
   <style>
     #editor-content-wrapper{
-      width: 100%;
-      height: 100%;
-      margin-top: 50px;
-      /*width: 1000px;*/
-      /*height: 800px;*/
-      /*position: absolute;*/
-      /*margin-left: 300px;*/
-      /*margin-right: 0px;*/
-      /*right: 0px;*/
-      z-index: 9900;
-      /*overflow: hidden;*/
+      position: fixed;
+      top: 50px;                  /* height of toolbar */
+      left: 240px;                /* width of palette */
+      width: calc(100% - 240px);
+      height: calc(100% - 50px);
+      z-index: 9900;              /* behind of palette */
+      overflow: auto;
     }
     canvas[resize] {
       width: 100%;
@@ -58,7 +54,7 @@
             INITIAL_ZOOM, ZOOM_UNIT, AVAILABLE_ZOOM_MIN, AVAILABLE_ZOOM_MAX);
 
         // レイヤー２に切り替え
-//        new Layer();
+        new Layer();
 
         this.editor = new LayoutEditor();
         this.factory = new RailFactory();
@@ -82,7 +78,7 @@
 
         view.onFrame = (event) => {
             this.editor.handleOnFrame(event);
-        }
+        };
 
         window.addEventListener('mousemove', (e) => {
             this.grid.windowOnMouseMove(e);
@@ -90,10 +86,12 @@
 
         window.addEventListener("mousewheel", (e) => {
             this.grid.windowOnMouseWheel(e);
-        });
+//            return false;
+        }, false);
+
 
         this.editor.selectRail(this.factory.S280());
-        let rail = new StraightRail(new Point(560, 140),0,140);
+        let rail = new StraightRail(new Point(560, 140),0,140, true);
         this.editor.layoutManager.putRail(rail, rail.joints[0], new Point(140,140));
 
     });
@@ -110,12 +108,12 @@
 
     this.onControl(riot.VE.MENU_SAVE_LAYOUT, () => {
         log.info("Saving layout...");
-        riot.control.trigger(riot.VE.SAVE_LAYOUT, this.editor.railData);
+        riot.control.trigger(riot.VE.SAVE_LAYOUT, this.editor.layoutManager.railData);
     });
 
     this.onControl(riot.SE.LAYOUT_LOADED, (layoutData) => {
         log.info("Loading layout...");
-        this.editor.loadLayout(layoutData);
+        this.editor.layoutManager.loadLayout(layoutData);
     });
 
   </script>

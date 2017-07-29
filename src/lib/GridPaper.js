@@ -1,4 +1,6 @@
 import { range } from "lodash";
+import logger from "../logging";
+let log = logger("EditorContent");
 
 /**
  * ドラッグで移動、ホイールで拡大・縮小が可能な一定の大きさの方眼紙を作成する。
@@ -40,10 +42,10 @@ export class GridPaper {
         this.boardMin = new Point(view.size.width / 2 - this.boardWidth / 2, view.size.height / 2 - this.boardHeight / 2);
         this.boardMax = new Point(view.size.width / 2 + this.boardWidth / 2, view.size.height / 2 + this.boardHeight / 2);
 
-        console.log("viewCenterMin ", this.viewCenterMin);
-        console.log("viewCenterMax ", this.viewCenterMax);
-        console.log("boardMin ", this.boardMin);
-        console.log("boardMax ", this.boardMax);
+        log.debug("viewCenterMin ", this.viewCenterMin);
+        log.debug("viewCenterMax ", this.viewCenterMax);
+        log.debug("boardMin ", this.boardMin);
+        log.debug("boardMax ", this.boardMax);
 
 
         // top-left of the board
@@ -164,10 +166,19 @@ export class GridPaper {
     /**
      * Windowの mousewheel イベントで実行させるハンドラ。
      * ホイールの移動量に応じてビューを拡大・縮小する。
+     * FIXME: 一回でもmousemoveイベントを処理しないと、デフォルトのスクロール動作が行われてしまう。
      * @param e
      */
     windowOnMouseWheel(e) {
-        // console.log("wheelDelta: " + e.wheelDelta);
+        // このキャンバス上でなければ何もしない
+        let element = document.elementFromPoint(this.cursorPoint.x, this.cursorPoint.y);
+        if (element.id !== this.canvasElem.id) {
+            return;
+        }
+        log.debug("wheelDelta: " + e.wheelDelta);
+
+        // デフォルトのスクロール動作を行わない
+        e.preventDefault();
 
         // scale()に与える率は、現在からの相対値
         let newRelativeScale = 1 + this.zoomUnit * e.wheelDelta;

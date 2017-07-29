@@ -1,5 +1,5 @@
 import { Rail } from "./rails/Rail";
-import { StraightRail, DoubleStraightRail } from "./rails/StraightRail";
+import { StraightRail, DoubleStraightRail, GappedStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
 import { SimpleTurnout, SymmetricalTurnout, Direction } from "./rails/Turnout";
 import { Point } from "paper";
@@ -9,6 +9,7 @@ import { Point } from "paper";
 const classes = {
     StraightRail,
     DoubleStraightRail,
+    GappedStraightRail,
     CurveRail,
     DoubleCurveRail,
     SimpleTurnout,
@@ -32,6 +33,7 @@ class DynamicClass {
 
 /**
  * ある関数の引数名を、文字列の配列として取得する。
+ * 注意: デフォルト引数は今のところうまく取得できない。
  * @param func
  * @returns {Array|{index: number, input: string}}
  * @private
@@ -51,6 +53,9 @@ function getParamNames(func) {
 /**
  * 与えられたレールと同じレールを生成する。
  * 同じ引数でnewしたのと同じ効果が得られるため、内部のPathオブジェクトなどは新規に生成される。
+ * 注意: コンストラクタの引数と同じ名前のインスタンス変数を保持している必要がある。
+ *     上記のgetParamNames()の制約もあるので、デフォルト引数も使ってはいけない。
+ *
  * @param rail {Rail}
  * @returns {string}
  */

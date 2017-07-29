@@ -13,28 +13,22 @@ export class StraightRail extends Rail {
      * @param {Point} startPoint
      * @param {number} angle
      * @param {number} length
+     * @param {boolean} hasFeederSocket
      */
-    constructor(startPoint, angle, length) {
+    constructor(startPoint, angle, length, hasFeederSocket) {
         super(startPoint, 0);
 
         this.length = length;
 
-        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, true));
+        this.hasFeederSocket = hasFeederSocket;
+
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, hasFeederSocket));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
 
         this.showJoints();
     }
-
-    /**
-     * レールを複製する。
-     * @returns {Object}
-     */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
-    }
-
 }
 
 export class DoubleStraightRail extends Rail {
@@ -46,7 +40,7 @@ export class DoubleStraightRail extends Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(startPoint, angle)
+        super(startPoint, angle);
 
         this.length = length;
 
@@ -58,12 +52,30 @@ export class DoubleStraightRail extends Rail {
 
         this.showJoints();
     }
+}
+
+export class GappedStraightRail extends Rail {
 
     /**
-     * レールを複製する。
-     * @returns {Object}
+     * 両ギャップレールを生成する。
+     * @param {Point} startPoint
+     * @param {number} angle
+     * @param {number} length
      */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
+    constructor(startPoint, angle, length) {
+        super(startPoint, 0);
+
+        this.length = length;
+
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, false));
+
+        this.conductionMap = {
+            0: []
+        };
+
+        this.move(startPoint, this.joints[0]);
+        this.rotate(angle, this.joints[0]);
+
+        this.showJoints();
     }
 }

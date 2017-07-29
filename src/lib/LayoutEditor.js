@@ -19,7 +19,6 @@ Array.prototype.flatMap = function(lambda) {
 
 export class LayoutEditor {
 
-    static JOINT_TOLERANCE = 2;
 
     constructor() {
         // 選択中のレール
