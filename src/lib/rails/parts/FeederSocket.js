@@ -33,9 +33,9 @@ export class FeederSocket extends RectPart {
      * @type {{OPEN: Symbol, CONNECTING: Symbol, CONNECTED: Symbol}}
      */
     static State = {
-        OPEN: Symbol(),         // 未接続
-        CONNECTING: Symbol(),   // 接続試行中
-        CONNECTED: Symbol()     // 接続中
+        OPEN: Symbol("Open"),               // 未接続
+        CONNECTING: Symbol("Connecting"),   // 接続試行中
+        CONNECTED: Symbol("Connected")      // 接続中
     };
 
 
@@ -49,6 +49,8 @@ export class FeederSocket extends RectPart {
         this.railPart = railPart;
         this.flowDirection = direction;
         this.connectedFeeder = null;
+
+        this.pathGroup = new Group();
 
         console.log("FeederSocket", this.railPart.path.position);
     }

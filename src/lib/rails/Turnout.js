@@ -38,12 +38,12 @@ export class SimpleTurnout extends Rail {
      * @param {Direction} direction
      */
     constructor(startPoint, angle, length, radius, centerAngle, direction) {
-        super(startPoint, angle)
+        super(startPoint, angle);
 
         this.length = length;
         this.radius = radius;
         this.centerAngle = centerAngle;
-        this.flowDirection = direction;
+        this.direction = direction;
 
         this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPart.Anchor.START, false));
         switch (direction) {
@@ -56,8 +56,8 @@ export class SimpleTurnout extends Rail {
         }
 
         this.conductionMap = {
-            0: 0,
-            1: 1
+            0: [0],
+            1: [1]
         };
 
         this.move(startPoint, this.joints[0]);
@@ -96,8 +96,8 @@ export class SymmetricalTurnout extends Rail {
         this.addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END, false));
 
         this.conductionMap = {
-            0: 0,
-            1: 1
+            0: [0],
+            1: [1]
         };
 
         this.move(startPoint, this.joints[0]);
@@ -133,7 +133,7 @@ export class CurvedTurnout extends Rail {
         this.innerRadius = innerRadius;
         this.outerRadius = outerRadius;
         this.centerAngle = centerAngle;
-        this.flowDirection = direction;
+        this.direction = direction;
 
         let anchorJoint;
 
@@ -151,6 +151,11 @@ export class CurvedTurnout extends Rail {
                 anchorJoint = this.joints[0];
                 break;
         }
+
+        this.conductionMap = {
+            0: [0],
+            1: [1]
+        };
 
         this.move(startPoint, anchorJoint);
         this.rotate(this.angle, anchorJoint);

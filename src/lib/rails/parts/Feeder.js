@@ -6,7 +6,7 @@ import {TrianglePart} from "./TrianglePart";
 
 /**
  * フィーダークラス。
- * このクラスは単なるエディタ上の表示のために存在し、フィーダーの実際の機能はFeederSocketクラスに集約している。
+ * このクラスはエディタ上の表示とイベントハンドリングのために存在し、フィーダーの実際の機能はFeederSocketクラスに集約している。
  */
 export class Feeder extends TrianglePart {
 
@@ -24,10 +24,28 @@ export class Feeder extends TrianglePart {
         super(feederSocket.getFeederPosition(), feederSocket.getFeederAngle(), Feeder.WIDTH, Feeder.HEIGHT, Feeder.FILL_COLOR_OPEN);
 
         this.railPart = feederSocket.railPart;
-        this.rendered = false;
+        this.feederSocket = feederSocket;
+
+        // feederSocket.pathGroup.addChild(this.path);
 
         this.move(feederSocket.getFeederPosition(), this.getCenterOfTop());
         // this.rotate(angle, this.getPosition());
         // this.disconnect();
+    }
+
+    /**
+     * イベントハンドリング用のIDをセットする。
+     * @param {String} name
+     */
+    setName(name) {
+        this.path.name = name;
+    }
+
+    /**
+     * イベントハンドリング用のIDを取得する。
+     * @param {String} name
+     */
+    getName(name) {
+        return this.path.name;
     }
 }

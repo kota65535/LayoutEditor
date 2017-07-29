@@ -167,7 +167,7 @@ export class GridPaper {
      * @param e
      */
     windowOnMouseWheel(e) {
-        console.log("wheelDelta: " + e.wheelDelta);
+        // console.log("wheelDelta: " + e.wheelDelta);
 
         // scale()に与える率は、現在からの相対値
         let newRelativeScale = 1 + this.zoomUnit * e.wheelDelta;
@@ -190,7 +190,7 @@ export class GridPaper {
         }
 
         view.scale(newRelativeScale, this.canvasPoint);
-        console.info("currentZoom: ", newScale);
+        // console.info("currentZoom: ", newScale);
 
         // ビューの端がボードの範囲を超えないよう、ビュー中心の移動可能範囲を変更する
         if (view.size.width < this.boardWidth && view.size.height < this.boardHeight) {

@@ -27,7 +27,7 @@ export class LayoutEditor {
         // マウスカーソルで触れたフィーダーソケット
         this.touchedFeederSocket = null;
 
-        this.nextId = 1;
+        this._nextRailId = 1;
 
         this.layoutManager = new LayoutManager();
         this.layoutSimulator = new LayoutSimulator();
@@ -76,8 +76,10 @@ export class LayoutEditor {
      * @param {Joint} toJoint
      */
     putSelectedRail(toJoint) {
-        this.layoutManager.putRail(this.paletteRail, toJoint);
-        this.selectRail(cloneRail(this.paletteRail));
+        let result = this.layoutManager.putRail(this.paletteRail, toJoint);
+        if (result) {
+            this.selectRail(cloneRail(this.paletteRail));
+        }
     }
 
     /**
@@ -188,6 +190,13 @@ export class LayoutEditor {
             event.item.selected = !event.item.selected; // 選択を反転
             return;
         }
+
+        // フィーダーの選択状態をトグルする
+        let feeder = this.layoutManager.getFeeder(event.item);
+        if (feeder) {
+            event.item.selected = !event.item.selected; // 選択を反転
+            return;
+        }
     }
 
     /**
@@ -236,10 +245,15 @@ export class LayoutEditor {
         let selectedRails = project.selectedItems
             .map(item => this.layoutManager.getRail(item))
             .filter(Boolean);
+        let selectedFeeders = project.selectedItems
+            .map(item => this.layoutManager.getFeeder(item))
+            .filter(Boolean);
         log.info("Selected rail: ", selectedRails);
+        log.info("Selected feeder: ", selectedFeeders);
         switch (event.key) {
             case "backspace":
                 selectedRails.forEach(r => this.layoutManager.removeRail(r));
+                selectedFeeders.forEach(f => this.layoutManager.removeFeeder(f));
                 break;
             case "space":
                 // 全てのレールを未チェック状態にする
@@ -247,17 +261,13 @@ export class LayoutEditor {
                 break;
             case "f":
                 this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feeders);
+                this.layoutSimulator.resetFlowSimulation();
                 this.layoutSimulator.simulateFlow();
-                // selectedRails.forEach(r => r.putFeeder());
-                // selectedRails.forEach(r => r.toggleSwitch());
-                // this.rails.forEach(r => r.resetConduction());
-                // this.layoutSimulator.setRails(this.layoutManager.rails);
-                // this.getFeederedRails().forEach(r => {
-                //     this.checkConduction(r)
-                // });
                 break;
             case "s":
                 selectedRails.forEach(r => r.toggleSwitch());
+                this.layoutSimulator.resetFlowSimulation();
+                this.layoutSimulator.simulateFlow();
                 break;
             // case "up":
             //     request = new XMLHttpRequest();

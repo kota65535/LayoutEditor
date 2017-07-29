@@ -14,13 +14,12 @@ let log = logger("Rail");
  */
 export class Rail {
 
+    // レール間の間隔
     static SPACE = 38;
 
-    static State = {
-        OPEN: Symbol(),         // 未接続
-        CONNECTING: Symbol(),   // 接続試行中
-        CONNECTED: Symbol()     // 接続中
-    }
+    // ジョイントの位置とレールパーツの両端の位置の間で許される誤差
+    static JOINT_TO_RAIL_PART_TOLERANCE = 0.1;
+
 
     /**
      * レールの初期化。基底クラスでは特に重要な処理は行わない。
@@ -32,7 +31,7 @@ export class Rail {
     constructor(startPoint, angle) {
         this.railParts = [];
         this.joints = [];
-        this.feeders = [];
+        this.feederSockets = [];
         this.startPoint = startPoint;
         this.angle = angle;
 
@@ -40,26 +39,14 @@ export class Rail {
         this.jointOrder = [];
         this.currentJointIndex = 0;
         // どのレールパーツに電気が流れるかを表す導電状態マップ。
-        // 状態ID: 導電しているRailPartのIndex
+        // 状態ID: 導電しているRailPartのIndexのArray
         this.conductionMap = {
-            0: 0
+            0: [0]
         };
         // 現在の導電状態
         this.conductionState = 0;
 
         this.rendered = false;
-    }
-
-
-    /**
-     *
-     * @param {Joint} joint
-     */
-    getConnectedRail(joint) {
-        if (! joint.connectedJoint) {
-            return null;
-        }
-        return joint.connectedJoint.rail;
     }
 
     /**
@@ -85,10 +72,11 @@ export class Rail {
             this.pathGroup.addChild(endJoint.path);
         }
 
+        // フィーダーソケットの追加
         this.railParts.forEach(part => {
             if (part.hasFeederSocket()) {
                 let feederSocket = new FeederSocket(part);
-                this.feeders.push(feederSocket);
+                this.feederSockets.push(feederSocket);
                 this.pathGroup.addChild(feederSocket.path)
             }
         });
@@ -103,37 +91,6 @@ export class Rail {
     _isJointDuplicate(point) {
         let duplicates = this.joints.filter( jo => jo.getPosition().isClose(point, 0.1));
         return duplicates.length > 0;
-    }
-
-    /**
-     * このレールの導通状態にもとづいて、これを描画する。
-     * @private
-     */
-    renderConduction() {
-        let conductiveJointPairs = this.conductionMap[this.conductionState];
-        conductiveJointPairs.forEach( pair => {
-            let conductivePart = this._getRailPartFromJoints(this.joints[pair[0]], this.joints[pair[1]]);
-            this.railParts.forEach( part => {
-                if (part === conductivePart) {
-                    // 導通しているレールパーツの描画
-                    part.path.fillColor = "blue";
-                } else {
-                    // 導通していないレールパーツの描画
-                    part.path.fillColor = "black";
-                    part.path.moveBelow(conductivePart.path);
-                }
-            })
-        })
-        this.rendered = true;
-    }
-
-    /**
-     * 導通状態の描画をリセットする
-     */
-    resetConduction() {
-        this.rendered = false;
-        this.railParts.forEach(part => part.path.fillColor = "black");
-        this.joints.forEach(joint => joint.rendered = false);
     }
 
 
@@ -184,7 +141,7 @@ export class Rail {
         this.joints.forEach( joint => {
             joint.moveRelatively(difference);
         });
-        this.feeders.forEach( feeder => {
+        this.feederSockets.forEach( feeder => {
             feeder.moveRelatively(difference);
         });
         this._updatePoints();
@@ -218,7 +175,7 @@ export class Rail {
         this.joints.forEach( j => {
             j.rotateRelatively(angle, anchor);
         })
-        this.feeders.forEach( f => {
+        this.feederSockets.forEach( f => {
             f.rotateRelatively(angle, anchor);
         })
         this.angle += angle;
@@ -267,7 +224,7 @@ export class Rail {
         this.disconnect();
         this.railParts.forEach(elem => elem.remove());
         this.joints.forEach(elem => elem.remove());
-        this.feeders.forEach(elem => elem.remove());
+        this.feederSockets.forEach(elem => elem.remove());
     }
 
     /**
@@ -277,7 +234,7 @@ export class Rail {
     setOpacity(value) {
         this.railParts.forEach(elem => elem.path.opacity = value);
         this.joints.forEach(elem => elem.path.opacity = value);
-        this.feeders.forEach(elem => elem.path.opacity = value);
+        this.feederSockets.forEach(elem => elem.path.opacity = value);
     }
 
     /**
@@ -302,17 +259,7 @@ export class Rail {
     }
 
     /**
-     * フィーダーをレールに挿す。
-     */
-    putFeeder() {
-        this.feeder = true;
-        let text = new PointText(this.pathGroup.position.subtract(new Point(0, 10)));
-        text.justification = "center";
-        text.content = "FeederSocket";
-    }
-
-    /**
-     * 導通状態をトグルスイッチ的に変更する。
+     * 導電状態をトグルスイッチ的に変更する。
      */
     toggleSwitch() {
         let numStates = Object.keys(this.conductionMap).length;
@@ -321,7 +268,7 @@ export class Rail {
     }
 
     /**
-     * 導通状態を変更する。
+     * 導電状態を変更する。
      * @param state
      */
     switch(state) {
@@ -331,36 +278,8 @@ export class Rail {
             return;
         }
         this.conductionState = state;
-        this.resetConduction()
-        this.renderConduction();
     }
 
-    /**
-     * 与えられたジョイントから未描画の導通しているジョイントを取得する。
-     * @param joint
-     * @returns {*}
-     */
-    getConductiveJointsToRender(joint) {
-        let joints = this.getConductiveJoints(joint);
-        return joints.filter(j => j.rendered === false)
-    }
-
-    /**
-     * 与えられたジョイントから導通しているジョイントを取得する。
-     * @param {Joint} joint
-     * @returns {Array<Joint>}
-     */
-    getConductiveJoints(joint) {
-        let conductiveJointPairs = this.conductionMap[this.conductionState];
-        let givenIndex = this.joints.indexOf(joint);
-        let conductiveJoints = conductiveJointPairs
-            .filter( pair => pair.includes(givenIndex) )
-            .map( pair => pair.find(v => v !== givenIndex))
-            .map( i => this.joints[i]);
-
-        log.info(conductiveJoints);
-        return conductiveJoints;
-    }
 
     /**
      * レールパーツの両端のジョイントを取得する。開始点、終了点の順に取得される。
@@ -370,17 +289,32 @@ export class Rail {
     getJointsFromRailPart(railPart) {
         let ret = null;
         console.log(railPart.startPoint, railPart.endPoint);
-        let startJoint = this.joints.find( j => j.getPosition().isClose(railPart.startPoint, 0.1));
-        let endJoint = this.joints.find( j => j.getPosition().isClose(railPart.endPoint, 0.1));
+        let startJoint = this.joints.find( j => this._isReasonablyClose(j.getPosition(), railPart.startPoint));
+        let endJoint = this.joints.find( j => this._isReasonablyClose(j.getPosition(), railPart.endPoint));
         if (startJoint && endJoint) {
             return [startJoint, endJoint];
         }
     }
 
-    getConductiveRailPart(joint) {
-        return this.railParts[this.conductionMap[this.conductionState]];
+    /**
+     * 現在の導電状態で導電しているレールパーツを取得する。
+     * @returns {Array<RailPart>}
+     */
+    getConductiveRailParts() {
+        return this.conductionMap[this.conductionState].map( index => this.railParts[index])
     }
 
+    /**
+     * 現在の導電状態で導電しており、かつ指定のジョイントに接しているレールパーツを取得する。
+     * @param {Joint}joint
+     * @returns {RailPart}
+     */
+    getConductiveRailPartOfJoint(joint) {
+        let ret = this.getConductiveRailParts().find(part => {
+            return joint.getPosition().isClose(part.startPoint, 0.1) || joint.getPosition().isClose(part.endPoint, 0.1);
+        });
+        return ret;
+    }
 
     /**
      * 現在のジョイント
@@ -449,6 +383,18 @@ export class Rail {
 
     animate(event) {
         this.railParts.forEach(rp => rp.animate(event));
+    }
+
+    /**
+     * 2点が十分に近いことを示す。
+     * ジョイントがレールパーツの両端のいずれかに存在するか調べるときに使う。
+     * @param point1
+     * @param point2
+     * @return {Boolean}
+     * @private
+     */
+    _isReasonablyClose(point1, point2) {
+        return point1.isClose(point2, Rail.JOINT_TO_RAIL_PART_TOLERANCE);
     }
 }
 

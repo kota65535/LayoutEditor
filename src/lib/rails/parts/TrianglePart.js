@@ -92,4 +92,13 @@ export class TrianglePart {
     remove() {
         this.path.remove();
     }
+
+    /**
+     * 指定されたパスがこのパーツに属するか否かを返す。
+     * @param path
+     * @returns {boolean}
+     */
+    containsPath(path) {
+        return path.id === this.path.id;
+    }
 }

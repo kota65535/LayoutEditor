@@ -21,15 +21,18 @@ Array.prototype.flatMap = function(lambda) {
  */
 export class LayoutManager {
 
-    static JOINT_TOLERANCE = 2;
+    // ジョイント間の距離がこの値よりも近い場合は接続している扱いにする
+    static JOINT_TO_JOINT_TOLERANCE = 2;
 
     constructor() {
         // レイアウト上のレールのリスト
         this.rails = [];
+        // フィーダーのリスト
         this.feeders = [];
         this.railData = [];
 
-        this.nextId = 0;
+        this._nextRailId = 0;
+        this._nextFeederId = 0;
     }
 
     /**
@@ -60,11 +63,12 @@ export class LayoutManager {
      * レールを任意のジョイントと結合して設置する。
      * @param {Rail} rail
      * @param {Point,Joint} to
+     * @returns {Boolean} true if succeeds, false otherwise.
      */
     putRail(rail, to) {
         if (!this._canPutRail(rail)) {
             log.warn("The rail cannot be put because of intersection.");
-            return;
+            return false;
         }
         if (to.constructor.name === "Joint") {
             rail.connect(rail.getCurrentJoint(), to);
@@ -75,6 +79,7 @@ export class LayoutManager {
         }
         rail.setOpacity(1.0);
         this._registerRail(rail);
+        return true;
     }
 
 
@@ -87,6 +92,7 @@ export class LayoutManager {
         let index = this.rails.indexOf(rail);
         if(index !== -1) {
             this.rails.splice(index, 1);
+            log.info("Removed rail: ", rail);
         }
     }
 
@@ -124,28 +130,46 @@ export class LayoutManager {
         if (!hitResult) {
             return null;
         }
-        let allFeederSockets = [].concat.apply([], this.rails.map( r => r.feeders));
+        let allFeederSockets = [].concat.apply([], this.rails.map( r => r.feederSockets));
         return allFeederSockets.find( socket => socket.containsPath(hitResult.item));
     }
 
     /**
+     * パスが属するフィーダーオブジェクトを取得する。
+     * @param {Path} path
+     * @returns {Feeder} Feeder at the point
+     */
+    getFeeder(path) {
+        return this.feeders.find(feeder => feeder.getName() === path.name);
+        // let hitResult = this._hitTest(point);
+        // if (!hitResult) {
+        //     return null;
+        // }
+        // let allFeeders = [].concat.apply([], this.rails.map( r => r.feeders.map(socket => socket.connectedFeeder)))
+        // return allFeeders.find( feeder => feeder.containsPath(hitResult.item));
+    }
+
+
+    /**
      * フィーダーを設置する。
+     * @param {FeederSocket} feederSocket where a feeder to be connected
      */
     putFeeder(feederSocket) {
         feederSocket.connect();
-        this.feeders.push(feederSocket);
+        let id = this._getNextFeederId();
+        feederSocket.connectedFeeder.setName(id);
+        this.feeders.push(feederSocket.connectedFeeder);
     }
 
     /**
-     * レールを削除する。
-     * @param {Rail} rail
+     * フィーダーを削除する。
+     * @param {Feeder} feeder to be removed
      */
     removeFeeder(feeder) {
-        feeder.remove();
-        rail.remove();
-        let index = this.rails.indexOf(rail);
+        feeder.feederSocket.disconnect();
+        let index = this.feeders.indexOf(feeder);
         if(index !== -1) {
-            this.rails.splice(index, 1);
+            this.feeders.splice(index, 1);
         }
     }
 
@@ -158,14 +182,30 @@ export class LayoutManager {
     _canPutRail(rail) {
         let intersections = [];
         rail.railParts.forEach(part => {
-            this.rails.forEach( rail => {
-                rail.railParts.forEach( otherPart => {
-                    intersections = intersections.concat(part.path.getIntersections(otherPart.path));
+            this.rails.forEach( otherRail => {
+                otherRail.railParts.forEach( otherPart => {
+                    intersections = intersections.concat(part.path.getIntersections(otherPart.path, (location) => {
+                        let isIntersectionNearJoints = rail.joints.map( j => {
+                            log.info("Intersection:" ,location, " Joint:", j.getPosition());
+                            log.info("Distance", location.point.getDistance(j.getPosition()));
+                            return location.point.isClose(j.getPosition(), Joint.HEIGHT/2);
+                        }).includes(true);
+
+                        return ! isIntersectionNearJoints;
+                    }));
                 })
             })
         });
         log.info("Intersections:", intersections.length, intersections.map( i => i.point));
-        return intersections.length <= rail.joints.length * 3;
+        // デバッグ用
+        // intersections.forEach( i => {
+        //     new Path.Circle({
+        //         center: i.point,
+        //         radius: 5,
+        //         fillColor: '#009dec'});
+        //     log.info(i.isTouching(), i.isCrossing(), i.hasOverlap());
+        // });
+        return intersections.length === 0;
     }
 
     /**
@@ -181,7 +221,7 @@ export class LayoutManager {
             openToJoints.forEach( tj => {
                 let distance = fj.getPosition().getDistance(tj.getPosition());
                 log.info("Distance:", distance);
-                if (distance < LayoutManager.JOINT_TOLERANCE) {
+                if (distance < LayoutManager.JOINT_TO_JOINT_TOLERANCE) {
                     log.info("Connected other joint");
                     fj.connect(tj);
                 }
@@ -195,7 +235,7 @@ export class LayoutManager {
      * @param {Rail} rail
      */
     _registerRail(rail) {
-        let id = this._getNextId();
+        let id = this._getNextRailId();
         rail.setName(id);
         this.rails.push(rail);
 
@@ -233,7 +273,11 @@ export class LayoutManager {
         return hitResult;
     }
 
-    _getNextId() {
-        return this.nextId++;
+    _getNextRailId() {
+        return this._nextRailId++;
+    }
+
+    _getNextFeederId() {
+        return `feeder-${this._nextFeederId++}`;
     }
 }
