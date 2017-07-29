@@ -27,7 +27,8 @@ export class LayoutEditor {
         // マウスカーソルで触れたフィーダーソケット
         this.touchedFeederSocket = null;
 
-        this._nextRailId = 1;
+        // レール設置ガイドの自分の接続しているジョイントのインデックス
+        this.jointIndexOfGuide = null;
 
         this.layoutManager = new LayoutManager();
         this.layoutSimulator = new LayoutSimulator();
@@ -59,7 +60,11 @@ export class LayoutEditor {
      */
     showRailToPut(toJoint) {
         this.paletteRail.setOpacity(0.5);
-        this.paletteRail.connect(this.paletteRail.getCurrentJoint(), toJoint, true);
+        // レール選択直後の場合、対向レールの種類にもとづいてレールガイドの初期向きを設定する
+        if (this.jointIndexOfGuide === null) {
+            this.initJointOfGuide(toJoint);
+        }
+        this.paletteRail.connect(this.getCurrentJointOfGuide(), toJoint, true);
     }
 
     /**
@@ -72,13 +77,46 @@ export class LayoutEditor {
     }
 
     /**
+     * レールガイドが自身のどのジョイントで対向レールに接続するかを決定するインデックスを初期化する。
+     * @param toJoint
+     */
+    initJointOfGuide(toJoint) {
+        // 対向レールとパレットレールの両者がカーブレールの場合、カーブの向きを揃える。
+        // TODO: ジョイントの個数が２であることが前提になっている。より汎用的なロジックを考える。
+        let opponentRail = this.layoutManager.getRailFromJoint(toJoint);
+        if (this.paletteRail.constructor.name === "CurveRail"
+            && opponentRail.constructor.name === "CurveRail") {
+            this.jointIndexOfGuide = opponentRail.joints.indexOf(toJoint) ^ 1;
+        } else {
+            this.jointIndexOfGuide = 0;
+        }
+        log.info(`init joint index of guide with ${this.jointIndexOfGuide}`);
+    }
+
+    /**
+     * レールガイドが接続する自身のジョイントのインデックスを取得する。
+     * @returns {Number}
+     */
+    getCurrentJointOfGuide() {
+        return this.paletteRail.joints[this.jointIndexOfGuide];
+    }
+
+    /**
+     * レールガイドが接続する自身のジョイントのインデックスをインクリメントする。
+     */
+    incrementJointIndexOfGuide() {
+        this.jointIndexOfGuide = (this.jointIndexOfGuide + 1) % this.paletteRail.joints.length;
+    }
+
+    /**
      * 選択されたレールを設置する。
      * @param {Joint} toJoint
      */
     putSelectedRail(toJoint) {
-        let result = this.layoutManager.putRail(this.paletteRail, toJoint);
+        let result = this.layoutManager.putRail(this.paletteRail, this.getCurrentJointOfGuide(), toJoint);
         if (result) {
             this.selectRail(cloneRail(this.paletteRail));
+            this.jointIndexOfGuide = null;
         }
     }
 
@@ -208,8 +246,8 @@ export class LayoutEditor {
     handleMouseDownRight(event) {
         let joint = this.layoutManager.getJoint(event.point);
         if (joint && joint.getState() !== Joint.State.CONNECTED) {
-            this.paletteRail.getNextJoint();
             joint.disconnect();
+            this.incrementJointIndexOfGuide();
             this.showRailToPut(joint);
         }
 

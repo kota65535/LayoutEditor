@@ -62,16 +62,17 @@ export class LayoutManager {
     /**
      * レールを任意のジョイントと結合して設置する。
      * @param {Rail} rail
+     * @param {Joint} fromJoint
      * @param {Point,Joint} to
      * @returns {Boolean} true if succeeds, false otherwise.
      */
-    putRail(rail, to) {
+    putRail(rail, fromJoint, to) {
         if (!this._canPutRail(rail)) {
             log.warn("The rail cannot be put because of intersection.");
             return false;
         }
         if (to.constructor.name === "Joint") {
-            rail.connect(rail.getCurrentJoint(), to);
+            rail.connect(fromJoint, to);
             this._connectOtherJoints(rail);
         } else {
             // 動くか？
@@ -171,6 +172,23 @@ export class LayoutManager {
         if(index !== -1) {
             this.feeders.splice(index, 1);
         }
+    }
+
+    /**
+     * ジョイントからレールを取得する。
+     * @param {Joint} joint
+     * @returns {Rail}
+     */
+    getRailFromJoint(joint) {
+        let ret = null;
+        this.rails.forEach(rail => {
+            rail.joints.forEach(j => {
+                if (j === joint) {
+                    ret = rail;
+                }
+            });
+        });
+        return ret;
     }
 
     /**

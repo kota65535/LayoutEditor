@@ -40,7 +40,7 @@ export class RailPart {
 
         this.path = null;
 
-        this.rendered = false;
+        this._isSimulated = false;
 
         this._hasFeederSocket = hasFeederSocket;
 
@@ -148,6 +148,14 @@ export class RailPart {
 
     hasFeederSocket() {
         return this._hasFeederSocket;
+    }
+
+    isSimulated() {
+        return this._isSimulated;
+    }
+
+    setSimulated(isSimulated) {
+        this._isSimulated = isSimulated;
     }
 
     /**

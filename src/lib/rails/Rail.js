@@ -316,44 +316,6 @@ export class Rail {
         return ret;
     }
 
-    /**
-     * 現在のジョイント
-     * @returns {*}
-     */
-    getCurrentJoint() {
-        let jointIndex = this._getCurrentJointIndex();
-        log.debug("JointIndex:", jointIndex, this.joints[jointIndex]);
-        return this.joints[jointIndex];
-    }
-
-    getNextJoint() {
-        let jointIndex = this._getNextJointIndex();
-        log.debug("JointIndex:", jointIndex, this.joints[jointIndex]);
-        return this.joints[jointIndex];
-    }
-
-
-    _getCurrentJointIndex() {
-        let index = this.currentJointIndex % this.joints.length;
-        this.currentJointIndex = index;
-        if (this.jointOrder.length !== this.joints.length) {
-            log.debug("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
-            return index;
-        }
-        return this.jointOrder[index];
-
-    }
-
-    _getNextJointIndex() {
-        let index = this.currentJointIndex % this.joints.length;
-        this.currentJointIndex = index + 1;
-        if (this.jointOrder.length !== this.joints.length) {
-            log.debug("jointOrder.length !== joints.length", this.jointOrder.length, this.joints.length);
-            return index;
-        }
-        return this.jointOrder[index];
-    }
-
 
     /**
      * 内部情報を更新する。開始点のみ。

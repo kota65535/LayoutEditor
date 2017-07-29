@@ -32,6 +32,7 @@ export class LayoutSimulator {
         this.rails.forEach(rail => {
             rail.railParts.forEach(part => {
                 part.setFlowDirection(FlowDirection.NONE);
+                part.setSimulated(false);
             })
         })
     }
@@ -67,9 +68,10 @@ export class LayoutSimulator {
         }
         // ジョイントの先のレールを取得
         let rail = this.getRailFromJoint(joint.connectedJoint);
-        // 導電状態かつこのジョイントに繋がっているレールパーツを取得する。無ければ終了
+        // 導電状態かつこのジョイントに繋がっているレールパーツを取得する。
+        // 存在しないか、すでに処理済みであれば終了
         let railPart = rail.getConductiveRailPartOfJoint(joint.connectedJoint);
-        if (!railPart) {
+        if (!railPart || railPart.isSimulated()) {
             return;
         }
         // レールパーツ両端のジョイントを取得して電流方向を調べる。同時に次のジョイントも
@@ -87,7 +89,10 @@ export class LayoutSimulator {
         }
 
         log.info(flowDirection, nextJoint);
+
+        // 電流方向をセットし、処理済みであることをマークする
         railPart.setFlowDirection(flowDirection);
+        railPart.setSimulated(true);
 
         // 導電状態を更新したこのレールパーツが上になるよう描画する
         rail.railParts.forEach(otherPart => {
