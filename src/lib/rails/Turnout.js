@@ -56,12 +56,8 @@ export class SimpleTurnout extends Rail {
         }
 
         this.conductionMap = {
-            0: [
-                [0, 1],
-            ],
-            1: [
-                [0, 2]
-            ]
+            0: 0,
+            1: 1
         };
 
         this.move(startPoint, this.joints[0]);
@@ -100,12 +96,8 @@ export class SymmetricalTurnout extends Rail {
         this.addRailPart(new CurveRailPart(startPoint, 180, radius, centerAngle, RailPart.Anchor.END, false));
 
         this.conductionMap = {
-            0: [
-                [0, 1],
-            ],
-            1: [
-                [0, 2]
-            ]
+            0: 0,
+            1: 1
         };
 
         this.move(startPoint, this.joints[0]);

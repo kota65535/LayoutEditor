@@ -130,12 +130,10 @@ export class LayoutManager {
 
     /**
      * フィーダーを設置する。
-     * @param railPart
-     * @param direction
      */
-    putFeeder(railPart, direction) {
-        let feeder = new FeederSocket(railPart, direction);
-        this.feeders.push(feeder);
+    putFeeder(feederSocket) {
+        feederSocket.connect();
+        this.feeders.push(feederSocket);
     }
 
     /**

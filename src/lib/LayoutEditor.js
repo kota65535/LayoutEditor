@@ -22,14 +22,10 @@ export class LayoutEditor {
     static JOINT_TOLERANCE = 2;
 
     constructor() {
-        // 設置したレールのリスト
-        this.rails = [];
-        this.railData = [];
         // 選択中のレール
         this.paletteRail = null;
         // マウスカーソルで触れたフィーダーソケット
         this.touchedFeederSocket = null;
-        this.feeders = [];
 
         this.nextId = 1;
 
@@ -85,7 +81,7 @@ export class LayoutEditor {
     }
 
     /**
-     * 設置されるレールのガイドを半透明で表示する。
+     * 設置されるフィーダーのガイドを半透明で表示する。
      * @param {FeederSocket} feederSocket at the mouse cursor
      */
     showFeederToPut(feederSocket) {
@@ -95,7 +91,7 @@ export class LayoutEditor {
     }
 
     /**
-     * 設置されるレールのガイドを消去する。
+     * 設置されるフィーダーのガイドを消去する。
      */
     hideFeederToPut() {
         // 接続試行中ならガイドを消去する
@@ -110,8 +106,7 @@ export class LayoutEditor {
      * フィーダーを設置する。
      */
     putFeeder() {
-        this.touchedFeederSocket.connect();
-        this.feeders.push(this.touchedFeederSocket);
+        this.layoutManager.putFeeder(this.touchedFeederSocket);
     }
 
     /**
@@ -248,31 +243,22 @@ export class LayoutEditor {
                 break;
             case "space":
                 // 全てのレールを未チェック状態にする
-                this.rails.forEach(r => r.resetConduction());
+                this.layoutSimulator.resetFlowSimulation();
+                break;
+            case "f":
+                this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feeders);
+                this.layoutSimulator.simulateFlow();
+                // selectedRails.forEach(r => r.putFeeder());
+                // selectedRails.forEach(r => r.toggleSwitch());
+                // this.rails.forEach(r => r.resetConduction());
+                // this.layoutSimulator.setRails(this.layoutManager.rails);
                 // this.getFeederedRails().forEach(r => {
                 //     this.checkConduction(r)
                 // });
                 break;
-            case "f":
-
-                selectedRails.forEach(r => r.putFeeder());
+            case "s":
                 selectedRails.forEach(r => r.toggleSwitch());
-                this.rails.forEach(r => r.resetConduction());
-                this.layoutSimulator.setRails(this.layoutManager.rails);
-                this.getFeederedRails().forEach(r => {
-                    this.checkConduction(r)
-                });
                 break;
-            // case "s":
-            //     let request = new XMLHttpRequest();
-            //     request.open("POST", "http://0.0.0.0:5000/serial");
-            //     request.send("t 0");
-            //     selectedRails.forEach(r => r.toggleSwitch());
-            //     this.rails.forEach(r => r.resetConduction());
-            //     this.getFeederedRails().forEach(r => {
-            //         this.checkConduction(r)
-            //     });
-            //     break;
             // case "up":
             //     request = new XMLHttpRequest();
             //     request.open("POST", "http://0.0.0.0:5000/serial");

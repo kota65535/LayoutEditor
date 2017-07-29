@@ -2,15 +2,11 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
+import {FlowDirection} from "./FeederSocket";
 import logger from "../../../logging";
 
-let log = logger("Part");
+let log = logger("RailPart");
 
-const FlowDirection = {
-    NONE: Symbol(),
-    START_TO_END: Symbol(),
-    END_TO_START: Symbol()
-};
 
 /**
  * レールパーツの基底クラス。全てのレールは複数のレールパーツとジョイントにより構成される。
@@ -154,38 +150,46 @@ export class RailPart {
         return this._hasFeederSocket;
     }
 
+    /**
+     *
+     * @param {FlowDirection} flowDirection
+     */
     setFlowDirection(flowDirection) {
         this.flowDirection = flowDirection;
     }
 
 
+    /**
+     * 電流のアニメーションを行う。
+     * @param event
+     */
     animate(event) {
         let ratio = event.count % 60 / 60;
-        let currentOrigin = this.startPoint.multiply(2 - ratio).add(this.endPoint.multiply(ratio - 1));
-        let currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
+        let currentOrigin, currentDestination;
 
         switch (this.flowDirection) {
+            case FlowDirection.NONE:
+                // アニメーションしない
+                this.path.fillColor = "black";
+                return;
             case FlowDirection.START_TO_END:
-                this.path.fillColor = {
-                    gradient: {
-                        stops: [RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1]
-                    },
-                    origin: currentOrigin,
-                    destination: currentDestination
-                };
+                currentOrigin = this.startPoint.multiply(2 - ratio).add(this.endPoint.multiply(ratio - 1));
+                currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
+                log.debug("S to E : ", currentOrigin, "=>", currentDestination);
                 break;
             case FlowDirection.END_TO_START:
-                this.path.fillColor = {
-                    gradient: {
-                        stops: [RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1]
-                    },
-                    origin: currentDestination,
-                    destination: currentOrigin
-                };
-                break;
-            case FlowDirection.NONE:
-                this.path.fillColor = "black";
+                currentOrigin = this.startPoint.multiply(ratio + 1).add(this.endPoint.multiply(-ratio));
+                currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
+                log.debug("E to S : ", currentOrigin, "=>", currentDestination);
                 break;
         }
+
+        this.path.fillColor = {
+            gradient: {
+                stops: [RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1]
+            },
+            origin: currentDestination,
+            destination: currentOrigin
+        };
     }
 }

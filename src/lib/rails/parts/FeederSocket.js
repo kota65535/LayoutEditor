@@ -8,9 +8,19 @@ import logger from "../../../logging";
 let log = logger("FeederSocket", "DEBUG");
 
 /**
+ * フィーダーの電流方向をレールパーツの始点・終点を使って指定するための識別子。
+ * @type {{SAME_TO_ANGLE: Symbol, REVERSE_TO_ANGLE: Symbol}}
+ */
+export const FlowDirection = {
+    NONE: Symbol("None"),
+    START_TO_END: Symbol("Start-End"),
+    END_TO_START: Symbol("End-Start")
+};
+
+/**
  * レールの両端の中点に存在するフィーダー差し込み口を表すクラス。
  */
-export class FeederSocket extends RectPart{
+export class FeederSocket extends RectPart {
 
     static WIDTH = 8;
     static HEIGHT = 12;
@@ -28,21 +38,13 @@ export class FeederSocket extends RectPart{
         CONNECTED: Symbol()     // 接続中
     };
 
-    /**
-     * フィーダーの電流方向をレールパーツの始点・終点を使って指定するための識別子。
-     * @type {{SAME_TO_ANGLE: Symbol, REVERSE_TO_ANGLE: Symbol}}
-     */
-    static FlowDirection = {
-        START_TO_END: Symbol(),
-        END_TO_START: Symbol()
-    };
 
     /**
      * レールパーツにフィーダー差し込み口をセットする。
      * @param {RailPart} railPart
      * @param {FlowDirection} direction
      */
-    constructor(railPart, direction=FeederSocket.FlowDirection.START_TO_END) {
+    constructor(railPart, direction=FlowDirection.START_TO_END) {
         super(railPart.middlePoint, (railPart.startAngle + railPart.endAngle) / 2, FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
         this.railPart = railPart;
         this.flowDirection = direction;
@@ -57,9 +59,9 @@ export class FeederSocket extends RectPart{
      */
     getFeederAngle() {
         switch(this.flowDirection) {
-            case FeederSocket.FlowDirection.START_TO_END:
+            case FlowDirection.START_TO_END:
                 return this.angle;
-            case FeederSocket.FlowDirection.END_TO_START:
+            case FlowDirection.END_TO_START:
                 return this.angle - 180;
         }
     }
@@ -70,9 +72,9 @@ export class FeederSocket extends RectPart{
      */
     getFeederPosition() {
         switch(this.flowDirection) {
-            case FeederSocket.FlowDirection.START_TO_END:
+            case FlowDirection.START_TO_END:
                 return this.getCenterOfBottom();
-            case FeederSocket.FlowDirection.END_TO_START:
+            case FlowDirection.END_TO_START:
                 return this.getCenterOfTop();
         }
     }
@@ -86,11 +88,11 @@ export class FeederSocket extends RectPart{
      */
     toggleDirection() {
        switch(this.flowDirection) {
-           case FeederSocket.FlowDirection.START_TO_END:
-               this.setDirection(FeederSocket.FlowDirection.END_TO_START);
+           case FlowDirection.START_TO_END:
+               this.setDirection(FlowDirection.END_TO_START);
                break;
-           case FeederSocket.FlowDirection.END_TO_START:
-               this.setDirection(FeederSocket.FlowDirection.START_TO_END);
+           case FlowDirection.END_TO_START:
+               this.setDirection(FlowDirection.START_TO_END);
                break;
        }
     }

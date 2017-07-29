@@ -3,10 +3,12 @@
  */
 import {Joint} from "./rails/parts/Joint";
 import {Rail} from "./rails/Rail";
+import {FeederSocket, FlowDirection} from "./rails/parts/FeederSocket";
+import {RailPart} from "./rails/parts/RailPart";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
 import logger from "../logging";
 
-let log = logger("LayoutEditor", "DEBUG");
+let log = logger("LayoutSimulator", "DEBUG");
 
 // [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
 Array.prototype.flatMap = function(lambda) {
@@ -30,6 +32,70 @@ export class LayoutSimulator {
     setRails(rails) {
         this.rails = rails;
     }
+
+    init(rails, feeders) {
+        this.rails = rails;
+        this.feeders = feeders;
+    }
+
+    resetFlowSimulation() {
+        this.rails.forEach(rail => {
+            rail.railParts.forEach(part => {
+                part.setFlowDirection(FlowDirection.NONE);
+            })
+        })
+    }
+
+    simulateFlow() {
+        let feeder = this.feeders[0];
+        feeder.railPart.setFlowDirection(feeder.flowDirection);
+        let rail = this.getRailFromRailPart(feeder.railPart);
+        let startJoint, endJoint;
+        [startJoint, endJoint] = rail.getJointsFromRailPart(feeder.railPart);
+
+        switch (feeder.flowDirection) {
+            case FlowDirection.START_TO_END:
+                this.traceFlowRecursively(startJoint, true);
+                this.traceFlowRecursively(endJoint, false);
+                break;
+            case FlowDirection.END_TO_START:
+                this.traceFlowRecursively(startJoint, false);
+                this.traceFlowRecursively(endJoint, true);
+                break;
+        }
+    }
+
+    traceFlowRecursively(joint, isReversed) {
+        if (!joint.connectedJoint) {
+            return;
+        }
+        let rail = this.getRailFromJoint(joint.connectedJoint);
+        let railPart = rail.getConductiveRailPart(joint.connectedJoint);
+        if (!railPart) {
+            return;
+        }
+        let startJoint, endJoint;
+        [startJoint, endJoint] = rail.getJointsFromRailPart(railPart);
+
+        let flowDirection, nextJoint;
+        if (joint.connectedJoint === startJoint) {
+            flowDirection = isReversed ? FlowDirection.END_TO_START : FlowDirection.START_TO_END;
+            nextJoint = endJoint;
+        }
+        if (joint.connectedJoint === endJoint) {
+            flowDirection = isReversed ? FlowDirection.START_TO_END : FlowDirection.END_TO_START;
+            nextJoint = startJoint;
+        }
+
+        log.info(flowDirection, nextJoint);
+        railPart.setFlowDirection(flowDirection);
+
+        if (nextJoint) {
+            this.traceFlowRecursively(nextJoint, isReversed);
+        }
+    }
+
+
 
 
     /**
@@ -89,6 +155,61 @@ export class LayoutSimulator {
         let allJoints = [].concat.apply([], this.rails.map( r => r.joints));
         return allJoints.find( joint => joint.containsPath(hitResult.item));
     }
+
+    /**
+     *
+     * @param {RailPart} railPart
+     * @returns {Array<Joint>}
+     */
+    getJoints(railPart) {
+        this.rails.forEach(rail => {
+            rail.railParts.forEach(part => {
+                let startJoint = rail.joints.find(joint => joint.getPosition().isClose(part.startPoint, 0));
+                let endJoint = rail.joints.find(joint => joint.getPosition().isClose(part.endPoint, 0));
+                if (startJoint && endJoint) {
+                    return [startJoint, endJoint];
+                }
+            })
+        });
+        return null;
+    }
+
+    getRailFromJoint(joint) {
+        let ret = null;
+        this.rails.forEach(rail => {
+            rail.joints.forEach(j => {
+                if (j === joint) {
+                    ret = rail;
+                }
+            });
+        })
+        return ret;
+    }
+
+    getRailFromRailPart(railPart) {
+        let ret = null;
+        this.rails.forEach(rail => {
+            rail.railParts.forEach(p => {
+                if (p === railPart) {
+                    ret = rail;
+                }
+            });
+        })
+        return ret;
+        // for (let a of [new Point(1,1), new Point(2,1)]) {
+        //     console.log(a);
+        // }
+
+        // for (let rail of this.rails) {
+        //     console.log(rail);
+        //     for (let part of rail.railParts) {
+        //         if (part === railPart) {
+        //             return rail;
+        //         }
+        //     }
+        // }
+    }
+
 
 
     /**

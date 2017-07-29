@@ -39,11 +39,12 @@ export class Rail {
         this.pathGroup = new Group();
         this.jointOrder = [];
         this.currentJointIndex = 0;
+        // どのレールパーツに電気が流れるかを表す導電状態マップ。
+        // 状態ID: 導電しているRailPartのIndex
         this.conductionMap = {
-            0: [
-                [0, 1],
-            ]
+            0: 0
         };
+        // 現在の導電状態
         this.conductionState = 0;
 
         this.rendered = false;
@@ -346,7 +347,7 @@ export class Rail {
 
     /**
      * 与えられたジョイントから導通しているジョイントを取得する。
-     * @param joint
+     * @param {Joint} joint
      * @returns {Array<Joint>}
      */
     getConductiveJoints(joint) {
@@ -360,6 +361,27 @@ export class Rail {
         log.info(conductiveJoints);
         return conductiveJoints;
     }
+
+    /**
+     * レールパーツの両端のジョイントを取得する。開始点、終了点の順に取得される。
+     * @param {RailPart} railPart
+     * @returns {Array<Joint>}
+     */
+    getJointsFromRailPart(railPart) {
+        let ret = null;
+        console.log(railPart.startPoint, railPart.endPoint);
+        let startJoint = this.joints.find( j => j.getPosition().isClose(railPart.startPoint, 0.1));
+        let endJoint = this.joints.find( j => j.getPosition().isClose(railPart.endPoint, 0.1));
+        if (startJoint && endJoint) {
+            return [startJoint, endJoint];
+        }
+    }
+
+    getConductiveRailPart(joint) {
+        return this.railParts[this.conductionMap[this.conductionState]];
+    }
+
+
     /**
      * 現在のジョイント
      * @returns {*}
