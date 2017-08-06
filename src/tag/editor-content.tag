@@ -24,6 +24,11 @@
   <script>
     import riot from "riot";
     import paper from "paper";
+//    import "jquery";
+//    import 'jquery-selector-cache';
+//    import 'bootstrap'
+//    import 'bootstrap/dist/css/bootstrap.css';
+//    import 'bootstrap-notify';
     import { LayoutEditor } from "../lib/LayoutEditor";
     import { RailFactory } from "../lib/RailFactory";
     import { GridPaper } from "../lib/GridPaper";
@@ -56,7 +61,7 @@
         // レイヤー２に切り替え
         new Layer();
 
-        this.editor = new LayoutEditor();
+        this.editor = new LayoutEditor(this.grid);
         this.factory = new RailFactory();
 
         // 各種ハンドラの登録
@@ -64,12 +69,22 @@
         tool.onMouseMove = (event) => {
             this.editor.handleMouseMove(event);
         };
+
         tool.onMouseDown = (event) => {
+            this.grid.paperOnMouseDown(event);
             this.editor.handleMouseDown(event);
         };
 
+        tool.onMouseUp = (event) => {
+            this.grid.paperOnMouseUp(event);
+        };
+
         tool.onKeyDown = (event) => {
-            this.editor.handleKeyEvent(event);
+            this.editor.handleKeyDown(event);
+        };
+
+        tool.onKeyUp = (event) => {
+            this.editor.handleKeyUp(event);
         };
 
         tool.onMouseDrag = (event) => {

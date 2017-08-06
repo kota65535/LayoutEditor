@@ -15,12 +15,27 @@ let log = logger("LayoutEditor", "DEBUG");
 Array.prototype.flatMap = function(lambda) {
     return Array.prototype.concat.apply([], this.map(lambda));
 };
+Array.prototype.remove = function() {
+    let what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
+};
 
 
 export class LayoutEditor {
 
 
-    constructor() {
+    constructor(gridPaper) {
+
+        // GridPaperインスタンスへの参照
+        this.gridPaper =  gridPaper;
+
+
         // 選択中のレール
         this.paletteRail = null;
         // マウスカーソルで触れたフィーダーソケット
@@ -31,6 +46,9 @@ export class LayoutEditor {
 
         this.layoutManager = new LayoutManager();
         this.layoutSimulator = new LayoutSimulator();
+
+        // 現在押されている修飾キー
+        // this.modifierKeys = [];
     }
 
     /**
@@ -114,6 +132,7 @@ export class LayoutEditor {
     putSelectedRail(toJoint) {
         let result = this.layoutManager.putRail(this.paletteRail, this.getCurrentJointOfGuide(), toJoint);
         if (result) {
+            this.gridPaper.paths.push(this.paletteRail.pathGroup);
             this.selectRail(cloneRail(this.paletteRail));
             this.jointIndexOfGuide = null;
         }
@@ -277,7 +296,7 @@ export class LayoutEditor {
      *
      * @param {KeyEvent} event
      */
-    handleKeyEvent(event) {
+    handleKeyDown(event) {
         // 選択されたレールを取得する
         let selectedRails = project.selectedItems
             .map(item => this.layoutManager.getRail(item))
@@ -306,6 +325,18 @@ export class LayoutEditor {
                 this.layoutSimulator.resetFlowSimulation();
                 this.layoutSimulator.simulateFlow();
                 break;
+            // case "shift":
+            //     this.modifierKeys.push("shift");
+            //     break;
+            // case "alt":
+            //     this.modifierKeys.push("alt");
+            //     break;
+            // case "control":
+            //     this.modifierKeys.push("control");
+            //     break;
+            // case "meta":
+            //     this.modifierKeys.push("meta");
+            //     break;
             // case "up":
             //     request = new XMLHttpRequest();
             //     request.open("POST", "http://0.0.0.0:5000/serial");
@@ -322,6 +353,28 @@ export class LayoutEditor {
             //     request.send("f 1 d");
             //     break;
         }
+
+        log.info("Modifiers: ", this.modifierKeys);
+    }
+
+    handleKeyUp(event) {
+        // switch (event.key) {
+        //     case "shift":
+        //         this.modifierKeys.remove("shift");
+        //         log.info(this.modifierKeys);
+        //         break;
+        //     case "alt":
+        //         this.modifierKeys.remove("alt");
+        //         log.info(this.modifierKeys);
+        //         break;
+        //     case "control":
+        //         this.modifierKeys.remove("control");
+        //         break;
+        //     // case "meta":
+        //     //     this.modifierKeys.remove("meta");
+        //     //     break;
+        // }
+        // log.info("Modifiers: ", this.modifierKeys);
     }
 
     handleOnFrame(event) {

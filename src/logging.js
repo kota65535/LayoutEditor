@@ -3,7 +3,7 @@
  */
 
 import loglevel from "loglevel";
-import prefix from "loglevel-plugin-prefix";
+// import prefix from "loglevel-plugin-prefix";
 // import logdown from "logdown";
 
 

@@ -107,6 +107,11 @@
 
   <script>
       import riot from "riot";
+      import 'jquery'
+      import 'jquery-selector-cache';
+      import 'bootstrap'
+      import 'bootstrap/dist/css/bootstrap.css';
+      import 'bootstrap-notify';
       import paper from "paper";
       import { RailFactory } from "../lib/RailFactory";
       import logger from "../logging";
