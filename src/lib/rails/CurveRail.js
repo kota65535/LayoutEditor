@@ -58,7 +58,7 @@ export class DoubleCurveRail extends Rail {
         this.centerAngle = centerAngle;
 
         this.addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPart.Anchor.START, true));
-        this.addRailPart(new CurveRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPart.Anchor.START, true));
+        this.addRailPart(new CurveRailPart(new paper.Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPart.Anchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);

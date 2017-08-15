@@ -1,18 +1,23 @@
 /* global riot */
 import riot from "riot";
 
-const _RiotControlApi = ['on', 'one', 'off', 'trigger'];
-const RiotControl = {
-  _stores: [],
-  addStore(store) {
-    this._stores.push(store);
-  }
+var RiotControl = {
+    _stores: [],
+    addStore: function(store) {
+        this._stores.push(store);
+    },
+    reset: function() {
+        this._stores = [];
+    }
 };
 
-_RiotControlApi.forEach(api => {
-  RiotControl[api] = function apiHandler(...args) {
-    this._stores.forEach(el => el[api].apply(null, args))
-  }
+['on','one','off','trigger'].forEach(function(api){
+    RiotControl[api] = function() {
+        var args = [].slice.call(arguments);
+        this._stores.forEach(function(el){
+            el[api].apply(el, args);
+        });
+    };
 });
 
 // register global tag mixin for using RiotControl
@@ -32,6 +37,9 @@ riot.SE = {
 }
 
 riot.VE = {
+    APP: {
+        GOOGLE_API_LOADED: "ve.app.google-api-loaded"
+    },
     PALETTE_ITEM_SELECTED: "ve_palette_item_selected",
     MENU_SAVE_LAYOUT: "ve_menu_save_layout",
     MENU_LOAD_LAYOUT: "ve_load_layout",

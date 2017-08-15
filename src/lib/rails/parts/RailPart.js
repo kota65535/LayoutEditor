@@ -35,7 +35,7 @@ export class RailPart {
      * 子クラスではここでパスの生成・移動・回転を行う。
      */
     constructor(hasFeederSocket) {
-        this.startPoint = this.endPoint = new Point(0, 0);
+        this.startPoint = this.endPoint = new paper.Point(0, 0);
         this.startAngle = this.endAngle = 0;
 
         this.path = null;

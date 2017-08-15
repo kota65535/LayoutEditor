@@ -217,7 +217,7 @@ export class LayoutManager {
         log.info("Intersections:", intersections.length, intersections.map( i => i.point));
         // デバッグ用
         // intersections.forEach( i => {
-        //     new Path.Circle({
+        //     new paper.Path.Circle({
         //         center: i.point,
         //         radius: 5,
         //         fillColor: '#009dec'});
@@ -264,7 +264,7 @@ export class LayoutManager {
         this.railData.push(serializedRail);
 
         log.debug("ActiveLayer.children begin-----");
-        project.activeLayer.children.forEach( c => {
+        paper.project.activeLayer.children.forEach( c => {
             if (c.constructor.name === "Group") {
                 log.debug("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
             } else {
@@ -281,7 +281,7 @@ export class LayoutManager {
             fill: true,
             // tolerance: 5
         };
-        let hitResult = project.hitTest(point, hitOptions);
+        let hitResult = paper.project.hitTest(point, hitOptions);
         if (hitResult) {
             // log.debug("Hit Test:");
             // log.debug(point);

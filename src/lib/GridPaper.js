@@ -39,11 +39,12 @@ export class GridPaper {
     }
 
     _init() {
-        this.initialViewSize = new Size(view.size);
-        this.viewCenterMin = new Point(view.size.width - this.boardWidth / 2, view.size.height - this.boardHeight / 2);
-        this.viewCenterMax = new Point(this.boardWidth / 2, this.boardHeight / 2);
-        this.boardMin = new Point(view.size.width / 2 - this.boardWidth / 2, view.size.height / 2 - this.boardHeight / 2);
-        this.boardMax = new Point(view.size.width / 2 + this.boardWidth / 2, view.size.height / 2 + this.boardHeight / 2);
+        let view = paper.view;
+        this.initialViewSize = new paper.Size(view.size);
+        this.viewCenterMin = new paper.Point(view.size.width - this.boardWidth / 2, view.size.height - this.boardHeight / 2);
+        this.viewCenterMax = new paper.Point(this.boardWidth / 2, this.boardHeight / 2);
+        this.boardMin = new paper.Point(view.size.width / 2 - this.boardWidth / 2, view.size.height / 2 - this.boardHeight / 2);
+        this.boardMax = new paper.Point(view.size.width / 2 + this.boardWidth / 2, view.size.height / 2 + this.boardHeight / 2);
 
         log.debug("viewCenterMin ", this.viewCenterMin);
         log.debug("viewCenterMax ", this.viewCenterMax);
@@ -52,26 +53,26 @@ export class GridPaper {
 
 
         // top-left of the board
-        new Path.Circle({
+        new paper.Path.Circle({
             center: this.boardMin,
             radius: 100,
             fillColor: 'green'
         });
         // top-right of the board
-        new Path.Circle({
-            center: new Point(this.boardMax.x, this.boardMin.y),
+        new paper.Path.Circle({
+            center: new paper.Point(this.boardMax.x, this.boardMin.y),
             radius: 100,
             fillColor: 'green'
         });
         // bottom-right of the board
-        new Path.Circle({
+        new paper.Path.Circle({
             center: this.boardMax,
             radius: 100,
             fillColor: 'green'
         });
         // bottom-left of the board
-        new Path.Circle({
-            center: new Point(this.boardMin.x, this.boardMax.y),
+        new paper.Path.Circle({
+            center: new paper.Point(this.boardMin.x, this.boardMax.y),
             radius: 100,
             fillColor: 'green'
         });
@@ -91,7 +92,7 @@ export class GridPaper {
         let rangeY = _.range(Math.floor(this.boardMin.y / size), Math.floor(this.boardMax.y / size));
         // 縦線
         rangeX.forEach( (i) => {
-            let line = new Path.Line(new paper.Point(size * i, this.boardMin.y), new paper.Point(size * i, this.boardMax.y));
+            let line = new paper.Path.Line(new paper.Point(size * i, this.boardMin.y), new paper.Point(size * i, this.boardMax.y));
             if (i === 0) {
                 line.strokeColor = 'red';
                 line.strokeWidth = 3;
@@ -104,7 +105,7 @@ export class GridPaper {
         });
         // 横線
         rangeY.forEach( (i) => {
-            let line = new Path.Line(new paper.Point(this.boardMin.x, size*i), new paper.Point(this.boardMax.x, size*i));
+            let line = new paper.Path.Line(new paper.Point(this.boardMin.x, size*i), new paper.Point(this.boardMax.x, size*i));
             if (i === 0) {
                 line.strokeColor = 'red';
                 line.strokeWidth = 3;
@@ -167,7 +168,7 @@ export class GridPaper {
             if (this.selectionRect) {
                 this.selectionRect.remove();
             }
-            this.selectionRect = new Path.Rectangle({
+            this.selectionRect = new paper.Path.Rectangle({
                 from: this.rectStart,
                 to: event.point,
                 strokeColor: 'blue',
@@ -179,26 +180,26 @@ export class GridPaper {
         }
 
         // 移動量をスケールに応じて変化させる
-        let moveUnit = 1 / view.getScaling().x;
-        let nextCenter = view.center.subtract(this.cursorDelta.multiply(moveUnit));
+        let moveUnit = 1 / paper.view.getScaling().x;
+        let nextCenter = paper.view.center.subtract(this.cursorDelta.multiply(moveUnit));
 
         if (this.shouldModifyViewCenter) {
             // ビューの中心点が移動可能領域からはみ出さないようにする
             if ( nextCenter.x < this.viewCenterMin.x ) {
-                nextCenter = new Point(this.viewCenterMin.x, nextCenter.y);
+                nextCenter = new paper.Point(this.viewCenterMin.x, nextCenter.y);
             }
             if ( this.viewCenterMax.x < nextCenter.x ) {
-                nextCenter = new Point(this.viewCenterMax.x, nextCenter.y);
+                nextCenter = new paper.Point(this.viewCenterMax.x, nextCenter.y);
             }
             if ( nextCenter.y < this.viewCenterMin.y ) {
-                nextCenter = new Point(nextCenter.x, this.viewCenterMin.y);
+                nextCenter = new paper.Point(nextCenter.x, this.viewCenterMin.y);
             }
             if ( this.viewCenterMax.y < nextCenter.y ) {
-                nextCenter = new Point(nextCenter.x, this.viewCenterMax.y);
+                nextCenter = new paper.Point(nextCenter.x, this.viewCenterMax.y);
             }
         }
 
-        view.center = nextCenter;
+        paper.view.center = nextCenter;
     }
 
 
@@ -210,7 +211,7 @@ export class GridPaper {
     windowOnMouseMove(e) {
         // ページ上のマウスカーソルの位置を更新
         let cursorBefore = this.cursorPoint;
-        this.cursorPoint = new Point(e.pageX, e.pageY);
+        this.cursorPoint = new paper.Point(e.pageX, e.pageY);
         this.cursorDelta = this.cursorPoint.subtract(cursorBefore);
 
         // キャンバス上のマウスカーソルの位置を更新
@@ -247,26 +248,27 @@ export class GridPaper {
      * @param newRelativeScale
      */
     scale(newRelativeScale) {
+        let view = paper.view;
         // 最大拡大率・最小縮小率を超えないようにする
-        let newScale = view.getScaling().x * newRelativeScale;
+        let newScale = paper.view.getScaling().x * newRelativeScale;
         if (newScale < this.zoomMin) {
-            newRelativeScale = this.zoomMin / view.getScaling().x;
+            newRelativeScale = this.zoomMin / paper.view.getScaling().x;
         }
         if (this.zoomMax < newScale) {
-            newRelativeScale = this.zoomMax / view.getScaling().x;
+            newRelativeScale = this.zoomMax / paper.view.getScaling().x;
         }
 
-        view.scale(newRelativeScale, this.canvasPoint);
+        paper.view.scale(newRelativeScale, this.canvasPoint);
         // console.info("currentZoom: ", newScale);
 
         // ビューの端がボードの範囲を超えないよう、ビュー中心の移動可能範囲を変更する
-        if (view.size.width < this.boardWidth && view.size.height < this.boardHeight) {
-            this.viewCenterMin = new Point(
-                this.initialViewSize.width / 2 + view.size.width / 2 - this.boardWidth / 2,
-                this.initialViewSize.height / 2 + view.size.height / 2 - this.boardHeight / 2);
-            this.viewCenterMax = new Point(
-                this.initialViewSize.width / 2 - view.size.width / 2 + this.boardWidth / 2,
-                this.initialViewSize.height / 2 - view.size.height / 2 + this.boardHeight / 2);
+        if (paper.view.size.width < this.boardWidth && paper.view.size.height < this.boardHeight) {
+            this.viewCenterMin = new paper.Point(
+                this.initialViewSize.width / 2 + paper.view.size.width / 2 - this.boardWidth / 2,
+                this.initialViewSize.height / 2 + paper.view.size.height / 2 - this.boardHeight / 2);
+            this.viewCenterMax = new paper.Point(
+                this.initialViewSize.width / 2 - paper.view.size.width / 2 + this.boardWidth / 2,
+                this.initialViewSize.height / 2 - paper.view.size.height / 2 + this.boardHeight / 2);
             this.shouldModifyViewCenter = true;
         } else {
             // ビューサイズがボードの幅または高さを超えた場合は、ビューの中心点の修正を行わない。

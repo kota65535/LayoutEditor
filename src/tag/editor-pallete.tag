@@ -107,25 +107,16 @@
 
   <script>
       import riot from "riot";
-      import 'jquery'
-      import 'jquery-selector-cache';
-      import 'bootstrap'
-      import 'bootstrap/dist/css/bootstrap.css';
-      import 'bootstrap-notify';
-      import paper from "paper";
       import { RailFactory } from "../lib/RailFactory";
       import logger from "../logging";
-
-      let log = logger("EditorPalette");
+      let log = logger(this.__.tagName);
 
       this.mixin("controlMixin");
 
       this.factory = new RailFactory();
 
       this.on("mount", () => {
-          log.info("Editor palette mounted");
-          paper.install(window);
-
+          log.info(`is mounted.`);
           // 各パレットアイテムのアイコン描画
           for (let [key, value] of Object.entries(opts.items)) {
               value.forEach(item => {
@@ -133,7 +124,7 @@
                   let canvas = $("#" + item.name + "-canvas");
                   let rail = this.factory[item.name]();
                   let bounds = rail.getBounds();
-                  let center = new Point(canvas.width() / 2, canvas.height() / 2);
+                  let center = new paper.Point(canvas.width() / 2, canvas.height() / 2);
                   rail.move(center, bounds.center);
                   rail.scale(0.4, 0.4);
               });

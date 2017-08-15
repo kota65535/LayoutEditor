@@ -1,36 +1,60 @@
 <app>
-  <div id="mainview"></div>
-  <!--<editor-view></editor-view>-->
+  <div data-is={ view } is-authorized="{ isAuthorized }"></div>
 
-  <script>
+  <script type="es6">
       import riot from "riot";
       import route from "riot-route";
+      import "../vendor";
+      import {GoogleAPIManager} from "../lib/google/GoogleAPIManager";
+      import logger from "../logging";
+      let log = logger(this.__.tagName);
 
-      this._currentView = null;
 
-      this.loadView = (viewName, id) => {
-          if (this._currentView) {
-              this._currentView.unmount(true)
-          }
-          this._currentView = riot.mount('div#mainview', viewName);
-      }
+      this.isAuthorized = false;
 
-      this.studyRoute = (view, id) => {
+      //==========================
+      // Routing & Switching views
+      //==========================
+
+      route((view) => {
           switch (view) {
               case "editor":
-                  this.loadView("editor-view");
+                  this.view = "view-editor";
                   break;
-              case "simulator":
-                  this.loadView("simulator-view");
-                  break;
+              default:
+                  this.view = "view-editor";
           }
-      }
-
-      route(this.studyRoute);
+          this.update();
+      });
 
       this.on('mount', () => {
           route.start(true);
-      })
+      });
+
+      //==========================
+      // Loading Google API client
+      //==========================
+
+      window.onGoogleAPIClientLoad = () => {
+          window.googleAPIManager = new GoogleAPIManager( (isAuthorized) => {
+              log.info(`Google auth API loaded: isAuthorized=${isAuthorized}`)
+              this.isAuthorized = isAuthorized;
+              this.update();
+          }, (isAuthorized) => {
+              log.info(`Auth status changed: isAuthorized=${isAuthorized}`)
+              this.isAuthorized = isAuthorized;
+              this.update();
+          });
+      };
+
+      //====================
+      // Notification setting
+      //====================
+
+      $.notifyDefaults({
+          z_index: 10000
+      });
+
 
   </script>
 </app>

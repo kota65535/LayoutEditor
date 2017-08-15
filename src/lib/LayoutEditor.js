@@ -90,7 +90,7 @@ export class LayoutEditor {
     hideRailToPut() {
         this.paletteRail.setOpacity(0);
         this.paletteRail.disconnect();
-        this.paletteRail.move(new Point(0,0), this.paletteRail.joints[0]);
+        this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
     }
 
     /**
@@ -298,10 +298,10 @@ export class LayoutEditor {
      */
     handleKeyDown(event) {
         // 選択されたレールを取得する
-        let selectedRails = project.selectedItems
+        let selectedRails = paper.project.selectedItems
             .map(item => this.layoutManager.getRail(item))
             .filter(Boolean);
-        let selectedFeeders = project.selectedItems
+        let selectedFeeders = paper.project.selectedItems
             .map(item => this.layoutManager.getFeeder(item))
             .filter(Boolean);
         log.info("Selected rail: ", selectedRails);

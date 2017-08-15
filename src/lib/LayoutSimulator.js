@@ -151,7 +151,7 @@ export class LayoutSimulator {
             });
         });
         return ret;
-        // for (let a of [new Point(1,1), new Point(2,1)]) {
+        // for (let a of [new paper.Point(1,1), new paper.Point(2,1)]) {
         //     console.log(a);
         // }
 

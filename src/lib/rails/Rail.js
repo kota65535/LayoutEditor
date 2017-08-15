@@ -35,7 +35,7 @@ export class Rail {
         this.startPoint = startPoint;
         this.angle = angle;
 
-        this.pathGroup = new Group();
+        this.pathGroup = new paper.Group();
         this.jointOrder = [];
         this.currentJointIndex = 0;
         // どのレールパーツに電気が流れるかを表す導電状態マップ。

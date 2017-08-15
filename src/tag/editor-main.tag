@@ -1,4 +1,4 @@
-<editor-content>
+<editor-main>
   <style>
     #editor-content-wrapper{
       position: fixed;
@@ -20,24 +20,15 @@
     <canvas id="editor-canvas" resize></canvas>
   </div>
 
-
   <script>
     import riot from "riot";
-    import paper from "paper";
-//    import "jquery";
-//    import 'jquery-selector-cache';
-//    import 'bootstrap'
-//    import 'bootstrap/dist/css/bootstrap.css';
-//    import 'bootstrap-notify';
     import { LayoutEditor } from "../lib/LayoutEditor";
     import { RailFactory } from "../lib/RailFactory";
     import { GridPaper } from "../lib/GridPaper";
     import { StraightRail } from "../lib/rails/StraightRail";
     import {Joint} from "../lib/rails/parts/Joint";
-
     import logger from "../logging";
-    let log = logger("EditorContent");
-
+    let log = logger(this.__.tagName);
 
     this.mixin("controlMixin");
 
@@ -50,8 +41,7 @@
     const AVAILABLE_ZOOM_MAX = 5;
 
     this.on("mount", () => {
-        log.info("Editor content mounted");
-        paper.install(window);
+        log.info(`is mounted.`);
         paper.setup("editor-canvas");
 
         // レイヤー１にグリッドを描画
@@ -59,13 +49,13 @@
             INITIAL_ZOOM, ZOOM_UNIT, AVAILABLE_ZOOM_MIN, AVAILABLE_ZOOM_MAX);
 
         // レイヤー２に切り替え
-        new Layer();
+        new paper.Layer();
 
         this.editor = new LayoutEditor(this.grid);
         this.factory = new RailFactory();
 
         // 各種ハンドラの登録
-        let tool = new Tool();
+        let tool = new paper.Tool();
         tool.onMouseMove = (event) => {
             this.editor.handleMouseMove(event);
         };
@@ -91,7 +81,7 @@
             this.grid.paperOnMouseDrag(event);
         };
 
-        view.onFrame = (event) => {
+        paper.view.onFrame = (event) => {
             this.editor.handleOnFrame(event);
         };
 
@@ -106,8 +96,8 @@
 
 
         this.editor.selectRail(this.factory.S280());
-        let rail = new StraightRail(new Point(560, 140),0,140, true);
-        this.editor.layoutManager.putRail(rail, rail.joints[0], new Point(140,140));
+        let rail = new StraightRail(new paper.Point(560, 140),0,140, true);
+        this.editor.layoutManager.putRail(rail, rail.joints[0], new paper.Point(140,140));
 
     });
 
@@ -133,4 +123,4 @@
 
   </script>
 
-</editor-content>
+</editor-main>

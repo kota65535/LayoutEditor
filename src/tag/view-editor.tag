@@ -1,17 +1,11 @@
-<editor-view>
-    <editor-toolbar/>
+<view-editor>
+    <editor-menubar is-authorized={ opts.isAuthorized }/>
     <editor-pallete items={ palette_items }></editor-pallete>
-    <editor-content/>
+    <editor-main/>
 
-    <!--<main-content></main-content>-->
   <script>
-      import paper from "paper";
       import logger from "../logging";
-      let log = logger("EditorContent");
-
-      this.on("mount", () => {
-          log.info("Editor view mounted");
-      });
+      let log = logger(this.__.tagName);
 
       this.palette_items = {
           "StraightRails": [
@@ -38,5 +32,13 @@
           ]
       };
 
+
+      this.on("mount", () => {
+          log.info(`is mounted.`);
+      });
+
+
   </script>
-</editor-view>
+
+
+</view-editor>

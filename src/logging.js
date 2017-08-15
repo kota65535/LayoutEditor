@@ -3,23 +3,34 @@
  */
 
 import loglevel from "loglevel";
-// import prefix from "loglevel-plugin-prefix";
-// import logdown from "logdown";
+import logdown from "logdown";
 
-
-export default function getLogger(name, level = "INFO") {
-    // ログの出力元のファイル名・行数が上書きされてしまって不便
-    // prefix.apply(loglevel, {
-    //     template: "[%t] %l (%n):"
-    // });
+// Loglevelを使う場合
+function initLoglevel(name) {
     let logger = loglevel.getLogger(name);
-    logger.setLevel(level);
+    logger.setLevel("INFO");
     return logger;
-};
+}
 
-// logdownはブラウザのDevToolで見ると綺麗だが、WebStormでは残念な感じになる
-// localStorage.debug = "*";
-// export default function getLogger(name) {
-//     let logger = logdown(name);
-//     return logger;
-// };
+// Logdownを使う場合
+// 全てのログインスタンスを有効にする
+localStorage.debug = "*";
+function initLogdown(name) {
+    let logger = logdown(name);
+    return logger;
+}
+
+export default function getLogger(name) {
+    // let logger = initLogdown(name);
+    let logger = initLoglevel(name);
+
+    logger.printOpts = (opts) => {
+        let ary = [];
+        for (let [k, v] of Object.entries(opts)) {
+            ary.push(`${k}: ${v}`);
+        }
+        logger.info(`opts: ${ary.join(", ")}`);
+    };
+
+    return  logger;
+};

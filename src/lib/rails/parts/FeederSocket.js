@@ -50,9 +50,9 @@ export class FeederSocket extends RectPart {
         this.flowDirection = direction;
         this.connectedFeeder = null;
 
-        this.pathGroup = new Group();
+        this.pathGroup = new paper.Group();
 
-        console.log("FeederSocket", this.railPart.path.position);
+        // console.log("FeederSocket", this.railPart.path.position);
     }
 
     /**

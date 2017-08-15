@@ -1,0 +1,11 @@
+$app-nav-width: 60px;
+
+/* Google PickerがModalダイアログの裏に隠れないようにする */
+.picker-dialog-bg {
+  z-index: 20000 !important;
+}
+
+.picker-dialog {
+  z-index: 20001 !important;
+}
+
