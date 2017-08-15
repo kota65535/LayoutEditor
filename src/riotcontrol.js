@@ -32,19 +32,27 @@ riot.mixin('controlMixin', {
 riot.control = RiotControl;
 
 riot.SE = {
-    PALETTE_ITEM_SELECTED: "se_palette_item_selected",
-    LAYOUT_LOADED: "se_layout_loaded"
-}
+    EDITOR: {
+        PALETTE_ITEM_SELECTED: "se.editor.palette_item_selected",
+        LAYOUT_CHANGED: "se.editor.layout_changed",
+        FILE_CHANGED: "se.editor.file_changed",
+    }
+};
 
 riot.VE = {
     APP: {
         GOOGLE_API_LOADED: "ve.app.google-api-loaded"
     },
-    PALETTE_ITEM_SELECTED: "ve_palette_item_selected",
-    MENU_SAVE_LAYOUT: "ve_menu_save_layout",
-    MENU_LOAD_LAYOUT: "ve_load_layout",
-    SAVE_LAYOUT: "ve_save_layout",
-    LOAD_LAYOUT: "ve_load_layout"
+    EDITOR: {
+        PALETTE_ITEM_SELECTED: "ve.editor.palette_item_selected",
+        FILE_CHANGED: "ve.editor.file_changed",
+        LAYOUT_CHANGED: "ve.editor.layout_changed",
+        FILE_INIT: "ve.editor.file_init",
+        LAYOUT_INIT: "ve.editor.layout_init",
+        OPEN_BUILD_PALETTE: "ve.editor.open_build_palette",
+        OPEN_RUN_PALETTE: "ve.editor.open_run_palette",
+        ANGLE_CHANGED: "ve.editor.angle_changed"
+    },
 }
 
 

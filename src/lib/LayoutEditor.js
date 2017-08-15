@@ -38,6 +38,7 @@ export class LayoutEditor {
 
         // 選択中のレール
         this.paletteRail = null;
+        this.paletteRailAngle = 0;
         // マウスカーソルで触れたフィーダーソケット
         this.touchedFeederSocket = null;
 
@@ -60,6 +61,10 @@ export class LayoutEditor {
         this.layoutManager.loadLayout(layoutData);
     }
 
+    saveLayout() {
+        return this.layoutManager.saveLayout();
+    }
+
     /**
      * 設置するレールを選択する。
      * @param {Rail} rail
@@ -67,8 +72,12 @@ export class LayoutEditor {
      */
     selectRail(rail) {
         // 接続可能なジョイントに近づくまで透明化する
+        if (this.paletteRail) {
+            this.paletteRail.remove();
+        }
         this.paletteRail = rail;
-        this.paletteRail.setOpacity(0);
+        this.paletteRail.rotate(this.paletteRailAngle, this.paletteRail.startPoint);
+        this.paletteRail.setOpacity(0.3);
     }
 
     /**
@@ -88,7 +97,7 @@ export class LayoutEditor {
      * 設置されるレールのガイドを消去する。
      */
     hideRailToPut() {
-        this.paletteRail.setOpacity(0);
+        this.paletteRail.setOpacity(0.3);
         this.paletteRail.disconnect();
         this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
     }

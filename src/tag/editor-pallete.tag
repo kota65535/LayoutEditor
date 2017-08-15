@@ -135,7 +135,7 @@
       this.handleItemClick = (item) => {
           this.selectedItem = item;
           log.info("Selected: " + this.selectedItem.name);
-          riot.control.trigger(riot.VE.PALETTE_ITEM_SELECTED, item.name);
+          riot.control.trigger(riot.VE.EDITOR.PALETTE_ITEM_SELECTED, item.name);
       };
 
 

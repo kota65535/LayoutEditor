@@ -36,12 +36,14 @@
             </ul>
           </li>
         </ul>
+        <p class="navbar-text">File: { _editingFile.name }</p>
+
         <ul class="nav navbar-nav navbar-right">
-          <li><a onclick="{ onLogin }" if={ !opts.isAuthorized }>Login</a></li>
-          <li><a onclick="{ onLogout }" if={ opts.isAuthorized }>Logout</a></li>
+          <button type="button" class="btn btn-default navbar-btn" onclick="{ onLogin }" if={ !opts.isAuthorized }>Login</button>
+          <button type="button" class="btn btn-default navbar-btn" onclick="{ onLogout }" if={ opts.isAuthorized }>Logout</button>
         </ul>
-      </div><!--/.nav-collapse -->
-    </div><!--/.container-fluid -->
+      </div>
+    </div>
   </nav>
 
   <file-save-dialog ref="file-new-dialog" title="New File" on-ok="{ onFileNewOK }"/>
@@ -61,6 +63,9 @@
       this.on('mount', () => {
           log.info(`is mounted.`);
           log.printOpts(opts);
+
+          // 編集中のファイルの初期化を始める
+          riot.control.trigger(riot.VE.EDITOR.FILE_INIT);
       });
 
 
@@ -96,7 +101,7 @@
                   let file = pickerEvent.docs[0];
                   window.googleAPIManager.downloadFile(file.id)
                       .then(resp => {
-                          this.setContent(resp.body);
+                          this.setLayout(resp.body);
                           $.notify(
                               { message: `File "${file.name}" loaded.` },
                               { type: 'info' });
@@ -122,7 +127,7 @@
       };
 
       this.onFileSaveAsOK = (fileName, parentId, parentName) => {
-          let content = this.getContent();
+          let content = this.getLayout();
 
           // ファイルを所定のフォルダに作成し、さらに中身を書き込む
           window.googleAPIManager.createFile(fileName, 'application/json', [parentId])
@@ -148,7 +153,7 @@
       //====================
 
       this.onFileSave = () => {
-          let content = this.getContent();
+          let content = this.getLayout();
 
           window.googleAPIManager.updateFile(this._editingFile.id, content)
               .then(resp => {
@@ -183,6 +188,7 @@
       // Utility
       //====================
 
+      // 「編集中のファイル」を設定し、ストアに通知する。
       this.setEditingFile = (fileId, fileName, parentId, parentName) => {
           this._editingFile = {
               id: fileId,
@@ -190,19 +196,30 @@
               parentId: parentId,
               parentName: parentName
           };
-          riot.control.trigger(riot.VE.EDITOR_NAV.EDITING_FILE_CHANGED, this._editingFile);
+          riot.control.trigger(riot.VE.EDITOR.FILE_CHANGED, this._editingFile);
           this.update();
       };
 
-      this.setContent = (content) => {
-          riot.control.trigger(riot.VE.EDITOR_NAV.CONTENT_CHANGED, content);
-      }
+      // レイアウトが読み込まれたことをストアに通知する。
+      this.setLayout = (content) => {
+          riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, content);
+      };
 
       // 親タグからeditor-mainタグを取得してcontentを取得する
       // TODO: ちょっとDirty
-      this.getContent = () => {
-          return this.parent.tags['editor-main'].getContent();
-      }
+      this.getLayout = () => {
+          return this.parent.tags['editor-main'].getLayout();
+      };
+
+      //====================
+      // Handler
+      //====================
+
+      // 編集中のファイルをローカルストレージから読み込む
+      this.onControl(riot.SE.EDITOR.FILE_CHANGED, (editingFile) => {
+          log.info(`Loaded editing file: ${editingFile.id}`);
+          this._editingFile = editingFile
+      });
 
   </script>
 
@@ -227,6 +244,10 @@
 
     a {
       cursor: pointer;
+    }
+
+    .navbar-btn {
+      margin-right: 10px;
     }
 
 

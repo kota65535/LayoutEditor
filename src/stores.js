@@ -1,5 +1,5 @@
-import {PaletteStore} from "./store/PaletteStore";
+import {EditorStore} from "./store/EditorStore";
 
-const stores = new PaletteStore();
+const stores = new EditorStore();
 
 export default stores;

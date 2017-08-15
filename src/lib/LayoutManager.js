@@ -53,10 +53,21 @@ export class LayoutManager {
      */
     loadLayout(layoutData) {
         this.destroyLayout();
-        layoutData.forEach( rail => {
+        layoutData["rails"].forEach( rail => {
             let railObject = deserialize(rail);
             this._registerRail(railObject);
         })
+    }
+
+    /**
+     * レイアウトをシリアライズして保存可能な状態にする。
+     * @returns {{rails: Array}}
+     */
+    saveLayout() {
+        let layoutData = {
+            rails: this.rails.map(r => serialize(r))
+        };
+        return layoutData;
     }
 
     /**

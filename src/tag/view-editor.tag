@@ -1,11 +1,15 @@
 <view-editor>
     <editor-menubar is-authorized={ opts.isAuthorized }/>
-    <editor-pallete items={ palette_items }></editor-pallete>
+    <editor-pallete items={ palette_items }/>
     <editor-main/>
+    <editor-toolbar is-authorized={ opts.isAuthorized }/>
 
   <script>
+      import riot from "riot";
       import logger from "../logging";
       let log = logger(this.__.tagName);
+
+      this.mixin("controlMixin");
 
       this.palette_items = {
           "StraightRails": [
@@ -35,6 +39,7 @@
 
       this.on("mount", () => {
           log.info(`is mounted.`);
+
       });
 
 

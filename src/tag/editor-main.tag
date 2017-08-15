@@ -99,27 +99,42 @@
         let rail = new StraightRail(new paper.Point(560, 140),0,140, true);
         this.editor.layoutManager.putRail(rail, rail.joints[0], new paper.Point(140,140));
 
+        // レイアウトデータの初期化を始める
+        riot.control.trigger(riot.VE.EDITOR.LAYOUT_INIT);
     });
 
     //====================
     // イベントハンドラ
     //====================
 
-    this.onControl(riot.SE.PALETTE_ITEM_SELECTED, itemName => {
+    // パレットレールが指定されたら、これを選択する
+    this.onControl(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, itemName => {
         this.selectedItem = itemName;
         log.info("Palette selected: " + this.selectedItem);
         this.editor.selectRail(this.factory[itemName]());
     });
 
-    this.onControl(riot.VE.MENU_SAVE_LAYOUT, () => {
-        log.info("Saving layout...");
-        riot.control.trigger(riot.VE.SAVE_LAYOUT, this.editor.layoutManager.railData);
+    // レイアウトデータに変更があったら、これをロードする
+    this.onControl(riot.SE.EDITOR.LAYOUT_CHANGED, (layoutData) => {
+        log.info(`Loading layout: ${layoutData}`);
+        this.editor.loadLayout(layoutData);
     });
 
-    this.onControl(riot.SE.LAYOUT_LOADED, (layoutData) => {
-        log.info("Loading layout...");
-        this.editor.layoutManager.loadLayout(layoutData);
+    // ツールバーにAngleが入力されたら、パレットレールの角度を変更する
+    this.onControl(riot.VE.EDITOR.ANGLE_CHANGED, (angle) => {
+        log.info(`Angle changed: ${angle}`);
+        this.editor.paletteRailAngle = angle;
+        this.editor.paletteRail.rotate(this.editor.paletteRailAngle, this.editor.paletteRail.startPoint);
     });
+
+    //====================
+    // public API
+    //====================
+
+    this.getLayout = () => {
+        return this.editor.saveLayout();
+    }
+
 
   </script>
 
