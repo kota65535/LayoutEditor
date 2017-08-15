@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 
-import {TrianglePart} from "./TrianglePart";
+import {TrianglePart} from "./primitives/TrianglePart";
 
 /**
  * フィーダークラス。

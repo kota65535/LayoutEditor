@@ -89,6 +89,7 @@ export class LayoutManager {
             // 動くか？
             rail.move(to, rail.startPoint);
         }
+        rail.setVisible(true);
         rail.setOpacity(1.0);
         this._registerRail(rail);
         return true;

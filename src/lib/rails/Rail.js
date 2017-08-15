@@ -229,12 +229,22 @@ export class Rail {
 
     /**
      * このレールの透明度を設定する
-     * @param value
+     * @param {number} value
      */
     setOpacity(value) {
         this.railParts.forEach(elem => elem.path.opacity = value);
         this.joints.forEach(elem => elem.path.opacity = value);
         this.feederSockets.forEach(elem => elem.path.opacity = value);
+    }
+
+    /**
+     * このレールの表示・非表示を設定する。
+     * @param {boolean} isVisible
+     */
+    setVisible(isVisible) {
+        this.railParts.forEach(elem => elem.path.visible = isVisible);
+        this.joints.forEach(elem => elem.path.visible = isVisible);
+        this.feederSockets.forEach(elem => elem.path.visible = isVisible);
     }
 
     /**

@@ -71,13 +71,10 @@ export class LayoutEditor {
      *
      */
     selectRail(rail) {
-        // 接続可能なジョイントに近づくまで透明化する
-        if (this.paletteRail) {
-            this.paletteRail.remove();
-        }
+        // TODO: パレットを連打すると、その分だけ不可視のレールが生成されてしまう
         this.paletteRail = rail;
         this.paletteRail.rotate(this.paletteRailAngle, this.paletteRail.startPoint);
-        this.paletteRail.setOpacity(0.3);
+        this.paletteRail.setVisible(false);
     }
 
     /**
@@ -85,6 +82,7 @@ export class LayoutEditor {
      * @param {Joint} toJoint
      */
     showRailToPut(toJoint) {
+        this.paletteRail.setVisible(true);
         this.paletteRail.setOpacity(0.5);
         // レール選択直後の場合、対向レールの種類にもとづいてレールガイドの初期向きを設定する
         if (this.jointIndexOfGuide === null) {
@@ -97,7 +95,7 @@ export class LayoutEditor {
      * 設置されるレールのガイドを消去する。
      */
     hideRailToPut() {
-        this.paletteRail.setOpacity(0.3);
+        this.paletteRail.setVisible(false);
         this.paletteRail.disconnect();
         this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
     }

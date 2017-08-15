@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 
-import {RectPart} from "./RectPart";
+import {RectPart} from "./primitives/RectPart";
 import {sprintf} from "sprintf-js";
 import logger from "../../../logging";
 

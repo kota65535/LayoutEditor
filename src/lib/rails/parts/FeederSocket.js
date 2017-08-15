@@ -1,7 +1,7 @@
 /**
  * Created by tozawa on 2017/07/12.
  */
-import {RectPart} from "./RectPart";
+import {RectPart} from "./primitives/RectPart";
 import {Feeder} from "./Feeder";
 import logger from "../../../logging";
 
