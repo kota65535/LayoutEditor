@@ -29,6 +29,9 @@
     import {Joint} from "../lib/rails/parts/Joint";
     import logger from "../logging";
     let log = logger(this.__.tagName);
+    import { CombinedPart } from "../lib/rails/parts/primitives/CombinedPart";
+    import { CirclePart } from "../lib/rails/parts/primitives/CirclePart";
+    import { RectPart } from "../lib/rails/parts/primitives/RectPart";
 
     this.mixin("controlMixin");
 
@@ -43,6 +46,14 @@
     this.on("mount", () => {
         log.info(`is mounted.`);
         paper.setup("editor-canvas");
+
+        let p1 = new CombinedPart(new paper.Point(0, 0), new paper.Point(0, 0), 135, [
+            new CirclePart(new paper.Point(0, 0), 0, 70, "blue"),
+            new RectPart(new paper.Point(35, 0), 0, 70, 140, "blue")
+        ]);
+
+        p1.moveRelatively(new paper.Point(280, 0), p1.getPosition());
+
 
         // レイヤー１にグリッドを描画
         this.grid = new GridPaper("editor-canvas", BOARD_WIDTH, BOARD_HEIGHT, GRID_SIZE,

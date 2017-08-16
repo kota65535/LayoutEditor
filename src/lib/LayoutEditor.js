@@ -74,6 +74,7 @@ export class LayoutEditor {
         // TODO: パレットを連打すると、その分だけ不可視のレールが生成されてしまう
         this.paletteRail = rail;
         this.paletteRail.rotate(this.paletteRailAngle, this.paletteRail.startPoint);
+        // 不可視の状態で置いておく
         this.paletteRail.setVisible(false);
     }
 
@@ -88,7 +89,10 @@ export class LayoutEditor {
         if (this.jointIndexOfGuide === null) {
             this.initJointOfGuide(toJoint);
         }
+        // 接続先のレールよりも下に表示する（ジョイントの当たり判定のため）
+        this.paletteRail.pathGroup.moveBelow(this.layoutManager.getRailFromJoint(toJoint).pathGroup);
         this.paletteRail.connect(this.getCurrentJointOfGuide(), toJoint, true);
+        // toJoint.parts.forEach( part => part.path.bringToFront());
     }
 
     /**
@@ -96,6 +100,7 @@ export class LayoutEditor {
      */
     hideRailToPut() {
         this.paletteRail.setVisible(false);
+        this.paletteRail.setOpacity(0);
         this.paletteRail.disconnect();
         this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
     }

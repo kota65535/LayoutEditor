@@ -128,6 +128,10 @@ export class LayoutManager {
         if (!hitResult) {
             return null;
         }
+        // hitResults[0].item.fillColor = 'red';
+        // hitResults[1].item.fillColor = 'blue';
+
+
         let allJoints = [].concat.apply([], this.rails.map( r => r.joints));
         return allJoints.find( joint => joint.containsPath(hitResult.item));
     }
@@ -295,12 +299,26 @@ export class LayoutManager {
         };
         let hitResult = paper.project.hitTest(point, hitOptions);
         if (hitResult) {
+            // log.info(hitResult.item.position);
+            // log.info(hitResult.item.id);
             // log.debug("Hit Test:");
             // log.debug(point);
             // log.debug(hitResult);
             // log.debug(hitResult.point);
         }
         return hitResult;
+    }
+
+    _hitTestAll(point) {
+        let hitOptions = {
+            segments: true,
+            stroke: true,
+            fill: true,
+            // tolerance: 5
+        };
+        let hitResults = paper.project.hitTestAll(point, hitOptions);
+        let hitResultsPathOnly = hitResults.filter(r => r.item instanceof paper.Path);
+        return hitResultsPathOnly;
     }
 
     _getNextRailId() {

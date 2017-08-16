@@ -7,7 +7,7 @@ export class CombinedPart {
     /**
      * 複合パーツを作成する。
      *
-     * @param {Point} position       複合パーツの位置
+     * @param {Point} position       複合パーツの位置（移動先）
      * @param {Point} centerPosition 複合パーツの中心点とする位置
      * @param {number} angle         X軸に対する絶対角度
      * @param {Array<Part>} parts    複合パーツを構成するパーツ
@@ -73,7 +73,7 @@ export class CombinedPart {
      * @return {Point}
      */
     getPosition() {
-        return this.path.position;
+        return this.position;
     }
 
     // getCenterOfTop() {
@@ -92,6 +92,14 @@ export class CombinedPart {
     //     return this.path.segments[3].point
     // }
 
+    setOpacity(value) {
+        this.parts.forEach(part => part.path.opacity = value);
+    }
+
+    setVisible(value) {
+        this.parts.forEach(part => part.path.visible = value);
+    }
+
     /**
      * パスを削除する。
      */
@@ -104,7 +112,11 @@ export class CombinedPart {
      * @param path
      * @returns {boolean}
      */
+    equals(group) {
+        return this.pathGroup.id === group.id;
+    }
+
     containsPath(path) {
-        return path.id === this.path.id;
+        return this.parts.map(part => part.path.id).includes(path.id);
     }
 }

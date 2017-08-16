@@ -3,6 +3,8 @@
  */
 
 import {RectPart} from "./primitives/RectPart";
+import {CirclePart} from "./primitives/CirclePart";
+import {CombinedPart} from "./primitives/CombinedPart";
 import {sprintf} from "sprintf-js";
 import logger from "../../../logging";
 
@@ -11,10 +13,11 @@ let log = logger("Joint", "DEBUG");
 /**
  * レールのジョイントを表現するクラス
  */
-export class Joint extends RectPart {
+export class Joint extends CombinedPart {
 
     static WIDTH = 8;
     static HEIGHT = 16;
+    static HIT_RADIUS = 20;
     static FILL_COLOR_CONNECTED = "darkgray";
     static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "darkorange";
@@ -25,7 +28,8 @@ export class Joint extends RectPart {
      */
     static State = {
         OPEN: Symbol("Open"),               // 未接続
-        CONNECTING: Symbol("Connecting"),   // 接続試行中
+        CONNECTING_FROM: Symbol("ConnectingFrom"),   // 接続試行中
+        CONNECTING_TO: Symbol("ConnectingTo"),   // 接続試行中
         CONNECTED: Symbol("Connected")      // 接続中
     };
 
@@ -47,7 +51,14 @@ export class Joint extends RectPart {
      * @param {Rail} rail ジョイントが属するレールオブジェクト
      */
     constructor(position, angle, direction, rail) {
-        super(position, angle, Joint.WIDTH, Joint.HEIGHT, Joint.FILL_COLOR_OPEN);
+        let rect = new RectPart(position, 0, Joint.WIDTH, Joint.HEIGHT, Joint.FILL_COLOR_OPEN);
+        let circle = new CirclePart(position.subtract(new paper.Point(0, 0)), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
+
+        if (direction === Joint.Direction.SAME_TO_ANGLE) {
+            angle += 180;
+        }
+
+        super(position, rect.position, angle, [rect, circle]);
 
         this.direction = direction;
         this.connectedJoint = null;
@@ -66,12 +77,13 @@ export class Joint extends RectPart {
      * @return {Point}
      */
     getPosition() {
-        switch(this.direction) {
-            case Joint.Direction.SAME_TO_ANGLE:
-                return this.path.segments[3].point;
-            case Joint.Direction.REVERSE_TO_ANGLE:
-                return this.path.segments[0].point;
-        }
+        return this.parts[0].path.segments[0].point;
+        // switch(this.direction) {
+        //     case Joint.Direction.SAME_TO_ANGLE:
+        //         return this.parts[0].path.segments[3].point;
+        //     case Joint.Direction.REVERSE_TO_ANGLE:
+        //         return this.parts[0].path.segments[0].point;
+        // }
     }
 
     /**
@@ -92,12 +104,13 @@ export class Joint extends RectPart {
      * @returns {number}
      */
     getDirection() {
-        switch (this.direction) {
-            case Joint.Direction.SAME_TO_ANGLE:
-                return this.angle;
-            case Joint.Direction.REVERSE_TO_ANGLE:
-                return this.angle + 180;
-        }
+        return this.angle;
+        // switch (this.direction) {
+        //     case Joint.Direction.SAME_TO_ANGLE:
+        //         return this.angle;
+        //     case Joint.Direction.REVERSE_TO_ANGLE:
+        //         return this.angle + 180;
+        // }
     }
 
     /**
@@ -108,8 +121,8 @@ export class Joint extends RectPart {
         this.connectedJoint = joint;
         joint.connectedJoint = this;
         if (isDryRun) {
-            this._setState(Joint.State.CONNECTING);
-            joint._setState(Joint.State.CONNECTING);
+            this._setState(Joint.State.CONNECTING_FROM);
+            joint._setState(Joint.State.CONNECTING_TO);
         } else {
             this._setState(Joint.State.CONNECTED);
             joint._setState(Joint.State.CONNECTED);
@@ -151,27 +164,33 @@ export class Joint extends RectPart {
         let angle = this.angle;
         switch(state) {
             case Joint.State.OPEN:
-                this.path.fillColor = Joint.FILL_COLOR_OPEN;
-                // this.path.rotate(0);
-                // this.path.scale(1, 1, this.getPosition());
-                // this.path.rotate(angle);
-                this.state = state;
+                // 透明でも当たり判定が存在
+                this.parts.forEach(part => part.path.fillColor = Joint.FILL_COLOR_OPEN);
+                this.parts[1].path.visible = true;
+                this.parts[1].path.opacity = 0;
                 break;
-            case Joint.State.CONNECTING:
-                this.path.fillColor = Joint.FILL_COLOR_CONNECTING;
-                // this.path.rotate(0);
-                // this.path.scale(1, 1, this.getPosition());
-                // this.path.rotate(angle);
-                this.state = state;
+            case Joint.State.CONNECTING_FROM:
+                this.parts.forEach(part => part.path.fillColor = Joint.FILL_COLOR_CONNECTING);
+                this.parts[1].path.visible = false;
+                break;
+            case Joint.State.CONNECTING_TO:
+                this.parts.forEach(part => part.path.fillColor = Joint.FILL_COLOR_CONNECTING);
+                this.parts[1].path.visible = true;
+                this.parts[1].path.opacity = 0.5;
                 break;
             case Joint.State.CONNECTED:
-                this.path.fillColor = Joint.FILL_COLOR_CONNECTED;
-                // this.path.rotate(0);
-                // this.path.scale(0.5, 1, this.getPosition());
-                // this.path.rotate(angle);
-                this.state = state;
+                this.parts.forEach(part => part.path.fillColor = Joint.FILL_COLOR_CONNECTED);
+                this.parts[1].path.visible = true;
+                this.parts[1].path.opacity = 0;
                 break;
         }
+        this.state = state;
     }
 
+    setOpacity(value) {
+        this.parts[0].opacity = value;
+        if (this.parts[1].opacity > value) {
+            this.parts[1].opacity = value;
+        }
+    }
 }

@@ -64,12 +64,14 @@ export class Rail {
             let startJoint = new Joint(railPart.startPoint, railPart.startAngle, Joint.Direction.REVERSE_TO_ANGLE, this);
             this.joints.push(startJoint);
             // ジョイントは常にレールパーツの上に描画
-            this.pathGroup.addChild(startJoint.path);
+            startJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
+            // this.pathGroup.addChild(startJoint.pathGroup);
         }
         if ( ! this._isJointDuplicate(railPart.endPoint) ) {
             let endJoint = new Joint(railPart.endPoint, railPart.endAngle, Joint.Direction.SAME_TO_ANGLE, this);
             this.joints.push(endJoint);
-            this.pathGroup.addChild(endJoint.path);
+            // this.pathGroup.addChild(endJoint.pathGroup);
+            endJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
         }
 
         // フィーダーソケットの追加
@@ -233,7 +235,7 @@ export class Rail {
      */
     setOpacity(value) {
         this.railParts.forEach(elem => elem.path.opacity = value);
-        this.joints.forEach(elem => elem.path.opacity = value);
+        this.joints.forEach(elem => elem.setOpacity(value));
         this.feederSockets.forEach(elem => elem.path.opacity = value);
     }
 
@@ -243,7 +245,7 @@ export class Rail {
      */
     setVisible(isVisible) {
         this.railParts.forEach(elem => elem.path.visible = isVisible);
-        this.joints.forEach(elem => elem.path.visible = isVisible);
+        this.joints.forEach(elem => elem.setVisible(isVisible));
         this.feederSockets.forEach(elem => elem.path.visible = isVisible);
     }
 
