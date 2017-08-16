@@ -3,9 +3,7 @@ var path = require("path");
 module.exports = {
     context: __dirname + '/src',
 
-    entry: {
-        js: "./index.js"
-    },
+    entry: "./index.js",
 
     output: {
         path: __dirname + '/dist',
@@ -36,6 +34,10 @@ module.exports = {
                         presets: ['es2015', 'stage-0']
                     }
                 },
+            },
+            {
+                test: /\.tsx?$/,
+                loader: "ts-loader"
             },
             {
                 test: /\.css$/,
@@ -103,12 +105,8 @@ module.exports = {
     ],
 
     resolve: {
-        extensions: ['.js', '.jsx'],
+        extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"]
     },
-
-    // devServer: {
-    //     publicPath: "/dist/"
-    // },
 
 
     devtool: "source-map"
