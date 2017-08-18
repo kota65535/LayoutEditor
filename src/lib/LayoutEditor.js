@@ -50,7 +50,8 @@ export class LayoutEditor {
         this.layoutSimulator = new LayoutSimulator();
 
         // 最初のレールを配置するためのグリッド上のジョイント
-        this.jointsOnGrid = [];
+        this.gridJoints = [];
+        this.gridJointsAngle = 0;
     }
 
     /**
@@ -59,11 +60,6 @@ export class LayoutEditor {
      */
     loadLayout(layoutData) {
         this.layoutManager.loadLayout(layoutData);
-        if (this.isLayoutBlank()) {
-            this.putJointsOnGrid();
-        } else {
-            this.removeJointsOnGrid();
-        }
     }
 
     /**
@@ -83,37 +79,38 @@ export class LayoutEditor {
     }
 
     //==============================
-    // 最初のレール設置時特有のメソッド
+    // 一本目のレール設置時特有のメソッド
     //==============================
 
     /**
-     * 最初のレールを配置するための不可視のジョイント（以降、グリッドジョイント）をグリッド上に配置する。
+     * 一本目のレールを配置するための透明なジョイント（以降、グリッドジョイント）をグリッド上に配置する。
      */
-    putJointsOnGrid() {
-        let gridPoints = this.gridPaper.getGridPoints(paper.view.bounds.topLeft, paper.view.bounds.bottomRight);
-        gridPoints.forEach(point => {
-            let joint = new Joint(point, 0, JointDirection.SAME_TO_ANGLE, null);
-            joint.basePart.setOpacity(0);
-            this.jointsOnGrid.push(joint);
-        });
+    putJointsOnGrid(cursorPosition) {
+        // マウスカーソルの周囲のグリッドの座標を取得する
+        let topLeft = cursorPosition.subtract(new paper.Point(this.gridPaper.gridSize, this.gridPaper.gridSize));
+        let bottomRight = cursorPosition.add(new paper.Point(this.gridPaper.gridSize, this.gridPaper.gridSize));
+        let gridPoints = this.gridPaper.getGridPoints(topLeft, bottomRight);
+
+        // 更新のためいったん全て消す
+        this.removeJointsOnGrid();
+
+        if (this.isLayoutBlank()) {
+            // グリッド上に透明なジョイントを作成
+            gridPoints.forEach(point => {
+                let joint = new Joint(point, this.gridJointsAngle, JointDirection.SAME_TO_ANGLE, null);
+                joint.basePart.setOpacity(0);
+                joint.basePart.setVisible(false);
+                this.gridJoints.push(joint);
+            });
+        }
     }
 
     /**
      * 全てのグリッドジョイントを削除する。
      */
     removeJointsOnGrid() {
-        this.jointsOnGrid.forEach(joint => joint.remove());
-        this.jointsOnGrid = [];
-    }
-
-    /**
-     * グリッド上の不可視のジョイントを回転する。
-     * @param angle
-     */
-    rotateJointsOnGrid(angle) {
-        this.jointsOnGrid.forEach(joint => {
-            joint.rotate(angle);
-        })
+        this.gridJoints.forEach(joint => joint.remove());
+        this.gridJoints = [];
     }
 
     /**
@@ -126,7 +123,7 @@ export class LayoutEditor {
         if (!hitResult) {
             return null;
         }
-        return this.jointsOnGrid.find(joint => joint.containsPath(hitResult.item));
+        return this.gridJoints.find(joint => joint.containsPath(hitResult.item));
     }
 
     /**
@@ -292,6 +289,11 @@ export class LayoutEditor {
      * @param {ToolEvent} event
      */
     handleMouseMove(event) {
+
+        if (this.isLayoutBlank()) {
+            this.putJointsOnGrid(event.point);
+        }
+
         // 何にも接触していない場合、各種ガイドを消す
         this.hideRailToPut();
         this.hideFeederToPut();
@@ -455,10 +457,6 @@ export class LayoutEditor {
             case "backspace":
                 selectedRails.forEach(r => this.layoutManager.removeRail(r));
                 selectedFeeders.forEach(f => this.layoutManager.removeFeeder(f));
-                // レイアウトが空になっていたらグリッドジョイントを表示する
-                if (this.isLayoutBlank()) {
-                    this.putJointsOnGrid();
-                }
                 break;
             // case "space":
             //     // 全てのレールを未チェック状態にする

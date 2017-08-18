@@ -126,7 +126,7 @@ export class GridPaper {
      * @param bottomRight
      * @returns {Array<Array<number>}
      */
-    getGridPoints(topLeft, bottomRight) {
+    getGridPoints(topLeft = this.boardMin, bottomRight = this.boardMax) {
         let rangeX = _.range(Math.floor(bottomRight.x / this.gridSize), Math.floor(topLeft.x / this.gridSize));
         let gridsX = rangeX.map(x => x * this.gridSize);
         let rangeY = _.range(Math.floor(bottomRight.y / this.gridSize), Math.floor(topLeft.y / this.gridSize));

@@ -61,6 +61,8 @@
         let tool = new paper.Tool();
         tool.onMouseMove = (event) => {
             this.editor.handleMouseMove(event);
+            // マウスカーソル位置を通知
+            riot.control.trigger(riot.VE.EDITOR.CURSOR_POSITION_CHANGED, event.point);
         };
 
         tool.onMouseDown = (event) => {
@@ -135,7 +137,7 @@
             angle = 0;
         }
         // 角度は左回りとする
-        this.editor.rotateJointsOnGrid(-angle);
+        this.editor.gridJointsAngle = -angle;
     });
 
     //====================

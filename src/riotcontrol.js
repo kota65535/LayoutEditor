@@ -51,7 +51,8 @@ riot.VE = {
         LAYOUT_INIT: "ve.editor.layout_init",
         OPEN_BUILD_PALETTE: "ve.editor.open_build_palette",
         OPEN_RUN_PALETTE: "ve.editor.open_run_palette",
-        ANGLE_CHANGED: "ve.editor.angle_changed"
+        ANGLE_CHANGED: "ve.editor.angle_changed",
+        CURSOR_POSITION_CHANGED: "ve.editor.cursor_position_changed"
     },
 }
 
