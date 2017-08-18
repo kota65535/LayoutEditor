@@ -2,24 +2,25 @@
 import {PartBase} from "./PartBase";
 import {Group, Path, Point} from "paper";
 
-const enum State {
+export enum DetectionState {
     BEFORE_DETECT = 1,
     DETECTING,
     AFTER_DETECT
 }
 
-export class DetectivePart implements PartBase {
+/**
+ * 可視領域以外に当たり判定を持つことができるパーツ。
+ */
+export class DetectablePart implements PartBase {
 
     basePart: PartBase;
     detectionPart: PartBase;
     pathGroup: Group;
     path: Path;
     angle: number;
+    detectionState: DetectionState;
 
 
-    /**
-     * 当たり判定付きパーツを作成する。
-     */
     constructor(position: Point, angle: number, basePart: PartBase, detectionPart: PartBase) {
         this.basePart = basePart;
         this.detectionPart = detectionPart;
@@ -63,6 +64,10 @@ export class DetectivePart implements PartBase {
         return this.basePart.getAngle();
     }
 
+    setAngle(angle: number) {
+        this.basePart.setAngle(angle);
+    }
+
     remove() {
         this.basePart.remove();
         this.detectionPart.remove();
@@ -84,26 +89,27 @@ export class DetectivePart implements PartBase {
 
     /**
      * 当たり判定領域の状態を変更する。
-     * @param {State} state
+     * @param {DetectionState} state
      */
-    setState(state: State) {
+    setDetectionState(state: DetectionState) {
         switch(state) {
-            case State.BEFORE_DETECT:
+            case DetectionState.BEFORE_DETECT:
                 // 当たり判定領域を透明化
                 this.detectionPart.setVisible(true);
                 this.detectionPart.setOpacity(0);
                 break;
-            case State.DETECTING:
+            case DetectionState.DETECTING:
                 // 当たり判定領域を半透明化
                 this.detectionPart.setVisible(true);
                 this.detectionPart.setOpacity(0.5);
                 break;
-            case State.AFTER_DETECT:
+            case DetectionState.AFTER_DETECT:
                 // 当たり判定領域を不可視（無効化）
                 this.detectionPart.setVisible(false);
                 this.detectionPart.setOpacity(0);
                 break;
         }
+        this.detectionState = state;
     }
 
 

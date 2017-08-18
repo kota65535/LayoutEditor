@@ -1,7 +1,7 @@
 /**
  * Created by tozawa on 2017/07/12.
  */
-import {Joint} from "./rails/parts/Joint";
+import {Joint, JointState} from "./rails/parts/Joint";
 import {FeederSocket} from "./rails/parts/FeederSocket";
 import {Rail} from "./rails/Rail";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
@@ -193,7 +193,7 @@ export class LayoutEditor {
 
         // ジョイント上かつ接続中でないならレール設置ガイドを表示する
         let joint = this.layoutManager.getJoint(event.point);
-        if (joint && ! (joint.getState() === Joint.State.CONNECTED)) {
+        if (joint && ! (joint.getState() === JointState.CONNECTED)) {
             this.showRailToPut(joint);
         } else {
             this.hideRailToPut();
@@ -235,7 +235,7 @@ export class LayoutEditor {
 
         // ジョイント結合・レール設置処理
         let joint = this.layoutManager.getJoint(event.point);
-        if (joint && joint.getState() !== Joint.State.CONNECTED) {
+        if (joint && joint.getState() !== JointState.CONNECTED) {
             this.putSelectedRail(joint);
             return;
         }
@@ -275,7 +275,7 @@ export class LayoutEditor {
      */
     handleMouseDownRight(event) {
         let joint = this.layoutManager.getJoint(event.point);
-        if (joint && joint.getState() !== Joint.State.CONNECTED) {
+        if (joint && joint.getState() !== JointState.CONNECTED) {
             joint.disconnect();
             this.incrementJointIndexOfGuide();
             this.showRailToPut(joint);

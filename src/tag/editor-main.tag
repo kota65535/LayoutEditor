@@ -29,7 +29,6 @@
     import {Joint} from "../lib/rails/parts/Joint";
     import logger from "../logging";
     let log = logger(this.__.tagName);
-    import { CombinedPart } from "../lib/rails/parts/primitives/CombinedPart";
     import { CirclePart } from "../lib/rails/parts/primitives/CirclePart";
     import { RectPart } from "../lib/rails/parts/primitives/RectPart";
 
@@ -46,13 +45,6 @@
     this.on("mount", () => {
         log.info(`is mounted.`);
         paper.setup("editor-canvas");
-
-        let p1 = new CombinedPart(new paper.Point(0, 0), new paper.Point(0, 0), 135, [
-            new CirclePart(new paper.Point(0, 0), 0, 70, "blue"),
-            new RectPart(new paper.Point(35, 0), 0, 70, 140, "blue")
-        ]);
-
-        p1.moveRelatively(new paper.Point(280, 0), p1.getPosition());
 
 
         // レイヤー１にグリッドを描画
@@ -128,7 +120,7 @@
     // レイアウトデータに変更があったら、これをロードする
     this.onControl(riot.SE.EDITOR.LAYOUT_CHANGED, (layoutData) => {
         log.info(`Loading layout: ${layoutData}`);
-        this.editor.loadLayout(layoutData);
+//        this.editor.loadLayout(layoutData);
     });
 
     // ツールバーにAngleが入力されたら、パレットレールの角度を変更する

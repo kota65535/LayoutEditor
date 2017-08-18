@@ -8,7 +8,7 @@ import logdown from "logdown";
 // Loglevelを使う場合
 function initLoglevel(name) {
     let logger = loglevel.getLogger(name);
-    logger.setLevel("INFO");
+    logger.setLevel("DEBUG");
     return logger;
 }
 

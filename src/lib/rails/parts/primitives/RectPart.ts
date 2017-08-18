@@ -74,6 +74,10 @@ export class RectPart implements PartBase {
         return this.angle;
     }
 
+    setAngle(angle: number) {
+        this.angle = angle;
+    }
+
     remove() {
         this.path.remove();
     }

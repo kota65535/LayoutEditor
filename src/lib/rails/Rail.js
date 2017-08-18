@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
-import { Joint } from "./parts/Joint.js";
+import { Joint, JointDirection } from "./parts/Joint.ts";
 import { FeederSocket } from "./parts/FeederSocket";
 import logger from "../../logging";
 
@@ -61,27 +61,27 @@ export class Rail {
 
         // 重複が無いか確認してからジョイントを追加する
         if ( ! this._isJointDuplicate(railPart.startPoint) ) {
-            let startJoint = new Joint(railPart.startPoint, railPart.startAngle, Joint.Direction.REVERSE_TO_ANGLE, this);
+            let startJoint = new Joint(railPart.startPoint, railPart.startAngle, JointDirection.REVERSE_TO_ANGLE, this);
             this.joints.push(startJoint);
             // ジョイントは常にレールパーツの上に描画
-            startJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
-            // this.pathGroup.addChild(startJoint.pathGroup);
+            // startJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
+            this.pathGroup.addChild(startJoint.pathGroup);
         }
         if ( ! this._isJointDuplicate(railPart.endPoint) ) {
-            let endJoint = new Joint(railPart.endPoint, railPart.endAngle, Joint.Direction.SAME_TO_ANGLE, this);
+            let endJoint = new Joint(railPart.endPoint, railPart.endAngle, JointDirection.SAME_TO_ANGLE, this);
             this.joints.push(endJoint);
-            // this.pathGroup.addChild(endJoint.pathGroup);
-            endJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
+            this.pathGroup.addChild(endJoint.pathGroup);
+            // endJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
         }
 
         // フィーダーソケットの追加
-        this.railParts.forEach(part => {
-            if (part.hasFeederSocket()) {
-                let feederSocket = new FeederSocket(part);
-                this.feederSockets.push(feederSocket);
-                this.pathGroup.addChild(feederSocket.path)
-            }
-        });
+        // this.railParts.forEach(part => {
+        //     if (part.hasFeederSocket()) {
+        //         let feederSocket = new FeederSocket(part);
+        //         this.feederSockets.push(feederSocket);
+        //         this.pathGroup.addChild(feederSocket.path)
+        //     }
+        // });
     }
 
     /**

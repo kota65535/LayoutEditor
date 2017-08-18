@@ -33,7 +33,11 @@ export class EditorStore extends StoreBase {
             this.trigger(riot.SE.EDITOR.FILE_CHANGED, this.data["editing_file"]);
         });
         this.on(riot.VE.EDITOR.LAYOUT_INIT, () => {
-            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, JSON.parse(this.data["layout"]));
+            let layoutData = null;
+            if (this.data["layout"]) {
+                layoutData = JSON.parse(this.data["layout"]);
+            }
+            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData);
         });
     }
 

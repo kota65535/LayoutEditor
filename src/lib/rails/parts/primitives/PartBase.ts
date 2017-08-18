@@ -45,6 +45,12 @@ export interface PartBase {
     getAngle(): number;
 
     /**
+     * 現在角度を返す。
+     * @return {Point}
+     */
+    setAngle(angle: number): void;
+
+    /**
      * パスを削除する。
      */
     remove(): void;

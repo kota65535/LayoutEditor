@@ -1,7 +1,7 @@
 /**
  * Created by tozawa on 2017/07/12.
  */
-import {Joint} from "./rails/parts/Joint";
+import {Joint, JointState} from "./rails/parts/Joint";
 import {Rail} from "./rails/Rail";
 import {FeederSocket} from "./rails/parts/FeederSocket";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
@@ -248,8 +248,8 @@ export class LayoutManager {
      * @param {Rail} rail
      */
     _connectOtherJoints(rail) {
-        let openFromJoints = rail.joints.filter(j => j.getState() === Joint.State.OPEN);
-        let openToJoints = this.rails.flatMap( r => r.joints ).filter(j => j.getState() === Joint.State.OPEN);
+        let openFromJoints = rail.joints.filter(j => j.getState() === JointState.OPEN);
+        let openToJoints = this.rails.flatMap( r => r.joints ).filter(j => j.getState() === JointState.OPEN);
 
         openFromJoints.forEach( fj => {
             openToJoints.forEach( tj => {

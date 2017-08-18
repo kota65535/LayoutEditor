@@ -217,8 +217,10 @@
 
       // 編集中のファイルをローカルストレージから読み込む
       this.onControl(riot.SE.EDITOR.FILE_CHANGED, (editingFile) => {
-          log.info(`Loaded editing file: ${editingFile.id}`);
-          this._editingFile = editingFile
+          if (editingFile) {
+              log.info(`Loaded editing file: ${editingFile.id}`);
+              this._editingFile = editingFile
+          }
       });
 
   </script>

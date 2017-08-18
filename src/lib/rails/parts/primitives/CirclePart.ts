@@ -23,7 +23,7 @@ export class CirclePart implements PartBase {
      * @param {number} radius   半径
      * @param {Color} fillColor 色
      */
-    constructor(position: Point, angle: number, radius: number, fillColor: Color) {
+    constructor(position: Point, angle: number, radius: number, fillColor: string) {
         this.angle = 0;
         this.radius = radius;
 
@@ -65,6 +65,10 @@ export class CirclePart implements PartBase {
 
     getAngle(): number {
         return this.angle;
+    }
+
+    setAngle(angle: number) {
+        this.angle = angle;
     }
 
     remove() {
