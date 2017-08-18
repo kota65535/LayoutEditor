@@ -5,6 +5,7 @@ import {Joint, JointState} from "./rails/parts/Joint";
 import {Rail} from "./rails/Rail";
 import {FeederSocket} from "./rails/parts/FeederSocket";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
+import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
 
 let log = logger("LayoutEditor", "DEBUG");
@@ -53,14 +54,16 @@ export class LayoutManager {
      */
     loadLayout(layoutData) {
         this.destroyLayout();
-        layoutData["rails"].forEach( rail => {
-            let railObject = deserialize(rail);
-            this._registerRail(railObject);
-        })
+        if (layoutData && layoutData["rails"]) {
+            layoutData["rails"].forEach( rail => {
+                let railObject = deserialize(rail);
+                this._registerRail(railObject);
+            })
+        }
     }
 
     /**
-     * レイアウトをシリアライズして保存可能な状態にする。
+     * 現在のレイアウトデータをシリアライズしたオブジェクトを返す。
      * @returns {{rails: Array}}
      */
     saveLayout() {
@@ -74,7 +77,7 @@ export class LayoutManager {
      * レールを任意のジョイントと結合して設置する。
      * @param {Rail} rail
      * @param {Joint} fromJoint
-     * @param {Point,Joint} to
+     * @param {Joint} to
      * @returns {Boolean} true if succeeds, false otherwise.
      */
     putRail(rail, fromJoint, to) {
@@ -82,12 +85,12 @@ export class LayoutManager {
             log.warn("The rail cannot be put because of intersection.");
             return false;
         }
-        if (to.constructor.name === "Joint") {
+        if (to instanceof Joint) {
             rail.connect(fromJoint, to);
             this._connectOtherJoints(rail);
         } else {
             // 動くか？
-            rail.move(to, rail.startPoint);
+            rail.move(to.position, rail.startPoint);
         }
         rail.setVisible(true);
         rail.setOpacity(1.0);
@@ -124,7 +127,7 @@ export class LayoutManager {
      * @returns {Joint} joint at the point
      */
     getJoint(point) {
-        let hitResult = this._hitTest(point);
+        let hitResult = hitTest(point);
         if (!hitResult) {
             return null;
         }
@@ -143,7 +146,7 @@ export class LayoutManager {
      * @return {FeederSocket} feederSocket at the point
      */
     getFeederSocket(point) {
-        let hitResult = this._hitTest(point);
+        let hitResult = hitTest(point);
         if (!hitResult) {
             return null;
         }
@@ -279,47 +282,17 @@ export class LayoutManager {
 
         this.railData.push(serializedRail);
 
-        log.debug("ActiveLayer.children begin-----");
-        paper.project.activeLayer.children.forEach( c => {
-            if (c.constructor.name === "Group") {
-                log.debug("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
-            } else {
-                log.debug("PUT " + c.id);
-            }
-        });
-        log.debug("ActiveLayer.children end  -----");
+        // log.debug("ActiveLayer.children begin-----");
+        // paper.project.activeLayer.children.forEach( c => {
+        //     if (c.constructor.name === "Group") {
+        //         log.debug("PUT Group " + c.id + ": " + c.children.map(cc => cc.id).join(","));
+        //     } else {
+        //         log.debug("PUT " + c.id);
+        //     }
+        // });
+        // log.debug("ActiveLayer.children end  -----");
     }
 
-    _hitTest(point) {
-        let hitOptions = {
-            segments: true,
-            stroke: true,
-            fill: true,
-            // tolerance: 5
-        };
-        let hitResult = paper.project.hitTest(point, hitOptions);
-        if (hitResult) {
-            // log.info(hitResult.item.position);
-            // log.info(hitResult.item.id);
-            // log.debug("Hit Test:");
-            // log.debug(point);
-            // log.debug(hitResult);
-            // log.debug(hitResult.point);
-        }
-        return hitResult;
-    }
-
-    _hitTestAll(point) {
-        let hitOptions = {
-            segments: true,
-            stroke: true,
-            fill: true,
-            // tolerance: 5
-        };
-        let hitResults = paper.project.hitTestAll(point, hitOptions);
-        let hitResultsPathOnly = hitResults.filter(r => r.item instanceof paper.Path);
-        return hitResultsPathOnly;
-    }
 
     _getNextRailId() {
         return this._nextRailId++;

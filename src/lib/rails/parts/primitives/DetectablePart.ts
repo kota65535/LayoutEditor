@@ -3,7 +3,8 @@ import {PartBase} from "./PartBase";
 import {Group, Path, Point} from "paper";
 
 export enum DetectionState {
-    BEFORE_DETECT = 1,
+    DISABLED,
+    BEFORE_DETECT,
     DETECTING,
     AFTER_DETECT
 }
@@ -13,10 +14,15 @@ export enum DetectionState {
  */
 export class DetectablePart extends PartBase {
 
+    COLOR_BEFORE_DETECT: string = "darkorange";
+    COLOR_DETECTING: string = "deepskyblue";
+    COLOR_AFTER_DETECT: string = "darkgray";
+
     basePart: PartBase;
     detectionPart: PartBase;
     pathGroup: Group;
     detectionState: DetectionState;
+
 
     // このクラス自身が持つ _angle, _position は一切使われない
     get angle() { return this.basePart.angle; }
@@ -50,12 +56,12 @@ export class DetectablePart extends PartBase {
     //     this.moveRelatively(difference);
     // }
 
-    rotateRelatively(difference: number, anchor: Point) {
+    rotateRelatively(difference: number, anchor: Point = this.position) {
         this.basePart.rotateRelatively(difference, anchor);
         this.detectionPart.rotateRelatively(difference, anchor);
     }
 
-    rotate(angle: number, anchor: Point) {
+    rotate(angle: number, anchor: Point = this.position) {
         let relAngle = angle - this.basePart.angle;
         this.rotateRelatively(relAngle, anchor);
     }
@@ -85,20 +91,30 @@ export class DetectablePart extends PartBase {
      */
     setDetectionState(state: DetectionState) {
         switch(state) {
+            case DetectionState.DISABLED:
+                this.detectionPart.setVisible(false);
+                this.detectionPart.setOpacity(0);
+                break;
             case DetectionState.BEFORE_DETECT:
                 // 当たり判定領域を透明化
                 this.detectionPart.setVisible(true);
-                this.detectionPart.setOpacity(0);
+                this.detectionPart.setOpacity(0.2);
+                this.basePart.path.fillColor = this.COLOR_BEFORE_DETECT;
+                this.detectionPart.path.fillColor = this.COLOR_BEFORE_DETECT;
                 break;
             case DetectionState.DETECTING:
                 // 当たり判定領域を半透明化
                 this.detectionPart.setVisible(true);
                 this.detectionPart.setOpacity(0.5);
+                this.basePart.path.fillColor = this.COLOR_DETECTING;
+                this.detectionPart.path.fillColor = this.COLOR_DETECTING;
                 break;
             case DetectionState.AFTER_DETECT:
                 // 当たり判定領域を不可視（無効化）
                 this.detectionPart.setVisible(false);
                 this.detectionPart.setOpacity(0);
+                this.basePart.path.fillColor = this.COLOR_AFTER_DETECT;
+                this.detectionPart.path.fillColor = this.COLOR_AFTER_DETECT;
                 break;
         }
         this.detectionState = state;

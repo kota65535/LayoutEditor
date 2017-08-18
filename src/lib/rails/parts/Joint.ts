@@ -55,7 +55,7 @@ export class Joint extends DetectablePart {
 
 
     get position() {
-        switch (this.direction) {
+        switch (this._direction) {
             case JointDirection.SAME_TO_ANGLE:
                 return this.basePart.getCenterOfRight();
             case JointDirection.REVERSE_TO_ANGLE:
@@ -90,17 +90,16 @@ export class Joint extends DetectablePart {
      */
     constructor(position: Point, angle: number, direction: JointDirection, rail: any) {
         let rect = new RectPart(position, 0, Joint.WIDTH, Joint.HEIGHT, Joint.FILL_COLOR_OPEN);
-        let circle: CirclePart;
+        let circlePosition = new Point(Joint.WIDTH/2, 0);
         switch (direction) {
             case JointDirection.SAME_TO_ANGLE:
-                circle = new CirclePart(position.add(new Point(Joint.WIDTH/2, 0)), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
+                circlePosition = new Point(Joint.WIDTH/2, 0);
                 break;
             case JointDirection.REVERSE_TO_ANGLE:
-                circle = new CirclePart(position.subtract(new Point(Joint.WIDTH/2, 0)), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
+                circlePosition = new Point(-Joint.WIDTH/2, 0);
                 break;
-            default:
-                circle = new CirclePart(position.add(new Point(Joint.WIDTH/2, 0)), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
         }
+        let circle = new CirclePart(position.add(circlePosition), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
         super(position, angle, rect, circle);
 
 
@@ -143,6 +142,14 @@ export class Joint extends DetectablePart {
         }
         this._setState(JointState.OPEN);
         this.connectedJoint = null;
+    }
+
+    /**
+     * ジョイントを削除する。
+     */
+    remove() {
+        this.disconnect();
+        super.remove();
     }
 
     /**

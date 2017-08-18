@@ -97,10 +97,8 @@
 //            return false;
         }, false);
 
-
+        // TODO: ボタンクリックイベントで選択するようにする
         this.editor.selectRail(this.factory.S280());
-        let rail = new StraightRail(new paper.Point(560, 140),0,140, true);
-        this.editor.layoutManager.putRail(rail, rail.joints[0], new paper.Point(140,140));
 
         // レイアウトデータの初期化を始める
         riot.control.trigger(riot.VE.EDITOR.LAYOUT_INIT);
@@ -120,14 +118,18 @@
     // レイアウトデータに変更があったら、これをロードする
     this.onControl(riot.SE.EDITOR.LAYOUT_CHANGED, (layoutData) => {
         log.info(`Loading layout: ${layoutData}`);
-//        this.editor.loadLayout(layoutData);
+        this.editor.loadLayout(layoutData);
     });
 
     // ツールバーにAngleが入力されたら、パレットレールの角度を変更する
     this.onControl(riot.VE.EDITOR.ANGLE_CHANGED, (angle) => {
         log.info(`Angle changed: ${angle}`);
-        this.editor.paletteRailAngle = angle;
-        this.editor.paletteRail.rotate(this.editor.paletteRailAngle, this.editor.paletteRail.startPoint);
+        // 入力なしは 0 とみなす
+        if (!angle) {
+            angle = 0;
+        }
+        // 角度は左回りとする
+        this.editor.rotateJointsOnGrid(-angle);
     });
 
     //====================

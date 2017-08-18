@@ -1,5 +1,7 @@
 import "lodash";
 import logger from "../logging";
+import {cartesian} from "./utils";
+
 let log = logger("EditorContent");
 
 /**
@@ -118,6 +120,20 @@ export class GridPaper {
         })
     }
 
+    /**
+     * 指定の範囲のグリッドの交点を返す。
+     * @param topLeft
+     * @param bottomRight
+     * @returns {Array<Array<number>}
+     */
+    getGridPoints(topLeft, bottomRight) {
+        let rangeX = _.range(Math.floor(bottomRight.x / this.gridSize), Math.floor(topLeft.x / this.gridSize));
+        let gridsX = rangeX.map(x => x * this.gridSize);
+        let rangeY = _.range(Math.floor(bottomRight.y / this.gridSize), Math.floor(topLeft.y / this.gridSize));
+        let gridsY = rangeY.map(y => y * this.gridSize);
+
+        return cartesian(gridsX, gridsY).map(arr => new paper.Point(arr[0], arr[1]));
+    }
 
     /**
      * マウスボタンを押した時のハンドラ。
@@ -275,5 +291,6 @@ export class GridPaper {
             this.shouldModifyViewCenter = false;
         }
     }
+
 }
 

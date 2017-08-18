@@ -1,12 +1,13 @@
 /**
  * Created by tozawa on 2017/07/12.
  */
-import {Joint, JointState} from "./rails/parts/Joint";
+import {Joint, JointDirection, JointState} from "./rails/parts/Joint";
 import {FeederSocket} from "./rails/parts/FeederSocket";
 import {Rail} from "./rails/Rail";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
 import {LayoutManager} from "./LayoutManager";
 import {LayoutSimulator} from "./LayoutSimulator";
+import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
 
 let log = logger("LayoutEditor", "DEBUG");
@@ -35,7 +36,6 @@ export class LayoutEditor {
         // GridPaperインスタンスへの参照
         this.gridPaper =  gridPaper;
 
-
         // 選択中のレール
         this.paletteRail = null;
         this.paletteRailAngle = 0;
@@ -48,22 +48,87 @@ export class LayoutEditor {
         this.layoutManager = new LayoutManager();
         this.layoutSimulator = new LayoutSimulator();
 
-        // 現在押されている修飾キー
-        // this.modifierKeys = [];
+        // 最初のレールを配置するためのグリッド上のジョイント
+        this.jointsOnGrid = [];
     }
 
     /**
      * 保存されていたレイアウトをロードし、エディタ上に配置する。
-     *
      * @param layoutData
      */
     loadLayout(layoutData) {
         this.layoutManager.loadLayout(layoutData);
+        if (this.isLayoutBlank()) {
+            this.putJointsOnGrid();
+        }
     }
 
+    /**
+     * 現在のレイアウトデータをシリアライズしたオブジェクトを返す。
+     * @returns {{rails: Array}}
+     */
     saveLayout() {
         return this.layoutManager.saveLayout();
     }
+
+    /**
+     * レイアウトが空（レールが一本も配置されていない）か否かを返す。
+     * @returns {boolean}
+     */
+    isLayoutBlank() {
+        return this.layoutManager.rails.length === 0;
+    }
+
+    //==============================
+    // 最初のレール設置機能特有のメソッド
+    //==============================
+
+    /**
+     * 最初のレールを配置するための不可視のジョイント（以降、グリッドジョイント）をグリッド上に配置する。
+     */
+    putJointsOnGrid() {
+        let gridPoints = this.gridPaper.getGridPoints(paper.view.bounds.topLeft, paper.view.bounds.bottomRight);
+        gridPoints.forEach(point => {
+            let joint = new Joint(point, 0, JointDirection.SAME_TO_ANGLE, null);
+            joint.basePart.setOpacity(0);
+            this.jointsOnGrid.push(joint);
+        });
+    }
+
+    /**
+     * 全てのグリッドジョイントを削除する。
+     */
+    removeJointsOnGrid() {
+        this.jointsOnGrid.forEach(joint => joint.remove());
+        this.jointsOnGrid = [];
+    }
+
+    /**
+     * グリッド上の不可視のジョイントを回転する。
+     * @param angle
+     */
+    rotateJointsOnGrid(angle) {
+        this.jointsOnGrid.forEach(joint => {
+            joint.rotate(angle);
+        })
+    }
+
+    /**
+     * 指定の位置のグリッドジョイントを返す。
+     * @param point
+     * @returns {*}
+     */
+    searchJointsOnGrid(point) {
+        let hitResult = hitTest(point);
+        if (!hitResult) {
+            return null;
+        }
+        return this.jointsOnGrid.find(joint => joint.containsPath(hitResult.item));
+    }
+
+    //==============================
+    // 2本目以降のレール設置機能特有のメソッド
+    //==============================
 
     /**
      * 設置するレールを選択する。
@@ -90,7 +155,11 @@ export class LayoutEditor {
             this.initJointOfGuide(toJoint);
         }
         // 接続先のレールよりも下に表示する（ジョイントの当たり判定のため）
-        this.paletteRail.pathGroup.moveBelow(this.layoutManager.getRailFromJoint(toJoint).pathGroup);
+        if (this.isLayoutBlank()) {
+            this.paletteRail.pathGroup.moveBelow(toJoint.pathGroup);
+        } else {
+            this.paletteRail.pathGroup.moveBelow(this.layoutManager.getRailFromJoint(toJoint).pathGroup);
+        }
         this.paletteRail.connect(this.getCurrentJointOfGuide(), toJoint, true);
         // toJoint.parts.forEach( part => part.path.bringToFront());
     }
@@ -102,7 +171,7 @@ export class LayoutEditor {
         this.paletteRail.setVisible(false);
         this.paletteRail.setOpacity(0);
         this.paletteRail.disconnect();
-        this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
+        this.paletteRail.move(new paper.Point(-100000,-100000), this.paletteRail.joints[0]);
     }
 
     /**
@@ -151,6 +220,21 @@ export class LayoutEditor {
     }
 
     /**
+     * 指定の位置のジョイントを取得する。グリッドジョイントも含む。
+     * @param point
+     * @returns {*}
+     */
+    getJoint(point) {
+        let joint;
+        if (this.isLayoutBlank()) {
+            joint = this.searchJointsOnGrid(point);
+        } else {
+            joint = this.layoutManager.getJoint(point);
+        }
+        return joint;
+    }
+
+    /**
      * 設置されるフィーダーのガイドを半透明で表示する。
      * @param {FeederSocket} feederSocket at the mouse cursor
      */
@@ -185,19 +269,11 @@ export class LayoutEditor {
      */
     handleMouseMove(event) {
         // 何にも接触していない場合、各種ガイドを消す
-        if (!event.item) {
-            this.hideRailToPut();
-            this.hideFeederToPut();
-            return;
-        }
+        this.hideRailToPut();
+        this.hideFeederToPut();
 
-        // ジョイント上かつ接続中でないならレール設置ガイドを表示する
-        let joint = this.layoutManager.getJoint(event.point);
-        if (joint && ! (joint.jointState === JointState.CONNECTED)) {
-            this.showRailToPut(joint);
-        } else {
-            this.hideRailToPut();
-        }
+        // ジョイント上にマウスが乗った時の処理
+        this.handleMouseMoveOnJoint(event);
 
         // フィーダーソケット上かつ接続中でないならフィーダー設置ガイドを表示する
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
@@ -206,7 +282,22 @@ export class LayoutEditor {
         } else {
             this.hideFeederToPut();
         }
+    }
 
+    /**
+     * ジョイント上にマウスが乗った時の処理
+     * @param event
+     */
+    handleMouseMoveOnJoint(event) {
+        // 乗っているジョイントを取得
+        let joint = this.getJoint(event.point);
+
+        // ジョイント上かつ接続中でないならレール設置ガイドを表示する
+        if (joint && ! (joint.jointState === JointState.CONNECTED)) {
+            this.showRailToPut(joint);
+        } else {
+            this.hideRailToPut();
+        }
     }
 
     /**
@@ -233,12 +324,8 @@ export class LayoutEditor {
      */
     handleMouseDownLeft(event) {
 
-        // ジョイント結合・レール設置処理
-        let joint = this.layoutManager.getJoint(event.point);
-        if (joint && joint.jointState !== JointState.CONNECTED) {
-            this.putSelectedRail(joint);
-            return;
-        }
+        // ジョイント上でマウス左クリックした時の処理
+        this.handleMouseDownLeftOnJoint(event);
 
         // フィーダー結合処理
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
@@ -267,6 +354,28 @@ export class LayoutEditor {
         }
     }
 
+
+    /**
+     * ジョイント上でマウス左クリックした時の処理
+     * @param event
+     */
+    handleMouseDownLeftOnJoint(event) {
+        let joint = this.getJoint(event.point);
+        let isLayoutBlank = this.isLayoutBlank();
+
+        // ジョイント結合・レール設置処理
+        if (joint && joint.jointState !== JointState.CONNECTED) {
+            this.putSelectedRail(joint)
+            // レイアウトが空だったらグリッドジョイントを削除する
+            if (isLayoutBlank) {
+                this.removeJointsOnGrid();
+            }
+            return;
+        }
+    }
+
+
+
     /**
      * マウス右クリック時のハンドラ。以下の処理を行う。
      *   - 未接続のジョイント上ならば、現在選択中のレールの向きを変える。
@@ -274,7 +383,7 @@ export class LayoutEditor {
      * @param {ToolEvent} event
      */
     handleMouseDownRight(event) {
-        let joint = this.layoutManager.getJoint(event.point);
+        let joint = this.getJoint(event.point);
         if (joint && joint.jointState !== JointState.CONNECTED) {
             joint.disconnect();
             this.incrementJointIndexOfGuide();
@@ -299,6 +408,7 @@ export class LayoutEditor {
         log.info("delta ", event.delta);
     }
 
+
     /**
      * キーボード押下された時のハンドラ。以下の処理を行う。
      *   - DEL:   選択中のレールを削除する。
@@ -322,6 +432,10 @@ export class LayoutEditor {
             case "backspace":
                 selectedRails.forEach(r => this.layoutManager.removeRail(r));
                 selectedFeeders.forEach(f => this.layoutManager.removeFeeder(f));
+                // レイアウトが空になっていたらグリッドジョイントを表示する
+                if (this.isLayoutBlank()) {
+                    this.putJointsOnGrid();
+                }
                 break;
             case "space":
                 // 全てのレールを未チェック状態にする

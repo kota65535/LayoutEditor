@@ -85,6 +85,7 @@
                       { message: `File "${resp.result.name}" created.` },
                       { type: 'info' });
                   this.setEditingFile(resp.result.id, resp.result.name, parentId, parentName);
+                  this.setLayout(null);
               });
 
           // ダイアログを閉じる
