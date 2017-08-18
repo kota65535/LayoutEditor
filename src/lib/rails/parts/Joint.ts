@@ -45,14 +45,41 @@ export class Joint extends DetectablePart {
     static FILL_COLOR_OPEN = "darkorange";
 
 
-    direction: JointDirection;
+    basePart: RectPart;
+    detectionPart: CirclePart;
+    private _direction: JointDirection;
+    private _jointState: JointState;
     connectedJoint: Joint | null;
     rail: any;
     rendered: false;
-    basePart: RectPart;
-    detectionPart: CirclePart;
-    jointState: JointState;
 
+
+    get position() {
+        switch (this.direction) {
+            case JointDirection.SAME_TO_ANGLE:
+                return this.basePart.getCenterOfRight();
+            case JointDirection.REVERSE_TO_ANGLE:
+                return this.basePart.getCenterOfLeft();
+        }
+        return this.basePart.getCenterOfRight();
+    }
+
+    /**
+     * 接続方向の角度を取得する。
+     */
+    get direction(): number {
+        switch (this._direction) {
+            case JointDirection.SAME_TO_ANGLE:
+                return this.basePart.angle;
+            case JointDirection.REVERSE_TO_ANGLE:
+                return this.basePart.angle + 180;
+        }
+        return this.basePart.angle;
+    }
+
+    get jointState(): number {
+        return this._jointState;
+    }
 
     /**
      * ジョイントを指定の位置・角度で作成する。
@@ -77,58 +104,22 @@ export class Joint extends DetectablePart {
         super(position, angle, rect, circle);
 
 
-        this.direction = direction;
+        this._direction = direction;
         this.connectedJoint = null;
         this.rail = rail;
         this.rendered = false;
-        this.jointState = JointState.OPEN;
+        this._jointState = JointState.OPEN;
 
         this.move(position);
-        this.rotate(angle, this.getPosition());
+        this.rotate(angle, this.position);
 
         this.disconnect();
     }
 
-
-    // Angle = 0 の時、矩形の右辺中心がジョイント位置となる
-    getPosition() {
-        switch (this.direction) {
-            case JointDirection.SAME_TO_ANGLE:
-                return this.basePart.getCenterOfRight();
-            case JointDirection.REVERSE_TO_ANGLE:
-                return this.basePart.getCenterOfLeft();
-        }
-    }
-
-    /**
-     * 基準点の絶対座標で移動する。
-     * @param {Point} position
-     * @param {Point} anchor
-     */
-    move(position: Point, anchor: Point|null = null) {
-        if (!anchor) {
-            anchor = this.getPosition();
-        }
-        let difference = position.subtract(anchor);
-        this.moveRelatively(difference);
-    }
-
-    /**
-     * 接続方向を取得する。
-     * @returns {number}
-     */
-    getDirection() {
-        switch (this.direction) {
-            case JointDirection.SAME_TO_ANGLE:
-                return this.basePart.angle;
-            case JointDirection.REVERSE_TO_ANGLE:
-                return this.basePart.angle + 180;
-        }
-    }
-
     /**
      * 指定のジョイントと接続する。
-     * @param {Joint} joint
+     * @param joint
+     * @param isDryRun
      */
     connect(joint: Joint, isDryRun: boolean = false) {
         this.connectedJoint = joint;
@@ -159,14 +150,9 @@ export class Joint extends DetectablePart {
      * @returns {State}
      */
     getState() {
-        return this.jointState;
+        return this._jointState;
     }
 
-
-    showInfo() {
-        log.debug(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",
-            this.getPosition().x, this.getPosition().y, this.angle, this.getDirection()));
-    }
 
     /**
      * 状態を設定し、ジョイントの色、サイズを変更する。
@@ -188,7 +174,7 @@ export class Joint extends DetectablePart {
                 this.setDetectionState(DetectionState.AFTER_DETECT);
                 break;
         }
-        this.jointState = state;
+        this._jointState = state;
     }
 
 
@@ -197,5 +183,11 @@ export class Joint extends DetectablePart {
         if (this.detectionPart.path.opacity > value) {
             this.detectionPart.setOpacity(value);
         }
+    }
+
+
+    showInfo() {
+        log.debug(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",
+            this.position.x, this.position.y, this.angle, this.direction));
     }
 }

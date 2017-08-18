@@ -91,7 +91,7 @@ export class Rail {
      * @private
      */
     _isJointDuplicate(point) {
-        let duplicates = this.joints.filter( jo => jo.getPosition().isClose(point, 0.1));
+        let duplicates = this.joints.filter( jo => jo.position.isClose(point, 0.1));
         return duplicates.length > 0;
     }
 
@@ -105,8 +105,8 @@ export class Rail {
      */
     _getRailPartFromJoints(joint1, joint2) {
         let parts = this.railParts.filter( part => {
-            return (joint1.getPosition().isClose(part.startPoint, 0.1) && joint2.getPosition().isClose(part.endPoint, 0.1))
-                || (joint2.getPosition().isClose(part.startPoint, 0.1) && joint1.getPosition().isClose(part.endPoint, 0.1))
+            return (joint1.position.isClose(part.startPoint, 0.1) && joint2.position.isClose(part.endPoint, 0.1))
+                || (joint2.position.isClose(part.startPoint, 0.1) && joint1.position.isClose(part.endPoint, 0.1))
         });
         if (parts.length === 1) {
             return parts[0];
@@ -126,7 +126,7 @@ export class Rail {
      */
     move(point, anchor) {
         if (anchor.constructor.name === "Joint") {
-            anchor = anchor.getPosition();
+            anchor = anchor.position;
         }
         let difference = point.subtract(anchor);
         this.moveRelatively(difference);
@@ -156,7 +156,7 @@ export class Rail {
      */
     rotate(angle, anchor) {
         if (anchor.constructor.name === "Joint") {
-            anchor = anchor.getPosition();
+            anchor = anchor.position;
         }
         let relAngle = angle - this.angle;
         this.rotateRelatively(relAngle, anchor);
@@ -169,7 +169,7 @@ export class Rail {
      */
     rotateRelatively(angle, anchor) {
         if (anchor.constructor.name === "Joint") {
-            anchor = anchor.getPosition();
+            anchor = anchor.position;
         }
         this.railParts.forEach( part => {
             part.rotateRelatively(angle, anchor)
@@ -191,11 +191,11 @@ export class Rail {
      */
     connect(fromJoint, toJoint, isDruRun=false) {
 
-        this.move(toJoint.getPosition(), fromJoint);
-        let angle = toJoint.getDirection() - fromJoint.getDirection() + 180;
+        this.move(toJoint.position, fromJoint);
+        let angle = toJoint.direction - fromJoint.direction + 180;
 
         log.debug(sprintf("Rotate %.3f around (%.3f, %.3f)",
-            angle, toJoint.getPosition().x, toJoint.getPosition().y));
+            angle, toJoint.position.x, toJoint.position.y));
 
         this.rotateRelatively(angle, toJoint);
         fromJoint.connect(toJoint, isDruRun);
@@ -301,8 +301,8 @@ export class Rail {
     getJointsFromRailPart(railPart) {
         let ret = null;
         console.log(railPart.startPoint, railPart.endPoint);
-        let startJoint = this.joints.find( j => this._isReasonablyClose(j.getPosition(), railPart.startPoint));
-        let endJoint = this.joints.find( j => this._isReasonablyClose(j.getPosition(), railPart.endPoint));
+        let startJoint = this.joints.find( j => this._isReasonablyClose(j.position, railPart.startPoint));
+        let endJoint = this.joints.find( j => this._isReasonablyClose(j.position, railPart.endPoint));
         if (startJoint && endJoint) {
             return [startJoint, endJoint];
         }
@@ -323,7 +323,7 @@ export class Rail {
      */
     getConductiveRailPartOfJoint(joint) {
         let ret = this.getConductiveRailParts().find(part => {
-            return joint.getPosition().isClose(part.startPoint, 0.1) || joint.getPosition().isClose(part.endPoint, 0.1);
+            return joint.getPosition().isClose(part.startPoint, 0.1) || joint.position.isClose(part.endPoint, 0.1);
         });
         return ret;
     }

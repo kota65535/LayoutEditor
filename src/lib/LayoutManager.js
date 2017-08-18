@@ -220,9 +220,9 @@ export class LayoutManager {
                 otherRail.railParts.forEach( otherPart => {
                     intersections = intersections.concat(part.path.getIntersections(otherPart.path, (location) => {
                         let isIntersectionNearJoints = rail.joints.map( j => {
-                            log.info("Intersection:" ,location, " Joint:", j.getPosition());
-                            log.info("Distance", location.point.getDistance(j.getPosition()));
-                            return location.point.isClose(j.getPosition(), Joint.HEIGHT/2);
+                            log.info("Intersection:" ,location, " Joint:", j.position);
+                            log.info("Distance", location.point.getDistance(j.position));
+                            return location.point.isClose(j.position, Joint.HEIGHT/2);
                         }).includes(true);
 
                         return ! isIntersectionNearJoints;
@@ -248,12 +248,12 @@ export class LayoutManager {
      * @param {Rail} rail
      */
     _connectOtherJoints(rail) {
-        let openFromJoints = rail.joints.filter(j => j.getState() === JointState.OPEN);
-        let openToJoints = this.rails.flatMap( r => r.joints ).filter(j => j.getState() === JointState.OPEN);
+        let openFromJoints = rail.joints.filter(j => j.jointState === JointState.OPEN);
+        let openToJoints = this.rails.flatMap( r => r.joints ).filter(j => j.jointState === JointState.OPEN);
 
         openFromJoints.forEach( fj => {
             openToJoints.forEach( tj => {
-                let distance = fj.getPosition().getDistance(tj.getPosition());
+                let distance = fj.position.getDistance(tj.position);
                 log.info("Distance:", distance);
                 if (distance < LayoutManager.JOINT_TO_JOINT_TOLERANCE) {
                     log.info("Connected other joint");

@@ -16,9 +16,9 @@ export class DetectablePart extends PartBase {
     basePart: PartBase;
     detectionPart: PartBase;
     pathGroup: Group;
-    path: Path;
     detectionState: DetectionState;
 
+    // このクラス自身が持つ _angle, _position は一切使われない
     get angle() { return this.basePart.angle; }
     set angle(angle: number) { this.basePart.angle = this.basePart.angle; }
     get position() { return this.basePart.position; }
@@ -37,8 +37,7 @@ export class DetectablePart extends PartBase {
         this.move(position, this.basePart.position);
         this.rotate(angle, this.basePart.position);
 
-        this.path = this.basePart.path;
-        this.angle = this.basePart.angle;
+        this._path = this.basePart.path;
     }
 
     moveRelatively(difference: Point) {
@@ -46,10 +45,10 @@ export class DetectablePart extends PartBase {
         this.detectionPart.moveRelatively(difference);
     }
 
-    move(position: Point, anchor: Point) {
-        let difference = position.subtract(anchor);
-        this.moveRelatively(difference);
-    }
+    // move(position: Point, anchor: Point) {
+    //     let difference = position.subtract(anchor);
+    //     this.moveRelatively(difference);
+    // }
 
     rotateRelatively(difference: number, anchor: Point) {
         this.basePart.rotateRelatively(difference, anchor);

@@ -2,9 +2,9 @@ import {Path, Point} from "paper";
 
 export class PartBase {
 
-    _path: Path;
-    _angle: number;
-    _position: Point;
+    protected _path: Path;
+    protected _angle: number;
+    protected _position: Point;
 
     get path() { return this._path; }
     set path(_path: Path) { this._path = _path; }
