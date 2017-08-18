@@ -1,16 +1,25 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class GoogleDriveAPI {
+import FileResource = gapi.client.drive.FileResource;
+
+export class GoogleDriveAPI {
+
+    apiKey: string;
+    accessToken: string;
+
+
     constructor(apiKey, accessToken) {
         this.apiKey = apiKey;
         this.accessToken = accessToken;
+
         gapi.load('picker', () => {
             // 今のところ何もしない
         });
     }
+
+
     setAccessToken(accessToken) {
         this.accessToken = accessToken;
     }
+
     /**
      * フォルダーの表示・選択が可能なPickerを表示する。
      * @param parents
@@ -18,9 +27,10 @@ class GoogleDriveAPI {
      */
     showFolderPicker(parents, callback) {
         let foldersOnlyView = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
-            .setParent(parents) // これを付けないと全ての階層のフォルダが列挙される
+            .setParent(parents)      // これを付けないと全ての階層のフォルダが列挙される
             .setIncludeFolders(true)
             .setSelectFolderEnabled(true);
+
         let pickerBuilder = new google.picker.PickerBuilder()
             .enableFeature(google.picker.Feature.MINE_ONLY)
             .enableFeature(google.picker.Feature.NAV_HIDDEN)
@@ -29,9 +39,13 @@ class GoogleDriveAPI {
             .setOAuthToken(this.accessToken)
             .setDeveloperKey(this.apiKey)
             .setCallback(callback);
+
+
         let pickerInstance = pickerBuilder.build();
+
         pickerInstance.setVisible(true);
     }
+
     /**
      * ドキュメントの表示・選択が可能なPickerを表示する。
      * @param {Array<string>} parents
@@ -40,24 +54,33 @@ class GoogleDriveAPI {
     showFilePicker(parents, callback) {
         // ファイルとフォルダー両方を表示し、ファイルの選択が可能なビュー
         let docsView = new google.picker.DocsView()
-            .setIncludeFolders(true);
+            .setIncludeFolders(true)
+
         // ファイルとフォルダー両方の表示・選択が可能なビュー
         let docsAndFoldersView = new google.picker.DocsView()
             .setIncludeFolders(true)
             .setSelectFolderEnabled(true);
+
         if (parents) {
             docsView.setParent(parents);
         }
+
         let pickerBuilder = new google.picker.PickerBuilder()
             .enableFeature(google.picker.Feature.MINE_ONLY)
             .enableFeature(google.picker.Feature.NAV_HIDDEN)
+            // .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
             .addView(docsView)
+            // .addView(docsAndFoldersView)
             .setOAuthToken(this.accessToken)
             .setDeveloperKey(this.apiKey)
             .setCallback(callback);
+
+
         let pickerInstance = pickerBuilder.build();
+
         pickerInstance.setVisible(true);
     }
+
     /**
      * ファイルのリストを取得する。
      * @returns {Promise}
@@ -67,8 +90,9 @@ class GoogleDriveAPI {
         return gapi.client.drive.files.list({
             'pageSize': 10,
             'fields': "nextPageToken, files(id, name)"
-        });
+        })
     }
+
     /**
      * ファイル情報を取得する。
      * @param {String} fileId
@@ -80,8 +104,9 @@ class GoogleDriveAPI {
         return gapi.client.drive.files.get({
             fileId: fileId,
             fields: fields
-        });
+        })
     }
+
     /**
      * ファイルをダウンロードする。
      * @param {string} fileId
@@ -91,8 +116,10 @@ class GoogleDriveAPI {
         return gapi.client.drive.files.get({
             fileId: fileId,
             alt: "media"
-        });
+        })
     }
+
+
     /**
      * 指定されたファイル・フォルダのRootに対する階層を取得する。
      * Google Driveでは同一フォルダに同名のファイル・フォルダが存在でき、一意なパスというものは無いため
@@ -104,26 +131,27 @@ class GoogleDriveAPI {
         let loop = (fid, result) => {
             return this.getFile(fid, "id,name,parents")
                 .then(resp => {
-                result.unshift(resp.result.name);
-                if (resp.result.parents) {
-                    return loop(resp.result.parents[0], result);
-                }
-                else {
-                    return resp.result.name;
-                }
-            });
+                    result.unshift(resp.result.name);
+                    if (resp.result.parents) {
+                        return loop(resp.result.parents[0], result);
+                    } else {
+                        return resp.result.name;
+                    }
+                })
         };
         let titles = [];
         return new Promise((resolve, reject) => {
             loop(fileId, titles)
                 .then(() => {
-                resolve(titles.join("/"));
-            });
-            // .catch(() => {
-            //     reject();
-            // })
+                    resolve(titles.join("/"));
+                });
+                // .catch(() => {
+                //     reject();
+                // })
         });
     }
+
+
     /**
      * 既存のファイルの内容を更新する。
      * @param {string} fileId
@@ -138,8 +166,9 @@ class GoogleDriveAPI {
                 uploadType: 'media'
             },
             body: content
-        });
+        })
     }
+
     /**
      * 空のファイルを作成する。
      * ファイルの中身を更新するにはupdateFileを呼ぶ必要がある。
@@ -148,22 +177,27 @@ class GoogleDriveAPI {
      * @param {Array<string>} parents
      * @returns {Promise}
      */
-    createFile(fileName, mimeType, parents) {
-        let metadata = {
+    createFile(fileName: string, mimeType: string, parents: string[]) {
+        let metadata = <any>{
             mimeType: mimeType,
             name: fileName,
             fields: 'id'
         };
+
         if (parents) {
-            metadata.parents = parents;
+            (<any>metadata).parents = parents;
         }
+
         return gapi.client.drive.files.create({
             resource: metadata
-        });
+        })
     }
+
+
     createFolder(folderName, parents) {
         return this.createFile(folderName, 'application/vnd.google-apps.folder', parents);
     }
+
     /**
      * リクエストを作成する
      * @param method
@@ -171,7 +205,7 @@ class GoogleDriveAPI {
      * @returns {Promise}
      * @private
      */
-    _makeRequest(method, url) {
+    _makeRequest (method, url) {
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
             let status;
@@ -181,8 +215,7 @@ class GoogleDriveAPI {
             xhr.onload = () => {
                 if (status >= 200 && status < 300) {
                     resolve(xhr.response);
-                }
-                else {
+                } else {
                     reject({
                         status: status,
                         statusText: xhr.statusText
@@ -199,5 +232,4 @@ class GoogleDriveAPI {
         });
     }
 }
-exports.GoogleDriveAPI = GoogleDriveAPI;
-//# sourceMappingURL=GoogleDriveAPI.js.map
+

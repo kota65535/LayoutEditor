@@ -128,4 +128,5 @@ fabric.properties
 
 dist/bundle.js*
 src/lib/rails/parts/primitives/*.js*
+src/lib/google/*.js*
 *.js.map
