@@ -55,6 +55,10 @@
           z_index: 10000
       });
 
+      // リロードされたら未保存データが失われる旨を表示する
+//      window.onbeforeunload = function() {
+//          return "Dude, are you sure you want to leave? Think of the kittens!";
+//      }
 
   </script>
 </app>

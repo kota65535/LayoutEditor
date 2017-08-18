@@ -61,6 +61,8 @@ export class LayoutEditor {
         this.layoutManager.loadLayout(layoutData);
         if (this.isLayoutBlank()) {
             this.putJointsOnGrid();
+        } else {
+            this.removeJointsOnGrid();
         }
     }
 
@@ -458,20 +460,20 @@ export class LayoutEditor {
                     this.putJointsOnGrid();
                 }
                 break;
-            case "space":
-                // 全てのレールを未チェック状態にする
-                this.layoutSimulator.resetFlowSimulation();
-                break;
-            case "f":
-                this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feeders);
-                this.layoutSimulator.resetFlowSimulation();
-                this.layoutSimulator.simulateFlow();
-                break;
-            case "s":
-                selectedRails.forEach(r => r.toggleSwitch());
-                this.layoutSimulator.resetFlowSimulation();
-                this.layoutSimulator.simulateFlow();
-                break;
+            // case "space":
+            //     // 全てのレールを未チェック状態にする
+            //     this.layoutSimulator.resetFlowSimulation();
+            //     break;
+            // case "f":
+            //     this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feeders);
+            //     this.layoutSimulator.resetFlowSimulation();
+            //     this.layoutSimulator.simulateFlow();
+            //     break;
+            // case "s":
+            //     selectedRails.forEach(r => r.toggleSwitch());
+            //     this.layoutSimulator.resetFlowSimulation();
+            //     this.layoutSimulator.simulateFlow();
+            //     break;
             // case "shift":
             //     this.modifierKeys.push("shift");
             //     break;

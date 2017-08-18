@@ -102,13 +102,13 @@
                   let file = pickerEvent.docs[0];
                   window.googleAPIManager.downloadFile(file.id)
                       .then(resp => {
-                          this.setLayout(resp.body);
-                          $.notify(
-                              { message: `File "${file.name}" loaded.` },
-                              { type: 'info' });
+                          this.setLayout(resp.body, file.name, file.id);
+//                          $.notify(
+//                              { message: `File "${file.name}" loaded.` },
+//                              { type: 'info' });
                       }, resp => {
                           $.notify(
-                              { message: `Failed to open file. fileId: ${resp.result.id}` },
+                              { message: `Failed to open file "${resp.result.name}". fileId: ${resp.result.id}` },
                               { type: 'danger' });
                       });
                   window.googleAPIManager.getFilePath(file.parentId)
@@ -189,7 +189,7 @@
       // Utility
       //====================
 
-      // 「編集中のファイル」を設定し、ストアに通知する。
+      // 「編集中のファイル」を更新する
       this.setEditingFile = (fileId, fileName, parentId, parentName) => {
           this._editingFile = {
               id: fileId,
@@ -197,13 +197,22 @@
               parentId: parentId,
               parentName: parentName
           };
-          riot.control.trigger(riot.VE.EDITOR.FILE_CHANGED, this._editingFile);
           this.update();
       };
 
       // レイアウトが読み込まれたことをストアに通知する。
-      this.setLayout = (content) => {
-          riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, content);
+      this.setLayout = (content, fileName, fileId) => {
+          try {
+              // JSON形式のはずなので、パースしてからストアに渡す
+              let json = JSON.parse(content);
+              riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, json);
+          } catch(e) {
+              log.error(`Failed to parse JSON. fileName: ${fileName}, fileId: ${fileId}`);
+              $.notify(
+                  { message: `Cannot load layout from file "${fileName}"!` },
+                  { type: "danger" });
+              riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, null);
+          }
       };
 
       // 親タグからeditor-mainタグを取得してcontentを取得する

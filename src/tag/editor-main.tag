@@ -118,7 +118,13 @@
     // レイアウトデータに変更があったら、これをロードする
     this.onControl(riot.SE.EDITOR.LAYOUT_CHANGED, (layoutData) => {
         log.info(`Loading layout: ${layoutData}`);
-        this.editor.loadLayout(layoutData);
+        try {
+            this.editor.loadLayout(layoutData);
+        } catch(e) {
+            $.notify(
+                { message: `Failed to load layout!` },
+                { type: 'danger' });
+        }
     });
 
     // ツールバーにAngleが入力されたら、パレットレールの角度を変更する

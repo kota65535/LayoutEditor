@@ -57,6 +57,9 @@ export class LayoutManager {
         if (layoutData && layoutData["rails"]) {
             layoutData["rails"].forEach( rail => {
                 let railObject = deserialize(rail);
+                // 近いジョイント同士は接続する
+                this._connectOtherJoints(railObject);
+                // 管理下におく
                 this._registerRail(railObject);
             })
         }

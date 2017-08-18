@@ -23,7 +23,7 @@ export class EditorStore extends StoreBase {
         this.on(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData => {
             this.data["layout"] = layoutData;
             this.saveToStorage();
-            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, JSON.parse(layoutData));
+            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData);
         });
         this.on(riot.VE.EDITOR.FILE_CHANGED, editingFile => {
             this.data["editing_file"] = editingFile;
@@ -35,7 +35,13 @@ export class EditorStore extends StoreBase {
         this.on(riot.VE.EDITOR.LAYOUT_INIT, () => {
             let layoutData = null;
             if (this.data["layout"]) {
-                layoutData = JSON.parse(this.data["layout"]);
+                try {
+                    layoutData = JSON.parse(this.data["layout"]);
+                } catch(e) {
+                    $.notify(
+                        { message: `Failed to parse JSON.` },
+                        { type: "danger" });
+                }
             }
             this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData);
         });
