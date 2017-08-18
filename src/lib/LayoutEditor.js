@@ -4,6 +4,7 @@
 import {Joint, JointDirection, JointState} from "./rails/parts/Joint";
 import {FeederSocket} from "./rails/parts/FeederSocket";
 import {Rail} from "./rails/Rail";
+import {CurveRail} from "./rails/CurveRail";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
 import {LayoutManager} from "./LayoutManager";
 import {LayoutSimulator} from "./LayoutSimulator";
@@ -80,7 +81,7 @@ export class LayoutEditor {
     }
 
     //==============================
-    // 最初のレール設置機能特有のメソッド
+    // 最初のレール設置時特有のメソッド
     //==============================
 
     /**
@@ -126,8 +127,23 @@ export class LayoutEditor {
         return this.jointsOnGrid.find(joint => joint.containsPath(hitResult.item));
     }
 
+    /**
+     * 指定の位置のジョイントを取得する。グリッドジョイントも含む。
+     * @param point
+     * @returns {*}
+     */
+    getJoint(point) {
+        let joint;
+        if (this.isLayoutBlank()) {
+            joint = this.searchJointsOnGrid(point);
+        } else {
+            joint = this.layoutManager.getJoint(point);
+        }
+        return joint;
+    }
+
     //==============================
-    // 2本目以降のレール設置機能特有のメソッド
+    // レール設置機能に関するメソッド
     //==============================
 
     /**
@@ -161,7 +177,6 @@ export class LayoutEditor {
             this.paletteRail.pathGroup.moveBelow(this.layoutManager.getRailFromJoint(toJoint).pathGroup);
         }
         this.paletteRail.connect(this.getCurrentJointOfGuide(), toJoint, true);
-        // toJoint.parts.forEach( part => part.path.bringToFront());
     }
 
     /**
@@ -175,17 +190,30 @@ export class LayoutEditor {
     }
 
     /**
-     * レールガイドが自身のどのジョイントで対向レールに接続するかを決定するインデックスを初期化する。
+     * ガイドレールが自身のどのジョイントで対向レールに接続するかを決定するインデックスを初期化する。
+     * カーブレールが続く場合、弧の向きに合わせてガイドレールの初期接続ジョイントを一定に保つ。
      * @param toJoint
      */
     initJointOfGuide(toJoint) {
         // 対向レールとパレットレールの両者がカーブレールの場合、カーブの向きを揃える。
         // TODO: ジョイントの個数が２であることが前提になっている。より汎用的なロジックを考える。
         let opponentRail = this.layoutManager.getRailFromJoint(toJoint);
-        if (this.paletteRail.constructor.name === "CurveRail"
-            && opponentRail.constructor.name === "CurveRail") {
-            this.jointIndexOfGuide = opponentRail.joints.indexOf(toJoint) ^ 1;
+        if (!opponentRail) {
+            // グリッドジョイントの場合は向きは変えない
+            this.jointIndexOfGuide = 0;
+            return;
+        }
+        if (this.paletteRail instanceof CurveRail && opponentRail instanceof CurveRail) {
+            // 自分も相手もカーブレールの場合
+            if (this.layoutManager.rails.length === 1) {
+                // 一本目のレールがカーブレールの場合、両方のジョイントに対して弧の向きを揃えることはできない・・・
+                // 割り切って向きは変えないことにする。
+                this.jointIndexOfGuide = 0;
+            } else {
+                this.jointIndexOfGuide = opponentRail.joints.indexOf(toJoint) ^ 1;
+            }
         } else {
+            // カーブレール以外なら向きは変えなくてもいいよね？
             this.jointIndexOfGuide = 0;
         }
         log.info(`init joint index of guide with ${this.jointIndexOfGuide}`);
@@ -219,20 +247,9 @@ export class LayoutEditor {
         }
     }
 
-    /**
-     * 指定の位置のジョイントを取得する。グリッドジョイントも含む。
-     * @param point
-     * @returns {*}
-     */
-    getJoint(point) {
-        let joint;
-        if (this.isLayoutBlank()) {
-            joint = this.searchJointsOnGrid(point);
-        } else {
-            joint = this.layoutManager.getJoint(point);
-        }
-        return joint;
-    }
+    //==============================
+    // フィーダー設置機能に関わるメソッド
+    //==============================
 
     /**
      * 設置されるフィーダーのガイドを半透明で表示する。
@@ -262,6 +279,11 @@ export class LayoutEditor {
     putFeeder() {
         this.layoutManager.putFeeder(this.touchedFeederSocket);
     }
+
+
+    //====================
+    // UIイベントハンドラ
+    //====================
 
     /**
      * マウス移動時のハンドラ
@@ -373,7 +395,6 @@ export class LayoutEditor {
             return;
         }
     }
-
 
 
     /**
