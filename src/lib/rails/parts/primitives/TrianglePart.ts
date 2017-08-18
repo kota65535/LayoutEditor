@@ -9,13 +9,10 @@ import {PartBase} from "./PartBase";
 /**
  * 三角形パーツの基底クラス
  */
-export class TrianglePart implements PartBase {
+export class TrianglePart extends PartBase {
 
-    position: Point;
-    angle: number;
     width: number;
     height: number;
-    path: Path;
 
     /**
      * 三角形パーツを指定の位置・角度で作成する。
@@ -26,6 +23,7 @@ export class TrianglePart implements PartBase {
      * @param {Color} fillColor 色
      */
     constructor(position: Point, angle: number, width: number, height: number, fillColor: Color) {
+        super();
         this.angle = 0;
         this.width = width;
         this.height = height;
@@ -35,6 +33,7 @@ export class TrianglePart implements PartBase {
             this.width/2, this.height,
             -this.width/2, this.height,
         );
+
         this.path = new Path(pathData);
         this.path.fillColor = fillColor;
 
@@ -42,53 +41,6 @@ export class TrianglePart implements PartBase {
         this.rotate(angle, this.path.position);
     }
 
-    moveRelatively(difference: Point) {
-        this.path.position = this.path.position.add(difference);
-        this.position = this.path.position;
-    }
-
-    move(position: Point, anchor: Point) {
-        let difference = position.subtract(anchor);
-        this.moveRelatively(difference);
-    }
-
-    rotateRelatively(difference: number, anchor: Point) {
-        this.angle += difference;
-        this.path.rotate(difference, anchor);
-    }
-
-    rotate(angle: number, anchor: Point) {
-        let relAngle = angle - this.angle;
-        this.rotateRelatively(relAngle, anchor);
-    }
-
-    getPosition() {
-        return this.path.position;
-    }
-
-    getAngle(): number {
-        return this.angle;
-    }
-
-    setAngle(angle: number) {
-        this.angle = angle;
-    }
-
-    remove() {
-        this.path.remove();
-    }
-
-    setOpacity(value: number) {
-        this.path.opacity = value;
-    }
-
-    setVisible(isVisible: boolean) {
-        this.path.visible = isVisible;
-    }
-
-    containsPath(path: Path): boolean {
-        return path.id === this.path.id;
-    }
 
     /**
      * 上部の頂点を返す。

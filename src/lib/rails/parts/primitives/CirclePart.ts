@@ -9,12 +9,9 @@ import {PartBase} from "./PartBase";
 /**
  * 円形パーツの基底クラス。
  */
-export class CirclePart implements PartBase {
+export class CirclePart extends PartBase {
 
-    position: Point;
-    angle: number;
     radius: number;
-    path: Path;
 
     /**
      * 円形パーツを指定の位置・角度で作成する。
@@ -24,6 +21,7 @@ export class CirclePart implements PartBase {
      * @param {Color} fillColor 色
      */
     constructor(position: Point, angle: number, radius: number, fillColor: string) {
+        super();
         this.angle = 0;
         this.radius = radius;
 
@@ -37,54 +35,6 @@ export class CirclePart implements PartBase {
 
         this.move(position, this.path.position);
         this.rotate(angle, this.path.position);
-    }
-
-    moveRelatively(difference: Point) {
-        this.path.position = this.path.position.add(difference);
-        this.position = this.path.position;
-    }
-
-    move(position: Point, anchor: Point) {
-        let difference = position.subtract(anchor);
-        this.moveRelatively(difference);
-    }
-
-    rotateRelatively(difference: number, anchor: Point) {
-        this.angle += difference;
-        this.path.rotate(difference, anchor);
-    }
-
-    rotate(angle: number, anchor: Point) {
-        let relAngle = angle - this.angle;
-        this.rotateRelatively(relAngle, anchor);
-    }
-
-    getPosition(): Point {
-        return this.path.position;
-    }
-
-    getAngle(): number {
-        return this.angle;
-    }
-
-    setAngle(angle: number) {
-        this.angle = angle;
-    }
-
-    remove() {
-        this.path.remove();
-    }
-
-    setOpacity(value: number) {
-        this.path.opacity = value;
-    }
-
-    setVisible(isVisible: boolean) {
-        this.path.visible = isVisible;
-    }
-
-    containsPath(path: Path): boolean {
-        return path.id === this.path.id;
     }
 
     // getCenterOfTop() {

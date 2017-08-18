@@ -120,9 +120,9 @@ export class Joint extends DetectablePart {
     getDirection() {
         switch (this.direction) {
             case JointDirection.SAME_TO_ANGLE:
-                return this.basePart.getAngle();
+                return this.basePart.angle;
             case JointDirection.REVERSE_TO_ANGLE:
-                return this.basePart.getAngle() + 180;
+                return this.basePart.angle + 180;
         }
     }
 

@@ -1,80 +1,86 @@
 import {Path, Point} from "paper";
 
-export interface PartBase {
+export class PartBase {
 
-    path: Path;
-    angle: number;
+    _path: Path;
+    _angle: number;
+    _position: Point;
+
+    get path() { return this._path; }
+    set path(_path: Path) { this._path = _path; }
+    get position() { return this._position; }
+    set position(_position: Point) { this._position = _position; }
+    get angle() { return this._angle; }
+    set angle(_angle: number) { this._angle = _angle; }
 
     /**
      * 現在位置からの相対座標で移動する。
-     * @param {Point} difference
+     * @param difference
      */
-    moveRelatively(difference: Point): void;
+    moveRelatively(difference: Point) {
+        this.path.position = this.path.position.add(difference);
+        this._position = this.path.position;
+    }
 
     /**
      * 基準点の絶対座標で移動する。
-     * @param {Point} position
-     * @param {Point} anchor
+     * @param position 移動先の座標
+     * @param anchor 基準点。デフォルトは現在位置
      */
-    move(position: Point, anchor: Point): void;
+    move(position: Point, anchor: Point = this.position): void {
+        let difference = position.subtract(anchor);
+        this.moveRelatively(difference);
+    }
 
     /**
      * Y軸から時計回りで現在からの相対角度で回転する。
-     * @param {number} difference
-     * @param {Point} anchor
+     * @param difference
+     * @param anchor 回転の中心点。デフォルトは現在位置
      */
-    rotateRelatively(difference: number, anchor: Point): void;
+    rotateRelatively(difference: number, anchor: Point = this.position) {
+        this.angle += difference;
+        this.path.rotate(difference, anchor);
+    }
 
     /**
      * Y軸から時計回りの絶対角度で回転する。
-     * @param {number} angle
-     * @param {Point} anchor
+     * @param angle
+     * @param anchor 回転の中心点。デフォルトは現在位置
      */
-    rotate(angle: number, anchor: Point): void;
-
-    /**
-     * 現在位置を返す。
-     * @return {Point}
-     */
-    getPosition(): Point;
-
-    /**
-     * 現在角度を返す。
-     * @return {Point}
-     */
-    getAngle(): number;
-
-    /**
-     * 現在角度を返す。
-     * @return {Point}
-     */
-    setAngle(angle: number): void;
+    rotate(angle: number, anchor: Point = this.position) {
+        let relAngle = angle - this.angle;
+        this.rotateRelatively(relAngle, anchor);
+    }
 
     /**
      * パスを削除する。
      */
-    remove(): void;
+    remove() {
+        this.path.remove();
+    }
 
     /**
      * パスの可視・不可視を設定する。
-     * @param {boolean} isVisible
+     * @param isVisible
      */
-    setVisible(isVisible: boolean): void;
+    setVisible(isVisible: boolean) {
+        this.path.visible = isVisible;
+    }
 
     /**
      * パスの透明度を設定する。
-     * @param {number} value
+     * @param value
      */
-    setOpacity(value: number): void;
+    setOpacity(value: number) {
+        this.path.opacity = value;
+    }
 
     /**
      * 指定されたパスがこのパーツに属するか否かを返す。
-     * @param {Path} path
-     * @returns {boolean}
+     * @param path
+     * @returns if this part contains given path
      */
-    containsPath(path: Path): boolean;
+    containsPath(path: Path): boolean {
+        return path.id === this.path.id;
+    }
 }
-
-
-
-

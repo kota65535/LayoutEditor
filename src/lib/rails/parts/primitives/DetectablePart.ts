@@ -11,17 +11,22 @@ export enum DetectionState {
 /**
  * 可視領域以外に当たり判定を持つことができるパーツ。
  */
-export class DetectablePart implements PartBase {
+export class DetectablePart extends PartBase {
 
     basePart: PartBase;
     detectionPart: PartBase;
     pathGroup: Group;
     path: Path;
-    angle: number;
     detectionState: DetectionState;
+
+    get angle() { return this.basePart.angle; }
+    set angle(angle: number) { this.basePart.angle = this.basePart.angle; }
+    get position() { return this.basePart.position; }
+    set position(position: Point) { this.basePart.position = this.basePart.position; }
 
 
     constructor(position: Point, angle: number, basePart: PartBase, detectionPart: PartBase) {
+        super();
         this.basePart = basePart;
         this.detectionPart = detectionPart;
 
@@ -29,8 +34,8 @@ export class DetectablePart implements PartBase {
         this.pathGroup.addChild(this.basePart.path);
         this.pathGroup.addChild(this.detectionPart.path);
 
-        this.move(position, this.basePart.getPosition());
-        this.rotate(angle, this.basePart.getPosition());
+        this.move(position, this.basePart.position);
+        this.rotate(angle, this.basePart.position);
 
         this.path = this.basePart.path;
         this.angle = this.basePart.angle;
@@ -52,20 +57,8 @@ export class DetectablePart implements PartBase {
     }
 
     rotate(angle: number, anchor: Point) {
-        let relAngle = angle - this.basePart.getAngle();
+        let relAngle = angle - this.basePart.angle;
         this.rotateRelatively(relAngle, anchor);
-    }
-
-    getPosition(): Point {
-        return this.basePart.getPosition();
-    }
-
-    getAngle(): number {
-        return this.basePart.getAngle();
-    }
-
-    setAngle(angle: number) {
-        this.basePart.setAngle(angle);
     }
 
     remove() {
