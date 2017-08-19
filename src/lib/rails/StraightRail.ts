@@ -1,13 +1,17 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Created by tozawa on 2017/07/03.
  */
-const Rail_1 = require("./Rail");
-const RailPart_1 = require("./parts/RailPart");
-const StraightRailPart_1 = require("./parts/StraightRailPart");
-const paper_1 = require("paper");
-class StraightRail extends Rail_1.Rail {
+import { Rail } from "./Rail";
+import { RailPartAnchor } from "./parts/RailPart";
+import { StraightRailPart } from "./parts/StraightRailPart";
+import {Point} from "paper";
+
+
+export class StraightRail extends Rail {
+
+    length: number;
+    hasFeederSocket: boolean;
+
     /**
      * ストレートレールを生成する。
      * @param {Point} startPoint
@@ -15,18 +19,26 @@ class StraightRail extends Rail_1.Rail {
      * @param {number} length
      * @param {boolean} hasFeederSocket
      */
-    constructor(startPoint, angle, length, hasFeederSocket) {
+    constructor(startPoint: Point, angle: number, length: number, hasFeederSocket: boolean) {
         super(startPoint, 0);
+
         this.length = length;
+
         this.hasFeederSocket = hasFeederSocket;
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, hasFeederSocket));
+
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, hasFeederSocket));
+
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
+
         this.showJoints();
     }
 }
-exports.StraightRail = StraightRail;
-class DoubleStraightRail extends Rail_1.Rail {
+
+export class DoubleStraightRail extends Rail {
+
+    length: number;
+
     /**
      * 複線のダブルストレートレールを作成する。
      * @param {Point} startPoint
@@ -35,16 +47,23 @@ class DoubleStraightRail extends Rail_1.Rail {
      */
     constructor(startPoint, angle, length) {
         super(startPoint, angle);
+
         this.length = length;
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, true));
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(new paper_1.Point(startPoint.x, startPoint.y + Rail_1.Rail.SPACE), 0, length, RailPart_1.RailPartAnchor.START, true));
+
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, true));
+        this.addRailPart(new StraightRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, length, RailPartAnchor.START, true));
+
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
+
         this.showJoints();
     }
 }
-exports.DoubleStraightRail = DoubleStraightRail;
-class GappedStraightRail extends Rail_1.Rail {
+
+export class GappedStraightRail extends Rail {
+
+    length: number;
+
     /**
      * 両ギャップレールを生成する。
      * @param {Point} startPoint
@@ -53,15 +72,18 @@ class GappedStraightRail extends Rail_1.Rail {
      */
     constructor(startPoint, angle, length) {
         super(startPoint, 0);
+
         this.length = length;
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, false));
+
+        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, false));
+
         this.conductionMap = {
             0: []
         };
+
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
+
         this.showJoints();
     }
 }
-exports.GappedStraightRail = GappedStraightRail;
-//# sourceMappingURL=StraightRail.js.map

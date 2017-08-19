@@ -2,13 +2,16 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
-import { Joint, JointDirection } from "./parts/Joint.ts";
+import { Joint, JointDirection } from "./parts/Joint";
 import { FeederSocket } from "./parts/FeederSocket";
 import { PaletteItemType } from "./parts/PaletteItem";
 import logger from "../../logging";
+import {Group, Point} from "paper";
+import {RailPart} from "./parts/RailPart";
 
 
 let log = logger("Rail");
+
 
 /**
  * レールの基底クラス。レールはレールパーツとジョイントにより構成される。
@@ -22,6 +25,19 @@ export class Rail {
     // ジョイントの位置とレールパーツの両端の位置の間で許される誤差
     static JOINT_TO_RAIL_PART_TOLERANCE = 0.1;
 
+    railParts: RailPart[];
+    joints: Joint[];
+    feederSockets: FeederSocket[];
+
+    startPoint: Point;
+    angle: number;
+
+    pathGroup: Group;
+
+    conductionMap: any;
+    conductionState: number;
+    rendered: boolean;
+
 
     /**
      * レールの初期化。基底クラスでは特に重要な処理は行わない。
@@ -30,16 +46,14 @@ export class Rail {
      * @param {Point} startPoint
      * @param {number} angle
      */
-    constructor(startPoint, angle) {
+    constructor(startPoint: Point, angle: number) {
         this.railParts = [];
         this.joints = [];
         this.feederSockets = [];
         this.startPoint = startPoint;
         this.angle = angle;
 
-        this.pathGroup = new paper.Group();
-        this.jointOrder = [];
-        this.currentJointIndex = 0;
+        this.pathGroup = new Group();
         // どのレールパーツに電気が流れるかを表す導電状態マップ。
         // 状態ID: 導電しているRailPartのIndexのArray
         this.conductionMap = {
@@ -56,7 +70,7 @@ export class Rail {
      * Constructorからのみ呼ばれることを想定。
      * @param {RailPart} railPart
      */
-    addRailPart(railPart) {
+    protected addRailPart(railPart: RailPart) {
         this.railParts.push(railPart);
         // レールパーツは最も下に描画
         this.pathGroup.insertChild(0, railPart.path);
@@ -87,47 +101,12 @@ export class Rail {
     }
 
     /**
-     * 与えられた座標にジョイントが存在するか否かを返す。
-     * @param {Point} point
-     * @returns {boolean}
-     * @private
-     */
-    _isJointDuplicate(point) {
-        let duplicates = this.joints.filter( jo => jo.position.isClose(point, 0.1));
-        return duplicates.length > 0;
-    }
-
-
-    /**
-     * ジョイントのペアから、両者を繋ぐレールパーツを取得する。
-     * @param {Joint} joint1
-     * @param {Joint} joint2
-     * @returns {*}
-     * @private
-     */
-    _getRailPartFromJoints(joint1, joint2) {
-        let parts = this.railParts.filter( part => {
-            return (joint1.position.isClose(part.startPoint, 0.1) && joint2.position.isClose(part.endPoint, 0.1))
-                || (joint2.position.isClose(part.startPoint, 0.1) && joint1.position.isClose(part.endPoint, 0.1))
-        });
-        if (parts.length === 1) {
-            return parts[0];
-        } else if (parts.length > 1) {
-            log.warn("Multiple rail part found on 2 joints");
-        } else {
-            log.warn("No rail part found on 2 joints");
-        }
-        return null;
-    }
-
-
-    /**
      * 任意のジョイントを基準に、絶対座標で移動する。
      * @param {Point} point 移動先の座標
      * @param {Point,Joint} anchor 基準とする座標またはジョイント
      */
-    move(point, anchor) {
-        if (anchor.constructor.name === "Joint") {
+    move(point: Point, anchor: Point|Joint) {
+        if (anchor instanceof Joint) {
             anchor = anchor.position;
         }
         let difference = point.subtract(anchor);
@@ -138,7 +117,7 @@ export class Rail {
      * 現在からの相対座標で移動する。
      * @param {Point} difference 移動先の現在位置に対する相対座標
      */
-    moveRelatively(difference) {
+    moveRelatively(difference: Point) {
         this.railParts.forEach( part => {
             part.moveRelatively(difference);
         });
@@ -156,8 +135,8 @@ export class Rail {
      * @param {number} angle 回転角度
      * @param {Point,Joint} anchor 基準とするジョイント
      */
-    rotate(angle, anchor) {
-        if (anchor.constructor.name === "Joint") {
+    rotate(angle: number, anchor: Point|Joint) {
+        if (anchor instanceof Joint) {
             anchor = anchor.position;
         }
         let relAngle = angle - this.angle;
@@ -169,18 +148,18 @@ export class Rail {
      * @param {number} angle 回転角度
      * @param {Point,Joint} anchor 基準とするジョイント
      */
-    rotateRelatively(angle, anchor) {
-        if (anchor.constructor.name === "Joint") {
+    rotateRelatively(angle: number, anchor: Point|Joint) {
+        if (anchor instanceof Joint) {
             anchor = anchor.position;
         }
         this.railParts.forEach( part => {
             part.rotateRelatively(angle, anchor)
         });
         this.joints.forEach( j => {
-            j.rotateRelatively(angle, anchor);
+            j.rotateRelatively(angle, <Point>anchor);
         })
         this.feederSockets.forEach( f => {
-            f.rotateRelatively(angle, anchor);
+            f.rotateRelatively(angle, <Point>anchor);
         })
         this.angle += angle;
         this._updatePoints();
@@ -190,8 +169,9 @@ export class Rail {
      * 任意のジョイントに対して接続する。
      * @param {Joint} fromJoint こちら側のジョイント
      * @param {Joint} toJoint 接続先のジョイント
+     * @param {boolean} isDryRun
      */
-    connect(fromJoint, toJoint, isDruRun=false) {
+    connect(fromJoint: Joint, toJoint: Joint, isDryRun: boolean = false) {
 
         this.move(toJoint.position, fromJoint);
         let angle = toJoint.direction - fromJoint.direction + 180;
@@ -200,14 +180,14 @@ export class Rail {
             angle, toJoint.position.x, toJoint.position.y));
 
         this.rotateRelatively(angle, toJoint);
-        fromJoint.connect(toJoint, isDruRun);
+        fromJoint.connect(toJoint, isDryRun);
     }
 
     /**
      * このレールに属する全てのジョイントを切断する。
      */
     disconnect() {
-        this.joints.forEach(elem => elem.disconnect());
+        this.joints.forEach(j => j.disconnect());
     }
 
     /**
@@ -361,6 +341,44 @@ export class Rail {
         this.railParts.forEach(rp => rp.animate(event));
     }
 
+
+    getItemType() {
+        return PaletteItemType.RAIL;
+    }
+
+    /**
+     * 与えられた座標にジョイントが存在するか否かを返す。
+     * @param {Point} point
+     * @returns {boolean}
+     * @private
+     */
+    private _isJointDuplicate(point: Point) {
+        let duplicates = this.joints.filter( jo => jo.position.isClose(point, 0.1));
+        return duplicates.length > 0;
+    }
+
+    /**
+     * ジョイントのペアから、両者を繋ぐレールパーツを取得する。
+     * @param {Joint} joint1
+     * @param {Joint} joint2
+     * @returns {*}
+     * @private
+     */
+    private _getRailPartFromJoints(joint1, joint2) {
+        let parts = this.railParts.filter( part => {
+            return (joint1.position.isClose(part.startPoint, 0.1) && joint2.position.isClose(part.endPoint, 0.1))
+                || (joint2.position.isClose(part.startPoint, 0.1) && joint1.position.isClose(part.endPoint, 0.1))
+        });
+        if (parts.length === 1) {
+            return parts[0];
+        } else if (parts.length > 1) {
+            log.warn("Multiple rail part found on 2 joints");
+        } else {
+            log.warn("No rail part found on 2 joints");
+        }
+        return null;
+    }
+
     /**
      * 2点が十分に近いことを示す。
      * ジョイントがレールパーツの両端のいずれかに存在するか調べるときに使う。
@@ -369,12 +387,9 @@ export class Rail {
      * @return {Boolean}
      * @private
      */
-    _isReasonablyClose(point1, point2) {
+    private _isReasonablyClose(point1, point2) {
         return point1.isClose(point2, Rail.JOINT_TO_RAIL_PART_TOLERANCE);
     }
 
-    getItemType() {
-        return PaletteItemType.RAIL;
-    }
 }
 

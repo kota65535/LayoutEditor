@@ -3,7 +3,7 @@
  */
 import { StraightRail, DoubleStraightRail, GappedStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
-import { SimpleTurnout, SymmetricalTurnout, Direction } from "./rails/Turnout";
+import { SimpleTurnout, SymmetricalTurnout, TurnoutDirection } from "./rails/Turnout";
 import {Feeder} from "./rails/parts/Feeder";
 import {TrianglePart} from "./rails/parts/primitives/TrianglePart";
 import {PaletteItemType} from "./rails/parts/PaletteItem";
@@ -50,16 +50,16 @@ export class RailFactory {
         return new CurveRail(DEFAULT_POSITION, 0, 541, 15);
     }
     PL541_15() {
-        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 541, 15, Direction.LEFT);
+        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 541, 15, TurnoutDirection.LEFT);
     }
     PR541_15() {
-        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 541, 15, Direction.RIGHT);
+        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 541, 15, TurnoutDirection.RIGHT);
     }
     PL280_30() {
-        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 280, 30, Direction.LEFT);
+        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 280, 30, TurnoutDirection.LEFT);
     }
     PR280_30() {
-        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 280, 30, Direction.RIGHT);
+        return new SimpleTurnout(DEFAULT_POSITION, 0, 140, 280, 30, TurnoutDirection.RIGHT);
     }
     PY280_15() {
         return new SymmetricalTurnout(DEFAULT_POSITION, 0, 280, 15);

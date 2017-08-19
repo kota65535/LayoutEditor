@@ -4,9 +4,13 @@
 import { Rail } from "./Rail";
 import { RailPartAnchor } from "./parts/RailPart";
 import { CurveRailPart } from "./parts/CurveRailPart";
+import {Point} from "paper";
 
 
 export class CurveRail extends Rail {
+
+    radius: number;
+    centerAngle: number;
 
     /**
      * カーブレールを生成する。
@@ -15,7 +19,7 @@ export class CurveRail extends Rail {
      * @param {number} radius
      * @param {number} centerAngle
      */
-    constructor(startPoint, angle, radius, centerAngle) {
+    constructor(startPoint: Point, angle: number, radius: number, centerAngle: number) {
         super(startPoint, 0);
 
         this.radius = radius;
@@ -29,18 +33,14 @@ export class CurveRail extends Rail {
 
         this.showJoints();
     }
-
-    /**
-     * レールを複製する。
-     * @returns {Object}
-     */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
-    }
 }
 
 
 export class DoubleCurveRail extends Rail {
+
+    innerRadius: number;
+    outerRadius: number;
+    centerAngle: number;
 
     /**
      * 複線のダブルカーブレールを生成する。
@@ -58,19 +58,12 @@ export class DoubleCurveRail extends Rail {
         this.centerAngle = centerAngle;
 
         this.addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPartAnchor.START, true));
-        this.addRailPart(new CurveRailPart(new paper.Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPartAnchor.START, true));
+        this.addRailPart(new CurveRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPartAnchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
 
         this.showJoints();
-    }
-    /**
-     * レールを複製する。
-     * @returns {Object}
-     */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
     }
 }
 

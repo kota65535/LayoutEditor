@@ -8,26 +8,23 @@ import { CurveRailPart } from "./parts/CurveRailPart";
 
 /**
  * 分岐先の方向を指定するための識別子。
- * @type {{LEFT: Symbol, RIGHT: Symbol}}
  */
-export const Direction = {
-    LEFT: Symbol(),
-    RIGHT: Symbol()
-}
-
-
-export class Turnout extends Rail {
-    constructor(startPoint, angle) {
-        super(startPoint, angle);
-    }
+export enum TurnoutDirection {
+    LEFT,
+    RIGHT
 }
 
 /**
  * TODO: ジョイントオーダーは左回りで統一すべきか、分岐方向で統一すべきか決める。
  */
 
-
 export class SimpleTurnout extends Rail {
+
+    length: number;
+    radius: number;
+    centerAngle: number;
+    direction: TurnoutDirection;
+
     /**
      * 片開きのポイントを生成する。
      * @param {Point} startPoint
@@ -47,10 +44,10 @@ export class SimpleTurnout extends Rail {
 
         this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, false));
         switch (direction) {
-            case Direction.LEFT:
+            case TurnoutDirection.LEFT:
                 this.addRailPart(new CurveRailPart(startPoint, -180, radius, centerAngle, RailPartAnchor.END, false));
                 break;
-            case Direction.RIGHT:
+            case TurnoutDirection.RIGHT:
                 this.addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle, RailPartAnchor.START, false));
                 break;
         }
@@ -67,18 +64,13 @@ export class SimpleTurnout extends Rail {
 
         this.conductionState = 0;
     }
-
-
-    /**
-     * レールを複製する。
-     * @returns {Object}
-     */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
-    }
 }
 
 export class SymmetricalTurnout extends Rail {
+
+    radius: number;
+    centerAngle: number;
+
     /**
      * Y字ポイントを生成する。
      * @param {Point} startPoint
@@ -105,18 +97,16 @@ export class SymmetricalTurnout extends Rail {
 
         this.showJoints();
     }
-
-    /**
-     * レールを複製する。
-     * @returns {Object}
-     */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
-    }
 }
 
 
 export class CurvedTurnout extends Rail {
+
+    innerRadius: number;
+    outerRadius: number;
+    centerAngle: number;
+    direction: TurnoutDirection;
+
     /**
      * カーブポイントを生成する。
      * @param {Point} startPoint
@@ -138,13 +128,13 @@ export class CurvedTurnout extends Rail {
         let anchorJoint;
 
         switch (direction) {
-            case Direction.LEFT:
+            case TurnoutDirection.LEFT:
                 this.addRailPart(new CurveRailPart(startPoint, 180, outerRadius, centerAngle, RailPartAnchor.END, false));
                 this.addRailPart(new CurveRailPart(startPoint, 180, innerRadius, centerAngle, RailPartAnchor.END, false));
                 this.angle = angle + 180;
                 anchorJoint = this.joints[1];
                 break;
-            case Direction.RIGHT:
+            case TurnoutDirection.RIGHT:
                 this.addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPartAnchor.START, false));
                 this.addRailPart(new CurveRailPart(startPoint, 0, innerRadius, centerAngle, RailPartAnchor.START, false));
                 this.angle = angle;
@@ -161,13 +151,5 @@ export class CurvedTurnout extends Rail {
         this.rotate(this.angle, anchorJoint);
 
         this.showJoints();
-    }
-
-    /**
-     * レールを複製する。
-     * @returns {Object}
-     */
-    clone() {
-        return eval(Rail.evalMeToClone(this));
     }
 }
