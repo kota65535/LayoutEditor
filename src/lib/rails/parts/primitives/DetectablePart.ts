@@ -92,8 +92,13 @@ export class DetectablePart extends PartBase {
         this.detectionPart.setVisible(isVisible);
     }
 
+    /**
+     * 当たり判定は本体には無いことに留意。
+     * @param {"paper".Path} path
+     * @returns {boolean}
+     */
     containsPath(path: Path): boolean {
-        return this.basePart.containsPath(path) || this.detectionPart.containsPath(path);
+        return this.detectionPart.containsPath(path);
     }
 
     /**
@@ -109,21 +114,26 @@ export class DetectablePart extends PartBase {
             case DetectionState.BEFORE_DETECT:
                 // 当たり判定領域を透明化
                 this.detectionPart.setVisible(true);
-                this.detectionPart.setOpacity(0.2);
+                this.detectionPart.setOpacity(0.3);
                 this.basePart.path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
                 this.detectionPart.path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
+                // 親グループ（Railオブジェクトを想定）内で最前に移動
+                // TODO: レールが同士が近いとお互いのレールの上下関係により当たり判定が最前に表示されない。
+                this.pathGroup.bringToFront();
                 break;
             case DetectionState.DETECTING:
                 // 当たり判定領域を半透明化
                 this.detectionPart.setVisible(true);
-                this.detectionPart.setOpacity(0.5);
+                this.detectionPart.setOpacity(0.6);
                 this.basePart.path.fillColor = this.fillColors[DetectionState.DETECTING];
                 this.detectionPart.path.fillColor = this.fillColors[DetectionState.DETECTING];
+                // 親グループ（Railオブジェクトを想定）内で最前に移動
+                this.pathGroup.bringToFront();
                 break;
             case DetectionState.AFTER_DETECT:
                 // 当たり判定領域を不可視（無効化）
                 this.detectionPart.setVisible(false);
-                this.detectionPart.setOpacity(0);
+                // this.detectionPart.setOpacity(1.0);
                 this.basePart.path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
                 this.detectionPart.path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
                 break;

@@ -192,7 +192,10 @@ export class LayoutEditor {
         if (this.isLayoutBlank()) {
             joint = this.searchJointsOnGrid(point);
         } else {
-            joint = this.layoutManager.getJoint(point);
+            // カーソル上のジョイントのうち、最も近いものを選択する。
+            let joints = this.layoutManager.getJoints(point);
+            log.info(`${joints.length} Joints found.`)
+            joint = joints.sort( (a, b) => a.position.getDistance(point) - b.position.getDistance(point))[0];
         }
         return joint;
     }
@@ -225,11 +228,12 @@ export class LayoutEditor {
         if (this.jointIndexOfGuide === null) {
             this.initJointOfGuide(toJoint);
         }
-        // 接続先のレールよりも下に表示する（ジョイントの当たり判定のため）
+        // 接続先のレール（レイアウトが空ならジョイント）を最上部に表示する。
+        // 接続先のジョイントに対するカーソルの当たり判定維持のため。
         if (this.isLayoutBlank()) {
-            this.paletteRail.pathGroup.moveBelow(toJoint.pathGroup);
+            toJoint.pathGroup.bringToFront();
         } else {
-            this.paletteRail.pathGroup.moveBelow(this.layoutManager.getRailFromJoint(toJoint).pathGroup);
+            toJoint.rail.pathGroup.bringToFront();
         }
         this.paletteRail.connect(this.getCurrentJointOfGuide(), toJoint, true);
     }
@@ -294,6 +298,8 @@ export class LayoutEditor {
      * @param {Joint} toJoint
      */
     putSelectedRail(toJoint) {
+        // 接続先のレールよりも上に移動する。設置したレールのジョイントの当たり判定を優先したいので。
+        this.paletteRail.pathGroup.bringToFront();
         let result = this.layoutManager.putRail(this.paletteRail, this.getCurrentJointOfGuide(), toJoint);
         if (result) {
             this.gridPaper.paths.push(this.paletteRail.pathGroup);

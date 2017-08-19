@@ -204,11 +204,13 @@ export class Joint extends DetectablePart {
         }
     }
 
+    /**
+     * 本体への透明度設定を行う。
+     * 当たり判定の透明度は状態の混乱を招くので今の所は変更しない。
+     * @param {number} value
+     */
     setOpacity(value: number) {
         this.basePart.setOpacity(value);
-        if (this.detectionPart.path.opacity > value) {
-            this.detectionPart.setOpacity(value);
-        }
     }
 
     /**

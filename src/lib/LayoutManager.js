@@ -95,7 +95,6 @@ export class LayoutManager {
             // 動くか？
             rail.move(to.position, rail.startPoint);
         }
-        rail.setVisible(true);
         rail.setOpacity(1.0);
         this._registerRail(rail);
         return true;
@@ -129,17 +128,18 @@ export class LayoutManager {
      * @param {Point} point
      * @returns {Joint} joint at the point
      */
-    getJoint(point) {
-        let hitResult = hitTest(point);
-        if (!hitResult) {
+    getJoints(point) {
+        let hitResults = hitTestAll(point);
+        if (!hitResults) {
             return null;
         }
         // hitResults[0].item.fillColor = 'red';
         // hitResults[1].item.fillColor = 'blue';
 
-
         let allJoints = [].concat.apply([], this.rails.map( r => r.joints));
-        return allJoints.find( joint => joint.containsPath(hitResult.item));
+        return allJoints.filter( joint => {
+            return hitResults.map(result => joint.containsPath(result.item)).includes(true);
+        });
     }
 
 

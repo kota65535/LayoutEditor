@@ -137,7 +137,7 @@ export class RailPart {
         let centerOfOuterCurve = this.path.curves[1].getLocationAt(this.path.curves[1].length/2).point;
         let centerOfInnerCurve = this.path.curves[4].getLocationAt(this.path.curves[4].length/2).point;
         this.middlePoint = centerOfOuterCurve.add(centerOfInnerCurve).divide(2);
-        log.info(`middlePoint: ${this.middlePoint}`)
+        // log.info(`middlePoint: ${this.middlePoint}`)
     }
 
     /**
