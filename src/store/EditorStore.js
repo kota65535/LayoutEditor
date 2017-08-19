@@ -15,35 +15,34 @@ export class EditorStore extends StoreBase {
     }
 
     registerHandlers() {
+        // ビューからのパレットアイテム変更イベント
         this.on(riot.VE.EDITOR.PALETTE_ITEM_SELECTED, itemName => {
             this.data["selectedItem"] = itemName;
             this.saveToStorage();
             this.trigger(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, itemName);
         });
+        // ビューからのレイアウトデータ変更イベント
         this.on(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData => {
             this.data["layout"] = layoutData;
             this.saveToStorage();
             this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData);
         });
+        // ビューからの編集ファイル変更イベント
         this.on(riot.VE.EDITOR.FILE_CHANGED, editingFile => {
             this.data["editing_file"] = editingFile;
             this.saveToStorage();
         });
+        // ビューからの編集ファイル初期化要求
         this.on(riot.VE.EDITOR.FILE_INIT, () => {
             this.trigger(riot.SE.EDITOR.FILE_CHANGED, this.data["editing_file"]);
         });
+        // ビューからのレイアウトデータ初期化要求
         this.on(riot.VE.EDITOR.LAYOUT_INIT, () => {
             let layoutData = null;
             if (this.data["layout"]) {
-                try {
-                    layoutData = JSON.parse(this.data["layout"]);
-                } catch(e) {
-                    $.notify(
-                        { message: `Failed to parse JSON.` },
-                        { type: "danger" });
-                }
+                layoutData = this.data["layout"];
             }
-            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData);
+            this.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
         });
     }
 

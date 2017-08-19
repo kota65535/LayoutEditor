@@ -1,4 +1,6 @@
 import riot from "riot";
+import logger from "../logging";
+let log = logger("LayoutEditor", "DEBUG");
 
 export class StoreBase {
     constructor(localStorageKey) {
@@ -11,7 +13,15 @@ export class StoreBase {
             this.data = this.initData();
             this.saveToStorage();
         } else {
-            this.data = JSON.parse(json);
+            // データがあればJSONとしてパースする
+            try {
+                this.data = JSON.parse(json);
+            } catch(e) {
+                log.error(`Failed to parse JSON of local storage data.`);
+                $.notify(
+                    { message: `Failed to parse local storage data!` },
+                    { type: "danger" });
+            }
         }
 
         this.registerHandlers();

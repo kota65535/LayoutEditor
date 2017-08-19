@@ -202,17 +202,16 @@
 
       // レイアウトが読み込まれたことをストアに通知する。
       this.setLayout = (content, fileName, fileId) => {
+          let layoutData = null;
           try {
-              // JSON形式のはずなので、パースしてからストアに渡す
-              let json = JSON.parse(content);
-              riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, json);
+              layoutData = JSON.parse(content);
           } catch(e) {
-              log.error(`Failed to parse JSON. fileName: ${fileName}, fileId: ${fileId}`);
+              log.error(`Failed to parse JSON of fileName: ${fileName}, fileId: ${fileId}`);
               $.notify(
                   { message: `Cannot load layout from file "${fileName}"!` },
                   { type: "danger" });
-              riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, null);
           }
+          riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
       };
 
       // 親タグからeditor-mainタグを取得してcontentを取得する
