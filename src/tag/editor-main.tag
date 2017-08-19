@@ -114,7 +114,11 @@
     this.onControl(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, itemName => {
         this.selectedItem = itemName;
         log.info("Palette selected: " + this.selectedItem);
-        this.editor.selectRail(this.factory[itemName]());
+        if (itemName === "Feeder") {
+            this.editor.selectFeeder();
+        } else {
+            this.editor.selectRail(this.factory[itemName]());
+        }
     });
 
     // レイアウトデータに変更があったら、これをロードする

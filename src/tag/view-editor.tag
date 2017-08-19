@@ -33,7 +33,11 @@
               {name: "PL280_30"},
               {name: "PR280_30"},
               {name: "PY280_15"}
-          ]
+          ],
+//          "Electric Parts": [
+//              {name: "Feeder"},
+//              {name: "GapJoiner"}
+//          ]
       };
 
 

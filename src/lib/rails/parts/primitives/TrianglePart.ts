@@ -22,7 +22,7 @@ export class TrianglePart extends PartBase {
      * @param {number} height   高さ
      * @param {Color} fillColor 色
      */
-    constructor(position: Point, angle: number, width: number, height: number, fillColor: Color) {
+    constructor(position: Point, angle: number, width: number, height: number, fillColor: string) {
         super();
         this.angle = 0;
         this.width = width;

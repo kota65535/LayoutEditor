@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/12.
  */
 import {Joint, JointDirection, JointState} from "./rails/parts/Joint";
-import {FeederSocket} from "./rails/parts/FeederSocket";
+import {FeederSocket, FeederState} from "./rails/parts/FeederSocket";
 import {Rail} from "./rails/Rail";
 import {CurveRail} from "./rails/CurveRail";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
@@ -98,7 +98,9 @@ export class LayoutEditor {
             // グリッド上に透明なジョイントを作成
             gridPoints.forEach(point => {
                 let joint = new Joint(point, this.gridJointsAngle, JointDirection.SAME_TO_ANGLE, null);
+                // TODO: デバッグ用
                 joint.basePart.setOpacity(0);
+                // joint.setOpacity(0);
                 joint.basePart.setVisible(false);
                 this.gridJoints.push(joint);
             });
@@ -250,6 +252,10 @@ export class LayoutEditor {
     // フィーダー設置機能に関わるメソッド
     //==============================
 
+
+    selectFeeder() {
+    }
+
     /**
      * 設置されるフィーダーのガイドを半透明で表示する。
      * @param {FeederSocket} feederSocket at the mouse cursor
@@ -265,7 +271,7 @@ export class LayoutEditor {
      */
     hideFeederToPut() {
         // 接続試行中ならガイドを消去する
-        if (this.touchedFeederSocket && this.touchedFeederSocket.getState() === FeederSocket.State.CONNECTING) {
+        if (this.touchedFeederSocket && this.touchedFeederSocket.getState() === FeederState.CONNECTING) {
             this.touchedFeederSocket.disconnect();
         }
         // このとき接触しているフィーダーは無い
@@ -290,6 +296,7 @@ export class LayoutEditor {
      */
     handleMouseMove(event) {
 
+        // レイアウトが空ならグリッドジョイントをカーソルの周囲に生成する
         if (this.isLayoutBlank()) {
             this.putJointsOnGrid(event.point);
         }
@@ -302,12 +309,13 @@ export class LayoutEditor {
         this.handleMouseMoveOnJoint(event);
 
         // フィーダーソケット上かつ接続中でないならフィーダー設置ガイドを表示する
-        let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && ! (feederSocket.getState() === FeederSocket.State.CONNECTED)) {
-            this.showFeederToPut(feederSocket);
-        } else {
-            this.hideFeederToPut();
-        }
+        this.handleMouseMoveOnFeeder(event);
+        // let feederSocket = this.layoutManager.getFeederSocket(event.point);
+        // if (feederSocket && ! (feederSocket.getState() === FeederState.CONNECTED)) {
+        //     this.showFeederToPut(feederSocket);
+        // } else {
+        //     this.hideFeederToPut();
+        // }
     }
 
     /**
@@ -324,6 +332,17 @@ export class LayoutEditor {
         } else {
             this.hideRailToPut();
         }
+    }
+
+    handleMouseMoveOnFeeder(event) {
+        // フィーダーソケット上かつ接続中でないならフィーダー設置ガイドを表示する
+        let feederSocket = this.layoutManager.getFeederSocket(event.point);
+        if (feederSocket && ! (feederSocket.getState() === FeederState.CONNECTED)) {
+            this.showFeederToPut(feederSocket);
+        } else {
+            this.hideFeederToPut();
+        }
+
     }
 
     /**
@@ -355,7 +374,7 @@ export class LayoutEditor {
 
         // フィーダー結合処理
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.getState() !== FeederSocket.State.CONNECTED) {
+        if (feederSocket && feederSocket.getState() !== FeederState.CONNECTED) {
             this.putFeeder(feederSocket);
             return;
         }
@@ -416,7 +435,7 @@ export class LayoutEditor {
         }
 
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.getState() !== FeederSocket.State.CONNECTED) {
+        if (feederSocket && feederSocket.getState() !== FeederState.CONNECTED) {
             feederSocket.toggleDirection();
             feederSocket.disconnect();
             this.showFeederToPut(feederSocket);

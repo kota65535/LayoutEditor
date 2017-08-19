@@ -75,13 +75,13 @@ export class Rail {
         }
 
         // フィーダーソケットの追加
-        // this.railParts.forEach(part => {
-        //     if (part.hasFeederSocket()) {
-        //         let feederSocket = new FeederSocket(part);
-        //         this.feederSockets.push(feederSocket);
-        //         this.pathGroup.addChild(feederSocket.path)
-        //     }
-        // });
+        this.railParts.forEach(part => {
+            if (part.hasFeederSocket()) {
+                let feederSocket = new FeederSocket(part);
+                this.feederSockets.push(feederSocket);
+                this.pathGroup.addChild(feederSocket.pathGroup)
+            }
+        });
     }
 
     /**

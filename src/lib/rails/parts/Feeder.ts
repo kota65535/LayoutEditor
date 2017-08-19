@@ -3,6 +3,7 @@
  */
 
 import {TrianglePart} from "./primitives/TrianglePart";
+import {FeederSocket} from "./FeederSocket";
 
 /**
  * フィーダークラス。
@@ -16,19 +17,22 @@ export class Feeder extends TrianglePart {
     static FILL_COLOR_CONNECTING = "red";
     static FILL_COLOR_CONNECTED = "black";
 
+    railPart: any;
+    feederSocket: FeederSocket;
+
     /**
      * フィーダーを指定のフィーダーソケットに作成する
      * @param {FeederSocket} feederSocket
      */
-    constructor(feederSocket) {
-        super(feederSocket.getFeederPosition(), feederSocket.getFeederAngle(), Feeder.WIDTH, Feeder.HEIGHT, Feeder.FILL_COLOR_OPEN);
+    constructor(feederSocket: FeederSocket) {
+        super(feederSocket.position, feederSocket.angle, Feeder.WIDTH, Feeder.HEIGHT, Feeder.FILL_COLOR_OPEN);
 
         this.railPart = feederSocket.railPart;
         this.feederSocket = feederSocket;
 
         // feederSocket.pathGroup.addChild(this.path);
 
-        this.move(feederSocket.getFeederPosition(), this.getCenterOfTop());
+        this.move(feederSocket.position, this.getCenterOfTop());
         // this.rotate(angle, this.getPosition());
         // this.disconnect();
     }
