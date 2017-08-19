@@ -2,7 +2,7 @@
  * Created by tozawa on 2017/07/03.
  */
 import { Rail } from "./Rail";
-import { RailPart } from "./parts/RailPart";
+import { RailPartAnchor } from "./parts/RailPart";
 import { CurveRailPart } from "./parts/CurveRailPart";
 
 
@@ -22,7 +22,7 @@ export class CurveRail extends Rail {
         this.centerAngle = centerAngle;
 
         this.angle = 0;
-        this.addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle, RailPart.Anchor.START, true));
+        this.addRailPart(new CurveRailPart(startPoint, 0, radius, centerAngle, RailPartAnchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
@@ -57,8 +57,8 @@ export class DoubleCurveRail extends Rail {
         this.outerRadius = outerRadius;
         this.centerAngle = centerAngle;
 
-        this.addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPart.Anchor.START, true));
-        this.addRailPart(new CurveRailPart(new paper.Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPart.Anchor.START, true));
+        this.addRailPart(new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPartAnchor.START, true));
+        this.addRailPart(new CurveRailPart(new paper.Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPartAnchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);

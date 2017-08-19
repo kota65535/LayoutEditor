@@ -32,6 +32,14 @@ export class DetectablePart extends PartBase {
     set position(position: Point) { this.basePart.position = this.basePart.position; }
 
 
+    /**
+     *
+     * @param {"paper".Point} position
+     * @param {number} angle
+     * @param {PartBase} basePart
+     * @param {PartBase} detectionPart
+     * @param {string[]} colors 3要素の、それぞれ BEFORE_DETECT, DETECTING, AFTER_DETECT 時の色を表す文字列の配列。
+     */
     constructor(position: Point, angle: number, basePart: PartBase, detectionPart: PartBase, colors: string[]) {
         super();
         this.basePart = basePart;

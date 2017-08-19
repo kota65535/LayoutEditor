@@ -2,11 +2,15 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
-import {RailPart,AnchorType} from "./RailPart";
+import {RailPart} from "./RailPart";
+import {Path} from "paper";
 /**
  * 曲線レールパーツ。
  */
 export class CurveRailPart extends RailPart {
+
+    radius: number;
+    centerAngle: number;
 
     /**
      * 指定された始点、始点角度、半径、中心角度で曲線レールパーツを生成する。
@@ -48,7 +52,7 @@ export class CurveRailPart extends RailPart {
 
         // console.log(sprintf("curve rail path: %s", pathData));
 
-        this.path = new paper.Path(pathData);   // パスオブジェクト
+        this.path = new Path(pathData);   // パスオブジェクト
         // this.path.strokeColor = "black";
         this.path.fillColor = RailPart.FILL_COLOR;
 

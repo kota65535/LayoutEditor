@@ -102,7 +102,7 @@ export class Joint extends DetectablePart {
                 break;
         }
         let circle = new CirclePart(position.add(circlePosition), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
-        super(position, angle, rect, circle, [Joint.FILL_COLOR_OPEN, Joint.FILL_COLOR_OPEN, Joint.FILL_COLOR_CONNECTING, Joint.FILL_COLOR_CONNECTED]);
+        super(position, angle, rect, circle, [Joint.FILL_COLOR_OPEN, Joint.FILL_COLOR_CONNECTING, Joint.FILL_COLOR_CONNECTED]);
 
 
         this._direction = direction;
@@ -175,7 +175,7 @@ export class Joint extends DetectablePart {
                 this.setDetectionState(DetectionState.BEFORE_DETECT);
                 break;
             case JointState.CONNECTING_FROM:
-                this.setDetectionState(DetectionState.AFTER_DETECT);
+                this.setDetectionState(DetectionState.DETECTING);
                 break;
             case JointState.CONNECTING_TO:
                 this.setDetectionState(DetectionState.DETECTING);

@@ -78,7 +78,7 @@ export class FeederSocket extends DetectablePart {
         let rect = new RectPart(railPart.middlePoint, angle,
             FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
         let circle = new CirclePart(railPart.middlePoint, angle, FeederSocket.HIT_RADIUS, FeederSocket.FILL_COLOR_OPEN);
-        super(railPart.position, angle, rect, circle,
+        super(railPart.middlePoint, angle, rect, circle,
             [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
 
         this.railPart = railPart;

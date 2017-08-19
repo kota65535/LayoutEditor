@@ -4,8 +4,19 @@
 import {sprintf} from "sprintf-js";
 import {FlowDirection} from "./FeederSocket";
 import logger from "../../../logging";
+import {IGradientColor, Path, Point} from "paper";
 
 let log = logger("RailPart");
+
+/**
+ * レールパーツのコンストラクタでアンカー点を指定するための識別子。
+ * 始点または終点が指定可能。
+ * @type {{START: Symbol, END: Symbol}}
+ */
+export enum RailPartAnchor {
+    START,
+    END
+};
 
 
 /**
@@ -20,22 +31,28 @@ export class RailPart {
     static FLOW_COLOR_2 = "greenyellow";
 
 
-    /**
-     * レールパーツのコンストラクタでアンカー点を指定するための識別子。
-     * 始点または終点が指定可能。
-     * @type {{START: Symbol, END: Symbol}}
-     */
-    static Anchor = {
-        START: Symbol(),
-        END: Symbol
-    };
+    startPoint: Point;
+    middlePoint: Point;
+    endPoint: Point;
+    position: Point;
+
+    startAngle: number;
+    endAngle: number;
+
+    path: Path;
+
+    _isSimulated: boolean;
+    _hasFeederSocket: boolean;
+
+    flowDirection: FlowDirection;
+
 
     /**
      * レールパーツの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでパスの生成・移動・回転を行う。
      */
     constructor(hasFeederSocket) {
-        this.startPoint = this.endPoint = new paper.Point(0, 0);
+        this.startPoint = this.endPoint = new Point(0, 0);
         this.startAngle = this.endAngle = 0;
 
         this.path = null;
@@ -120,6 +137,7 @@ export class RailPart {
         let centerOfOuterCurve = this.path.curves[1].getLocationAt(this.path.curves[1].length/2).point;
         let centerOfInnerCurve = this.path.curves[4].getLocationAt(this.path.curves[4].length/2).point;
         this.middlePoint = centerOfOuterCurve.add(centerOfInnerCurve).divide(2);
+        log.info(`middlePoint: ${this.middlePoint}`)
     }
 
     /**
@@ -129,13 +147,13 @@ export class RailPart {
      * @private
      */
     _getAnchorFromType(anchorType) {
-        let anAnchorType = anchorType || RailPart.Anchor.START;
+        let anAnchorType = anchorType || RailPartAnchor.START;
         let anchor;
         switch (anAnchorType) {
-            case RailPart.Anchor.START:
+            case RailPartAnchor.START:
                 anchor = this.startPoint;
                 break;
-            case RailPart.Anchor.END:
+            case RailPartAnchor.END:
                 anchor = this.startPoint;
                 anchor = this.endPoint;
                 break;
@@ -173,7 +191,8 @@ export class RailPart {
      */
     animate(event) {
         let ratio = event.count % 60 / 60;
-        let currentOrigin, currentDestination;
+        let currentOrigin;
+        let currentDestination: Point;
 
         switch (this.flowDirection) {
             case FlowDirection.NONE:
@@ -192,12 +211,12 @@ export class RailPart {
                 break;
         }
 
-        this.path.fillColor = {
+        this.path.fillColor = <IGradientColor>{
             gradient: {
                 stops: [RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1, RailPart.FLOW_COLOR_2, RailPart.FLOW_COLOR_1]
             },
             origin: currentDestination,
-            destination: currentOrigin
+            destination: currentOrigin,
         };
     }
 }
