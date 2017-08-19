@@ -83,4 +83,13 @@ export class PartBase {
     containsPath(path: Path): boolean {
         return path.id === this.path.id;
     }
+
+    // TODO: RailクラスのgetBoundsともどもプロパティにして削除する
+    getBounds() {
+        return this.path.bounds;
+    }
+
+    scale(hor, ver) {
+        this.path.scale(hor, ver);
+    }
 }

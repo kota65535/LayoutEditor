@@ -4,7 +4,9 @@
 import {sprintf} from "sprintf-js";
 import { Joint, JointDirection } from "./parts/Joint.ts";
 import { FeederSocket } from "./parts/FeederSocket";
+import { PaletteItemType } from "./parts/PaletteItem";
 import logger from "../../logging";
+
 
 let log = logger("Rail");
 
@@ -369,6 +371,10 @@ export class Rail {
      */
     _isReasonablyClose(point1, point2) {
         return point1.isClose(point2, Rail.JOINT_TO_RAIL_PART_TOLERANCE);
+    }
+
+    getItemType() {
+        return PaletteItemType.RAIL;
     }
 }
 

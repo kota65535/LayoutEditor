@@ -3,7 +3,7 @@ import {PartBase} from "./PartBase";
 import {Group, Path, Point} from "paper";
 
 export enum DetectionState {
-    DISABLED = 0,
+    DISABLED = -1,
     BEFORE_DETECT,
     DETECTING,
     AFTER_DETECT

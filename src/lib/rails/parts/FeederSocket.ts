@@ -46,6 +46,7 @@ export class FeederSocket extends DetectablePart {
     flowDirection: FlowDirection;
     connectedFeeder: Feeder;
     _feederState: FeederState;
+    _isEnabled: boolean;
 
 
     get position() {
@@ -61,9 +62,9 @@ export class FeederSocket extends DetectablePart {
     get angle() {
         switch(this.flowDirection) {
             case FlowDirection.START_TO_END:
-                return this._angle;
+                return this.basePart.angle;
             case FlowDirection.END_TO_START:
-                return this._angle - 180;
+                return this.basePart.angle - 180;
         }
     }
 
@@ -77,13 +78,16 @@ export class FeederSocket extends DetectablePart {
         let rect = new RectPart(railPart.middlePoint, angle,
             FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
         let circle = new CirclePart(railPart.middlePoint, angle, FeederSocket.HIT_RADIUS, FeederSocket.FILL_COLOR_OPEN);
-        super(railPart.position, angle, rect, circle, [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
+        super(railPart.position, angle, rect, circle,
+            [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
 
         this.railPart = railPart;
         this.flowDirection = direction;
         this.connectedFeeder = null;
 
-        this._setState(FeederState.OPEN);
+        // 最初は無効で未接続状態
+        this.setState(FeederState.OPEN);
+        this.setEnabled(false);
 
         // console.log("FeederSocket", this.railPart.path.position);
     }
@@ -118,9 +122,9 @@ export class FeederSocket extends DetectablePart {
         }
 
         if (isDryRun) {
-            this._setState(FeederState.CONNECTING);
+            this.setState(FeederState.CONNECTING);
         } else {
-            this._setState(FeederState.CONNECTED);
+            this.setState(FeederState.CONNECTED);
         }
     }
 
@@ -129,7 +133,7 @@ export class FeederSocket extends DetectablePart {
      */
     disconnect() {
         this.connectedFeeder.remove();
-        this._setState(FeederState.OPEN);
+        this.setState(FeederState.OPEN);
         this.connectedFeeder = null;
     }
 
@@ -156,7 +160,7 @@ export class FeederSocket extends DetectablePart {
      * @param state
      * @private
      */
-    _setState(state) {
+    setState(state) {
         switch(state) {
             case FeederState.OPEN:
                 this.setDetectionState(DetectionState.BEFORE_DETECT);
@@ -168,6 +172,24 @@ export class FeederSocket extends DetectablePart {
                 this.setDetectionState(DetectionState.AFTER_DETECT);
                 break;
         }
+        if (this.connectedFeeder) {
+            this.connectedFeeder.setState(state);
+        }
         this._feederState = state;
+    }
+
+
+    setEnabled(isEnabled) {
+        if (isEnabled) {
+            this.setState(this._feederState);
+        } else {
+            this.setDetectionState(DetectionState.DISABLED);
+        }
+
+        if (this.connectedFeeder) {
+            this.connectedFeeder.setEnabled(isEnabled);
+        }
+
+        this._isEnabled = isEnabled;
     }
 }

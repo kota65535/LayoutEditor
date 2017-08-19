@@ -16,6 +16,7 @@ let log = logger("Joint");
  * @type {{OPEN: Symbol, CONNECTING: Symbol, CONNECTED: Symbol}}
  */
 export enum JointState {
+    DISABLED,
     OPEN,
     CONNECTING_FROM,
     CONNECTING_TO,
@@ -52,6 +53,7 @@ export class Joint extends DetectablePart {
     connectedJoint: Joint | null;
     rail: any;
     rendered: false;
+    _isEnabled: boolean;
 
 
     get position() {
@@ -108,6 +110,7 @@ export class Joint extends DetectablePart {
         this.rail = rail;
         this.rendered = false;
         this._jointState = JointState.OPEN;
+        this._isEnabled = true;
 
         this.move(position);
         this.rotate(angle, this.position);
@@ -124,11 +127,11 @@ export class Joint extends DetectablePart {
         this.connectedJoint = joint;
         joint.connectedJoint = this;
         if (isDryRun) {
-            this._setState(JointState.CONNECTING_FROM);
-            joint._setState(JointState.CONNECTING_TO);
+            this.setState(JointState.CONNECTING_FROM);
+            joint.setState(JointState.CONNECTING_TO);
         } else {
-            this._setState(JointState.CONNECTED);
-            joint._setState(JointState.CONNECTED);
+            this.setState(JointState.CONNECTED);
+            joint.setState(JointState.CONNECTED);
         }
     }
 
@@ -137,10 +140,10 @@ export class Joint extends DetectablePart {
      */
     disconnect() {
         if (this.connectedJoint) {
-            this.connectedJoint._setState(JointState.OPEN);
+            this.connectedJoint.setState(JointState.OPEN);
             this.connectedJoint.connectedJoint = null;
         }
-        this._setState(JointState.OPEN);
+        this.setState(JointState.OPEN);
         this.connectedJoint = null;
     }
 
@@ -166,7 +169,7 @@ export class Joint extends DetectablePart {
      * @param state
      * @private
      */
-    _setState(state: JointState) {
+    setState(state: JointState) {
         switch(state) {
             case JointState.OPEN:
                 this.setDetectionState(DetectionState.BEFORE_DETECT);
@@ -184,6 +187,15 @@ export class Joint extends DetectablePart {
         this._jointState = state;
     }
 
+    setEnabled(isEnabled) {
+        if (isEnabled) {
+            this.setState(this._jointState);
+            this._isEnabled = true;
+        } else {
+            this.setDetectionState(DetectionState.DISABLED);
+            this._isEnabled = false;
+        }
+    }
 
     setOpacity(value: number) {
         this.basePart.setOpacity(value);

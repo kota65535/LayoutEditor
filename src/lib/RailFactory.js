@@ -4,6 +4,9 @@
 import { StraightRail, DoubleStraightRail, GappedStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
 import { SimpleTurnout, SymmetricalTurnout, Direction } from "./rails/Turnout";
+import {Feeder} from "./rails/parts/Feeder";
+import {TrianglePart} from "./rails/parts/primitives/TrianglePart";
+import {PaletteItemType} from "./rails/parts/PaletteItem";
 
 
 let DEFAULT_POSITION = new paper.Point(-10000000,-10000000);
@@ -60,6 +63,14 @@ export class RailFactory {
     }
     PY280_15() {
         return new SymmetricalTurnout(DEFAULT_POSITION, 0, 280, 15);
+    }
+
+    Feeder() {
+        let feeder = new TrianglePart(DEFAULT_POSITION, 0, Feeder.WIDTH, Feeder.HEIGHT, Feeder.FILL_COLOR_OPEN);
+        feeder.getItemType = () => {
+            return PaletteItemType.FEEDER;
+        };
+        return feeder;
     }
 }
 

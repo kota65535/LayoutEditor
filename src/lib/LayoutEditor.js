@@ -10,6 +10,7 @@ import {LayoutManager} from "./LayoutManager";
 import {LayoutSimulator} from "./LayoutSimulator";
 import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
+import {PaletteItemType} from "./rails/parts/PaletteItem";
 
 let log = logger("LayoutEditor", "DEBUG");
 
@@ -53,6 +54,59 @@ export class LayoutEditor {
         this.gridJoints = [];
         this.gridJointsAngle = 0;
     }
+
+
+    //====================
+    // モード遷移
+    //====================
+
+    isRailMode() {
+        return this.paletteRail.getItemType() === PaletteItemType.RAIL;
+    }
+
+    isFeederMode() {
+        return this.paletteRail.getItemType() === PaletteItemType.FEEDER;
+    }
+
+    isGapJoinerMode() {
+        return this.paletteRail.getItemType() === PaletteItemType.FEEDER;
+    }
+
+    changeToRailMode(paletteItem) {
+        this.layoutManager.rails.forEach(rail => {
+            rail.joints.forEach(j => j.setEnabled(true));
+        });
+        this.layoutManager.rails.forEach(rail => {
+            rail.feederSockets.forEach(fs => fs.setEnabled(false));
+        });
+        this.selectRail(paletteItem);
+    }
+
+    changeToFeederMode(paletteItem) {
+        this.layoutManager.rails.forEach(rail => {
+            rail.joints.forEach(j => j.setEnabled(false));
+        });
+        this.layoutManager.rails.forEach(rail => {
+            rail.feederSockets.forEach(fs => fs.setEnabled(true));
+        });
+        this.paletteRail = paletteItem;
+        // this.selectRail(paletteItem);
+    }
+
+    selectPaletteItem(paletteItem) {
+        switch (paletteItem.getItemType()) {
+            case PaletteItemType.RAIL:
+                this.changeToRailMode(paletteItem);
+                break;
+            case PaletteItemType.FEEDER:
+                this.changeToFeederMode(paletteItem);
+                break;
+            case PaletteItemType.GAP_JOINER:
+                // this.selectFeeder(paletteItem);
+                // break;
+        }
+    }
+
 
     /**
      * 保存されていたレイアウトをロードし、エディタ上に配置する。
@@ -254,6 +308,14 @@ export class LayoutEditor {
 
 
     selectFeeder() {
+        this.layoutManager.rails.forEach(rail => {
+            rail.feederSockets.forEach(fs => fs.setState(FeederState.OPEN));
+        });
+        this.showFeederSockets();
+        log.info("Feeder selected");
+    }
+
+    showFeederSockets() {
     }
 
     /**
@@ -281,8 +343,8 @@ export class LayoutEditor {
     /**
      * フィーダーを設置する。
      */
-    putFeeder() {
-        this.layoutManager.putFeeder(this.touchedFeederSocket);
+    putFeeder(feederSocket) {
+        this.layoutManager.putFeeder(feederSocket);
     }
 
 
@@ -302,20 +364,18 @@ export class LayoutEditor {
         }
 
         // 何にも接触していない場合、各種ガイドを消す
-        this.hideRailToPut();
-        this.hideFeederToPut();
 
         // ジョイント上にマウスが乗った時の処理
-        this.handleMouseMoveOnJoint(event);
+        if (this.isRailMode()) {
+            this.hideRailToPut();
+            this.handleMouseMoveOnJoint(event);
+        }
 
-        // フィーダーソケット上かつ接続中でないならフィーダー設置ガイドを表示する
-        this.handleMouseMoveOnFeeder(event);
-        // let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        // if (feederSocket && ! (feederSocket.getState() === FeederState.CONNECTED)) {
-        //     this.showFeederToPut(feederSocket);
-        // } else {
-        //     this.hideFeederToPut();
-        // }
+        // フィーダー上にマウスが乗った時の処理
+        if (this.isFeederMode()) {
+            this.hideFeederToPut();
+            this.handleMouseMoveOnFeeder(event);
+        }
     }
 
     /**
@@ -325,7 +385,6 @@ export class LayoutEditor {
     handleMouseMoveOnJoint(event) {
         // 乗っているジョイントを取得
         let joint = this.getJoint(event.point);
-
         // ジョイント上かつ接続中でないならレール設置ガイドを表示する
         if (joint && ! (joint.jointState === JointState.CONNECTED)) {
             this.showRailToPut(joint);
@@ -334,15 +393,23 @@ export class LayoutEditor {
         }
     }
 
+    /**
+     * フィーダー上にマウスが乗った時の処理
+     * @param event
+     */
     handleMouseMoveOnFeeder(event) {
-        // フィーダーソケット上かつ接続中でないならフィーダー設置ガイドを表示する
+        // 乗っているフィーダーを取得
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && ! (feederSocket.getState() === FeederState.CONNECTED)) {
+
+        // フィーダーソケット上かつ下記の条件に当てはまればフィーダーガイドを表示
+        //  - フィーダーが選択されている
+        //  - フィーダーが未接続または接続試行中である
+        if (feederSocket
+            && [FeederState.OPEN, FeederState.CONNECTING].includes(feederSocket.getState())) {
             this.showFeederToPut(feederSocket);
         } else {
             this.hideFeederToPut();
         }
-
     }
 
     /**

@@ -100,7 +100,7 @@
         }, false);
 
         // TODO: ボタンクリックイベントで選択するようにする
-        this.editor.selectRail(this.factory.S280());
+        this.editor.selectPaletteItem(this.factory.S280());
 
         // レイアウトデータの初期化を始める
         riot.control.trigger(riot.VE.EDITOR.LAYOUT_INIT);
@@ -114,11 +114,7 @@
     this.onControl(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, itemName => {
         this.selectedItem = itemName;
         log.info("Palette selected: " + this.selectedItem);
-        if (itemName === "Feeder") {
-            this.editor.selectFeeder();
-        } else {
-            this.editor.selectRail(this.factory[itemName]());
-        }
+        this.editor.selectPaletteItem(this.factory[itemName]());
     });
 
     // レイアウトデータに変更があったら、これをロードする
