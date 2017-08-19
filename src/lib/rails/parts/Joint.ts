@@ -41,7 +41,7 @@ export class Joint extends DetectablePart {
     static WIDTH = 8;
     static HEIGHT = 16;
     static HIT_RADIUS = 20;
-    static FILL_COLOR_CONNECTED = "darkgray";
+    static FILL_COLOR_CONNECTED = "grey";
     static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "darkorange";
 
@@ -51,6 +51,8 @@ export class Joint extends DetectablePart {
     private _direction: JointDirection;
     private _jointState: JointState;
     connectedJoint: Joint | null;
+
+    _currentScale: number;
     rail: any;
     rendered: false;
     _isEnabled: boolean;
@@ -111,6 +113,7 @@ export class Joint extends DetectablePart {
         this.rendered = false;
         this._jointState = JointState.OPEN;
         this._isEnabled = true;
+        this._currentScale = 1;
 
         this.move(position);
         this.rotate(angle, this.position);
@@ -173,15 +176,19 @@ export class Joint extends DetectablePart {
         switch(state) {
             case JointState.OPEN:
                 this.setDetectionState(DetectionState.BEFORE_DETECT);
+                this.unshrink();
                 break;
             case JointState.CONNECTING_FROM:
                 this.setDetectionState(DetectionState.DETECTING);
+                this.unshrink();
                 break;
             case JointState.CONNECTING_TO:
                 this.setDetectionState(DetectionState.DETECTING);
+                this.unshrink();
                 break;
             case JointState.CONNECTED:
                 this.setDetectionState(DetectionState.AFTER_DETECT);
+                this.shrink();
                 break;
         }
         this._jointState = state;
@@ -204,6 +211,32 @@ export class Joint extends DetectablePart {
         }
     }
 
+    /**
+     * ジョイントに接続後、お互い接続方向に幅を縮める（合体するようなイメージ）
+     */
+    shrink() {
+        if (this._currentScale === 1) {
+            this._scaleHorizontally(7/10);
+            this._currentScale = 7/10;
+        }
+    }
+
+    unshrink() {
+        if (this._currentScale !== 1) {
+            this._scaleHorizontally(10/7);
+            this._currentScale = 1;
+        }
+    }
+
+    /**
+     * angle=0 時の水平方向に拡大・縮小する。
+     */
+    _scaleHorizontally(value: number) {
+        let angle = this.basePart.angle;
+        this.basePart.rotate(0);
+        this.basePart.scale(value, 1, this.position);
+        this.basePart.rotate(angle);
+    }
 
     showInfo() {
         log.debug(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",

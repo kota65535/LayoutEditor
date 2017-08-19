@@ -89,7 +89,7 @@ export class PartBase {
         return this.path.bounds;
     }
 
-    scale(hor, ver) {
-        this.path.scale(hor, ver);
+    scale(hor, ver, center = this.path.position) {
+        this.path.scale(hor, ver, center);
     }
 }
