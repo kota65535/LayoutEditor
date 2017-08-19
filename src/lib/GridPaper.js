@@ -2,7 +2,7 @@ import "lodash";
 import logger from "../logging";
 import {cartesian} from "./utils";
 
-let log = logger("EditorContent");
+let log = logger("GridPaper");
 
 /**
  * ドラッグで移動、ホイールで拡大・縮小が可能な一定の大きさの方眼紙を作成する。

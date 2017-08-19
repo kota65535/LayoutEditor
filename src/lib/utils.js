@@ -19,6 +19,11 @@ export function cartesian() {
 }
 
 
+/**
+ * Paper.js におけるHitTestのWrapper
+ * @param point
+ * @returns {"paper".HitResult | *}
+ */
 export function hitTest(point) {
     let hitOptions = {
         segments: true,
@@ -38,6 +43,10 @@ export function hitTest(point) {
     return hitResult;
 }
 
+/**
+ * Paper.js におけるHitTestAllのWrapper
+ * @param point
+ */
 export function hitTestAll(point) {
     let hitOptions = {
         segments: true,
@@ -46,6 +55,7 @@ export function hitTestAll(point) {
         // tolerance: 5
     };
     let hitResults = paper.project.hitTestAll(point, hitOptions);
+    // Groupがひっかかるとうざいので取り除く
     let hitResultsPathOnly = hitResults.filter(r => r.item instanceof paper.Path);
     return hitResultsPathOnly;
 }

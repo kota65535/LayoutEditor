@@ -77,7 +77,7 @@ export class LayoutEditor {
             rail.joints.forEach(j => j.setEnabled(true));
         });
         this.layoutManager.rails.forEach(rail => {
-            rail.feederSockets.forEach(fs => fs.setEnabled(false));
+            rail.feederSockets.forEach(fs => fs.enabled = false);
         });
         this.selectRail(paletteItem);
     }
@@ -87,7 +87,7 @@ export class LayoutEditor {
             rail.joints.forEach(j => j.setEnabled(false));
         });
         this.layoutManager.rails.forEach(rail => {
-            rail.feederSockets.forEach(fs => fs.setEnabled(true));
+            rail.feederSockets.forEach(fs => fs.enabled = true);
         });
         this.paletteRail = paletteItem;
         // this.selectRail(paletteItem);
@@ -193,9 +193,7 @@ export class LayoutEditor {
             joint = this.searchJointsOnGrid(point);
         } else {
             // カーソル上のジョイントのうち、最も近いものを選択する。
-            let joints = this.layoutManager.getJoints(point);
-            log.info(`${joints.length} Joints found.`)
-            joint = joints.sort( (a, b) => a.position.getDistance(point) - b.position.getDistance(point))[0];
+            joint = this.layoutManager.getJoint(point);
         }
         return joint;
     }
@@ -256,7 +254,7 @@ export class LayoutEditor {
     initJointOfGuide(toJoint) {
         // 対向レールとパレットレールの両者がカーブレールの場合、カーブの向きを揃える。
         // TODO: ジョイントの個数が２であることが前提になっている。より汎用的なロジックを考える。
-        let opponentRail = this.layoutManager.getRailFromJoint(toJoint);
+        let opponentRail = toJoint.rail;
         if (!opponentRail) {
             // グリッドジョイントの場合は向きは変えない
             this.jointIndexOfGuide = 0;
@@ -339,7 +337,7 @@ export class LayoutEditor {
      */
     hideFeederToPut() {
         // 接続試行中ならガイドを消去する
-        if (this.touchedFeederSocket && this.touchedFeederSocket.getState() === FeederState.CONNECTING) {
+        if (this.touchedFeederSocket && this.touchedFeederSocket.feederState === FeederState.CONNECTING) {
             this.touchedFeederSocket.disconnect();
         }
         // このとき接触しているフィーダーは無い
@@ -411,7 +409,7 @@ export class LayoutEditor {
         //  - フィーダーが選択されている
         //  - フィーダーが未接続または接続試行中である
         if (feederSocket
-            && [FeederState.OPEN, FeederState.CONNECTING].includes(feederSocket.getState())) {
+            && [FeederState.OPEN, FeederState.CONNECTING].includes(feederSocket.feederState)) {
             this.showFeederToPut(feederSocket);
         } else {
             this.hideFeederToPut();
@@ -447,7 +445,7 @@ export class LayoutEditor {
 
         // フィーダー結合処理
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.getState() !== FeederState.CONNECTED) {
+        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
             this.putFeeder(feederSocket);
             return;
         }
@@ -508,7 +506,7 @@ export class LayoutEditor {
         }
 
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.getState() !== FeederState.CONNECTED) {
+        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
             feederSocket.toggleDirection();
             feederSocket.disconnect();
             this.showFeederToPut(feederSocket);

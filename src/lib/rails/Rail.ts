@@ -248,7 +248,7 @@ export class Rail {
         this.pathGroup.name = name;
     }
 
-    getName(name) {
+    getName() {
         return this.pathGroup.name;
     }
 

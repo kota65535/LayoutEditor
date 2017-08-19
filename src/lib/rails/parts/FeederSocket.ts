@@ -6,6 +6,7 @@ import {Feeder} from "./Feeder";
 import logger from "../../../logging";
 import {DetectablePart, DetectionState} from "./primitives/DetectablePart";
 import {CirclePart} from "./primitives/CirclePart";
+import {RailPart} from "./RailPart";
 
 let log = logger("FeederSocket");
 
@@ -13,7 +14,6 @@ let log = logger("FeederSocket");
  * フィーダーの電流方向をレールパーツの始点・終点を使って指定するための識別子。
  * @type {{SAME_TO_ANGLE: Symbol, REVERSE_TO_ANGLE: Symbol}}
  */
-
 export enum FeederState {
     OPEN,
     CONNECTING,
@@ -25,7 +25,6 @@ export enum FlowDirection {
     START_TO_END,
     END_TO_START
 }
-
 
 
 /**
@@ -42,15 +41,22 @@ export class FeederSocket extends DetectablePart {
 
     basePart: RectPart;
     detectionPart: CirclePart;
-    railPart: any;
-    flowDirection: FlowDirection;
-    connectedFeeder: Feeder;
-    _feederState: FeederState;
-    _isEnabled: boolean;
 
+    railPart: RailPart;
+    connectedFeeder: Feeder;        // 接続されたフィーダーオブジェクト
+    _flowDirection: FlowDirection;  // 電流方向
+    _feederState: FeederState;      // フィーダー接続状態
+    _isEnabled: boolean;            // 操作有効・無効状態
+
+    get flowDirection() { return this._flowDirection; }
+    set flowDirection(flowDirection: FlowDirection) { this._flowDirection = flowDirection; }
+    get feederState() { return this._feederState; }
+    set feederState(feederState: FeederState) { this._setFeederState(feederState); }
+    get enabled() { return this._isEnabled; };
+    set enabled(isEnabled: boolean) { this._setEnabled(isEnabled); }
 
     get position() {
-        switch(this.flowDirection) {
+        switch(this._flowDirection) {
             case FlowDirection.START_TO_END:
                 return this.basePart.getCenterOfBottom();
             case FlowDirection.END_TO_START:
@@ -60,7 +66,7 @@ export class FeederSocket extends DetectablePart {
     }
 
     get angle() {
-        switch(this.flowDirection) {
+        switch(this._flowDirection) {
             case FlowDirection.START_TO_END:
                 return this.basePart.angle;
             case FlowDirection.END_TO_START:
@@ -73,7 +79,7 @@ export class FeederSocket extends DetectablePart {
      * @param {RailPart} railPart
      * @param {FlowDirection} direction
      */
-    constructor(railPart: any, direction: FlowDirection =FlowDirection.START_TO_END) {
+    constructor(railPart: RailPart, direction: FlowDirection = FlowDirection.NONE) {
         let angle = (railPart.startAngle + railPart.endAngle) / 2;
         let rect = new RectPart(railPart.middlePoint, angle,
             FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
@@ -82,20 +88,16 @@ export class FeederSocket extends DetectablePart {
             [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
 
         this.railPart = railPart;
-        this.flowDirection = direction;
+        this._flowDirection = direction;
         this.connectedFeeder = null;
 
         // 最初は無効で未接続状態
-        this.setState(FeederState.OPEN);
-        this.setEnabled(false);
+        this._setFeederState(FeederState.OPEN);
+        this._setEnabled(false);
 
         // console.log("FeederSocket", this.railPart.path.position);
     }
 
-
-    setDirection(direction) {
-        this.flowDirection = direction;
-    }
 
     /**
      * 電流方向をトグルする。
@@ -103,10 +105,10 @@ export class FeederSocket extends DetectablePart {
     toggleDirection() {
        switch(this.flowDirection) {
            case FlowDirection.START_TO_END:
-               this.setDirection(FlowDirection.END_TO_START);
+               this.flowDirection = FlowDirection.END_TO_START;
                break;
            case FlowDirection.END_TO_START:
-               this.setDirection(FlowDirection.START_TO_END);
+               this.flowDirection = FlowDirection.START_TO_END;
                break;
        }
     }
@@ -116,15 +118,15 @@ export class FeederSocket extends DetectablePart {
      * このソケットにフィーダーを接続する。
      * @param isDryRun
      */
-    connect(isDryRun=false) {
+    connect(isDryRun: boolean = false) {
         if (!this.isConnected()) {
             this.connectedFeeder = new Feeder(this);
         }
 
         if (isDryRun) {
-            this.setState(FeederState.CONNECTING);
+            this._setFeederState(FeederState.CONNECTING);
         } else {
-            this.setState(FeederState.CONNECTED);
+            this._setFeederState(FeederState.CONNECTED);
         }
     }
 
@@ -133,7 +135,7 @@ export class FeederSocket extends DetectablePart {
      */
     disconnect() {
         this.connectedFeeder.remove();
-        this.setState(FeederState.OPEN);
+        this._setFeederState(FeederState.OPEN);
         this.connectedFeeder = null;
     }
 
@@ -147,21 +149,24 @@ export class FeederSocket extends DetectablePart {
     }
 
 
-    /**
-     * フィーダーが接続中か否かを返す。
-     * @returns {State}
-     */
-    getState() {
-        return this._feederState;
+    private _setEnabled(isEnabled: boolean) {
+        if (isEnabled) {
+            this._setFeederState(this._feederState);
+        } else {
+            // 操作無効状態なら当たり判定を消しておく
+            this.setDetectionState(DetectionState.DISABLED);
+        }
+
+        // 接続されたフィーダーがあれば同じ状態に変更する
+        if (this.connectedFeeder) {
+            this.connectedFeeder.setEnabled(isEnabled);
+        }
+        this._isEnabled = isEnabled;
     }
 
-    /**
-     * 状態を設定し、フィーダーソケットとフィーダーの色、サイズを変更する。
-     * @param state
-     * @private
-     */
-    setState(state) {
-        switch(state) {
+
+    private _setFeederState(feederState: FeederState) {
+        switch(feederState) {
             case FeederState.OPEN:
                 this.setDetectionState(DetectionState.BEFORE_DETECT);
                 break;
@@ -172,24 +177,10 @@ export class FeederSocket extends DetectablePart {
                 this.setDetectionState(DetectionState.AFTER_DETECT);
                 break;
         }
+        // 接続されたフィーダーがあれば同じ状態に変更する
         if (this.connectedFeeder) {
-            this.connectedFeeder.setState(state);
+            this.connectedFeeder.setState(feederState);
         }
-        this._feederState = state;
-    }
-
-
-    setEnabled(isEnabled) {
-        if (isEnabled) {
-            this.setState(this._feederState);
-        } else {
-            this.setDetectionState(DetectionState.DISABLED);
-        }
-
-        if (this.connectedFeeder) {
-            this.connectedFeeder.setEnabled(isEnabled);
-        }
-
-        this._isEnabled = isEnabled;
+        this._feederState = feederState;
     }
 }

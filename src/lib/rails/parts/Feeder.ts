@@ -54,7 +54,7 @@ export class Feeder extends TrianglePart implements PaletteItem {
      * イベントハンドリング用のIDを取得する。
      * @param {String} name
      */
-    getName(name) {
+    getName() {
         return this.path.name;
     }
 
