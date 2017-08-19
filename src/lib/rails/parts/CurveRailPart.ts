@@ -4,6 +4,7 @@
 import {sprintf} from "sprintf-js";
 import {RailPart} from "./RailPart";
 import {Path} from "paper";
+import {FeederSocket} from "./FeederSocket";
 /**
  * 曲線レールパーツ。
  */
@@ -34,6 +35,11 @@ export class CurveRailPart extends RailPart {
         let anchor = this._getAnchorFromType(anchorType);
         this.move(point, anchor);
         this.rotate(angle, anchor);
+
+        // フィーダーソケットの生成
+        // if (hasFeederSocket) {
+        //     this.feederSocket = new FeederSocket(this);
+        // }
     }
 
     _initPath(radius, centerAngle) {
@@ -56,8 +62,7 @@ export class CurveRailPart extends RailPart {
         // this.path.strokeColor = "black";
         this.path.fillColor = RailPart.FILL_COLOR;
 
-        // 始点・終点の更新
-        this._updatePoints();
+        // 終点角度
         this.endAngle = centerAngle;
     }
 

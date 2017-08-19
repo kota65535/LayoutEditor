@@ -31,7 +31,7 @@ export class LayoutSimulator {
     resetFlowSimulation() {
         this.rails.forEach(rail => {
             rail.railParts.forEach(part => {
-                part.setFlowDirection(FlowDirection.NONE);
+                part.flowDirection = FlowDirection.NONE;
                 part.setSimulated(false);
             })
         })
@@ -39,7 +39,7 @@ export class LayoutSimulator {
 
     simulateFlow() {
         let feeder = this.feeders[0].feederSocket;
-        feeder.railPart.setFlowDirection(feeder.flowDirection);
+        feeder.railPart.flowDirection = feeder.flowDirection;
         let rail = this.getRailFromRailPart(feeder.railPart);
         let startJoint, endJoint;
         [startJoint, endJoint] = rail.getJointsFromRailPart(feeder.railPart);
@@ -91,7 +91,7 @@ export class LayoutSimulator {
         log.info(flowDirection, nextJoint);
 
         // 電流方向をセットし、処理済みであることをマークする
-        railPart.setFlowDirection(flowDirection);
+        railPart.flowDirection = flowDirection;
         railPart.setSimulated(true);
 
         // 導電状態を更新したこのレールパーツが上になるよう描画する

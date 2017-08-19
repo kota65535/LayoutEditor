@@ -27,14 +27,16 @@ class StraightRailPart extends RailPart_1.RailPart {
         let anchor = this._getAnchorFromType(anchorType);
         this.move(point, anchor);
         this.rotate(angle, anchor);
+        // フィーダーソケットの生成
+        // if (hasFeederSocket) {
+        //     this.feederSocket = new FeederSocket(this);
+        // }
     }
     _initPath(length) {
         let pathData = sprintf_js_1.sprintf("M 0 0 L %f %f L %f %f L %f %f L %f %f L 0 %f Z", 0, -RailPart_1.RailPart.WIDTH / 2, length, -RailPart_1.RailPart.WIDTH / 2, length, 0, length, RailPart_1.RailPart.WIDTH / 2, RailPart_1.RailPart.WIDTH / 2);
         this.path = new paper_1.Path(pathData); // Path Object
         // this.path.strokeColor = "black";
         this.path.fillColor = RailPart_1.RailPart.FILL_COLOR;
-        // 始点・終点の更新
-        this._updatePoints();
     }
 }
 exports.StraightRailPart = StraightRailPart;

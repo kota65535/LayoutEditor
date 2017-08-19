@@ -42,7 +42,7 @@ export class EditorStore extends StoreBase {
             if (this.data["layout"]) {
                 layoutData = this.data["layout"];
             }
-            this.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
+            // this.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
         });
     }
 

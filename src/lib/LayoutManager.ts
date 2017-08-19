@@ -7,14 +7,17 @@ import {FeederSocket} from "./rails/parts/FeederSocket";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
 import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
+import {Path, Point} from "paper";
+import {Feeder} from "./rails/parts/Feeder";
 
-let log = logger("LayoutEditor", "DEBUG");
+let log = logger("LayoutManager");
 
-// [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
-Array.prototype.flatMap = function(lambda) {
-    return Array.prototype.concat.apply([], this.map(lambda));
-};
-
+class MyArray<T> extends Array<T> {
+    // [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
+    flatMap(lambda) {
+        return Array.prototype.concat.apply([], this.map(lambda));
+    };
+}
 
 /**
  * レールを設置・結合することでレイアウトを構築する手段を提供するクラス。
@@ -25,43 +28,60 @@ export class LayoutManager {
     // ジョイント間の距離がこの値よりも近い場合は接続している扱いにする
     static JOINT_TO_JOINT_TOLERANCE = 2;
 
+    rails: MyArray<Rail>;
+    feeders: Feeder[];
+
+    _nextRailId: number;
+    _nextFeederId: number;
+
+
     constructor() {
         // レイアウト上のレールのリスト
-        this.rails = [];
+        this.rails = new MyArray();
         // フィーダーのリスト
         this.feeders = [];
-        this.railData = [];
 
         this._nextRailId = 0;
         this._nextFeederId = 0;
     }
 
+    //====================
+    // レイアウト管理系メソッド
+    //====================
+
     /**
-     * レイアウト上のレールを全て削除する。
+     * レイアウトを削除する。
      */
     destroyLayout() {
         this.rails.forEach( r => {
             r.remove();
         });
-        this.rails = [];
-        this.railData = [];
+        this.rails = new MyArray();
     }
 
     /**
-     * 保存されていたレイアウトをロードする。
+     * レイアウトをロードする。
      *
      * @param {Array<String>} layoutData シリアライズされたRailオブジェクトのリスト
      */
     loadLayout(layoutData) {
         this.destroyLayout();
-        if (layoutData && layoutData["rails"]) {
+        if (!layoutData) return;
+
+        if (layoutData["rails"]) {
             layoutData["rails"].forEach( rail => {
-                let railObject = deserialize(rail);
+                let railObject = <Rail>deserialize(rail);
                 // 近いジョイント同士は接続する
-                this._connectOtherJoints(railObject);
+                this._connectNearJoints(railObject);
                 // 管理下におく
                 this._registerRail(railObject);
             })
+        }
+        if (layoutData["feeders"]) {
+            layoutData["feeders"].forEach( feeder => {
+                // feeder["railId"]
+            })
+
         }
     }
 
@@ -70,11 +90,25 @@ export class LayoutManager {
      * @returns {{rails: Array}}
      */
     saveLayout() {
-        let layoutData = {
-            rails: this.rails.map(r => serialize(r))
+        return {
+            rails: this.rails.map(rail => {
+                return {
+                    id: rail.getName(),
+                    data: serialize(rail)
+                }
+            }),
+            feeders: this.feeders.map(feeder => {
+                return {
+                    id: feeder.getName(),
+                    railId: feeder.railPart
+                }
+            })
         };
-        return layoutData;
     }
+
+    //====================
+    // レール設置系メソッド
+    //====================
 
     /**
      * レールを任意のジョイントと結合して設置する。
@@ -83,29 +117,28 @@ export class LayoutManager {
      * @param {Joint} to
      * @returns {Boolean} true if succeeds, false otherwise.
      */
-    putRail(rail, fromJoint, to) {
+    putRail(rail: Rail, fromJoint: Joint, to: Joint|Point) {
         if (!this._canPutRail(rail)) {
             log.warn("The rail cannot be put because of intersection.");
             return false;
         }
         if (to instanceof Joint) {
             rail.connect(fromJoint, to);
-            this._connectOtherJoints(rail);
+            this._connectNearJoints(rail);
         } else {
             // 動くか？
-            rail.move(to.position, rail.startPoint);
+            rail.move(to, rail.startPoint);
         }
         rail.setOpacity(1.0);
         this._registerRail(rail);
         return true;
     }
 
-
     /**
      * レールを削除する。
      * @param {Rail} rail
      */
-    removeRail(rail) {
+    removeRail(rail: Rail) {
         rail.remove();
         let index = this.rails.indexOf(rail);
         if(index !== -1) {
@@ -124,45 +157,76 @@ export class LayoutManager {
     }
 
     /**
-     * 与えられた位置のジョイントを取得する。
+     * 指定の位置にあるジョイントを取得する。
+     * ジョイント同士が重なっている場合は、最も近いものを返す。
      * @param {Point} point
      * @returns {Joint} joint at the point
      */
-    getJoints(point) {
+    getJoint(point: Point): Joint {
         let hitResults = hitTestAll(point);
         if (!hitResults) {
+            // 何のパスにもヒットしなかった場合
             return null;
         }
-        // hitResults[0].item.fillColor = 'red';
-        // hitResults[1].item.fillColor = 'blue';
 
+        // レイアウト上の全てのジョイントを取得
         let allJoints = [].concat.apply([], this.rails.map( r => r.joints));
-        return allJoints.filter( joint => {
-            return hitResults.map(result => joint.containsPath(result.item)).includes(true);
-        });
+        // ヒットしたパスを含むジョイントを選択
+        let matchedJoints = allJoints.filter( joint =>
+            hitResults.map(result => joint.containsPath(result.item)).includes(true)
+        );
+        log.info(`${matchedJoints.length} Joints found.`)
+
+        // 最も近い位置にあるジョイントを選択
+        let joint = matchedJoints.sort( (a, b) => a.position.getDistance(point) - b.position.getDistance(point))[0];
+        return joint;
     }
 
+    // /**
+    //  * ジョイントからレールを取得する。
+    //  * @param {Joint} joint
+    //  * @returns {Rail}
+    //  */
+    // getRailFromJoint(joint: Joint): Rail {
+    //     let ret = null;
+    //     this.rails.forEach(rail => {
+    //         rail.joints.forEach(j => {
+    //             if (j === joint) {
+    //                 ret = rail;
+    //             }
+    //         });
+    //     });
+    //     return ret;
+    // }
+
+
+    //====================
+    // フィーダー設置系メソッド
+    //====================
 
     /**
-     * パスが属するフィーダーソケットオブジェクトを取得する。
+     * 指定の位置にあるフィーダーソケットオブジェクトを取得する。
      * @param {Point} point
      * @return {FeederSocket} feederSocket at the point
      */
-    getFeederSocket(point) {
+    getFeederSocket(point: Point): FeederSocket {
         let hitResult = hitTest(point);
         if (!hitResult) {
+            // 何のパスにもヒットしなかった場合
             return null;
         }
+        // レイアウト上の全てのフィーダーソケットを取得
         let allFeederSockets = [].concat.apply([], this.rails.map( r => r.feederSockets));
+        // ヒットしたパスを含むフィーダーソケットを選択
         return allFeederSockets.find( socket => socket.containsPath(hitResult.item));
     }
 
     /**
-     * パスが属するフィーダーオブジェクトを取得する。
+     * 指定の位置にあるフィーダーオブジェクトを取得する。
      * @param {Path} path
      * @returns {Feeder} Feeder at the point
      */
-    getFeeder(path) {
+    getFeeder(path: Path): Feeder {
         return this.feeders.find(feeder => feeder.getName() === path.name);
         // let hitResult = this._hitTest(point);
         // if (!hitResult) {
@@ -197,29 +261,12 @@ export class LayoutManager {
     }
 
     /**
-     * ジョイントからレールを取得する。
-     * @param {Joint} joint
-     * @returns {Rail}
-     */
-    getRailFromJoint(joint) {
-        let ret = null;
-        this.rails.forEach(rail => {
-            rail.joints.forEach(j => {
-                if (j === joint) {
-                    ret = rail;
-                }
-            });
-        });
-        return ret;
-    }
-
-    /**
      * レール設置時に他のレールに重なっていないか確認する。
      * TODO: 判別条件がイケてないので修正
      * @param {Rail} rail
      * @returns {boolean}
      */
-    _canPutRail(rail) {
+    private _canPutRail(rail) {
         let intersections = [];
         rail.railParts.forEach(part => {
             this.rails.forEach( otherRail => {
@@ -250,10 +297,9 @@ export class LayoutManager {
 
     /**
      * レール設置時に、逆側のジョイントが他の未接続のジョイントと十分に近ければ接続する。
-     *
      * @param {Rail} rail
      */
-    _connectOtherJoints(rail) {
+    private _connectNearJoints(rail: Rail) {
         let openFromJoints = rail.joints.filter(j => j.jointState === JointState.OPEN);
         let openToJoints = this.rails.flatMap( r => r.joints ).filter(j => j.jointState === JointState.OPEN);
 
@@ -269,21 +315,18 @@ export class LayoutManager {
         })
     }
 
+
     /**
      * レールオブジェクトをレイアウトに登録する。
      * レールには一意のIDが割り当てられる。
      * @param {Rail} rail
      */
-    _registerRail(rail) {
+    private _registerRail(rail) {
         let id = this._getNextRailId();
         rail.setName(id);
         this.rails.push(rail);
 
-        let serializedRail = serialize(rail);
-
         log.info("Added: ", serialize(rail));
-
-        this.railData.push(serializedRail);
 
         // log.debug("ActiveLayer.children begin-----");
         // paper.project.activeLayer.children.forEach( c => {
