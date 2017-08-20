@@ -1,7 +1,7 @@
 import {Group, Path, Point} from "paper";
 import {PartBase} from "./PartBase";
 
-export class MultiPartBase extends PartBase {
+export abstract class MultiPartBase extends PartBase {
 
     parts: PartBase[];
     pathGroup: Group;

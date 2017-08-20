@@ -1,6 +1,6 @@
 import {Path, Point} from "paper";
 
-export class PartBase {
+export abstract class PartBase {
 
     protected _path: Path;
     protected _angle: number;

@@ -23,6 +23,8 @@ export class DetectablePart extends MultiPartBase {
     detectionState: DetectionState;
     fillColors: string[];
 
+    get basePart() { return this.parts[0]; }
+    get detectionPart() { return this.parts[1]; }
 
     /**
      *
@@ -40,8 +42,8 @@ export class DetectablePart extends MultiPartBase {
 
 
     setVisible(isVisible: boolean) {
-        this.parts[0].setVisible(isVisible);
-        this.parts[1].setVisible(isVisible);
+        this.basePart.setVisible(isVisible);
+        this.detectionPart.setVisible(isVisible);
     }
 
     /**
@@ -50,7 +52,7 @@ export class DetectablePart extends MultiPartBase {
      * @returns {boolean}
      */
     containsPath(path: Path): boolean {
-        return this.parts[1].containsPath(path);
+        return this.detectionPart.containsPath(path);
     }
 
     /**
@@ -60,34 +62,34 @@ export class DetectablePart extends MultiPartBase {
     setDetectionState(state: DetectionState) {
         switch(state) {
             case DetectionState.DISABLED:
-                this.parts[1].setVisible(false);
-                this.parts[1].setOpacity(0);
+                this.detectionPart.setVisible(false);
+                this.detectionPart.setOpacity(0);
                 break;
             case DetectionState.BEFORE_DETECT:
                 // 当たり判定領域を透明化
-                this.parts[1].setVisible(true);
-                this.parts[1].setOpacity(0.3);
-                this.parts[0].path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
-                this.parts[1].path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
+                this.detectionPart.setVisible(true);
+                this.detectionPart.setOpacity(0.3);
+                this.basePart.path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
+                this.detectionPart.path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
                 // 親グループ（Railオブジェクトを想定）内で最前に移動
                 // TODO: レールが同士が近いとお互いのレールの上下関係により当たり判定が最前に表示されない。
                 this.pathGroup.bringToFront();
                 break;
             case DetectionState.DETECTING:
                 // 当たり判定領域を半透明化
-                this.parts[1].setVisible(true);
-                this.parts[1].setOpacity(0.6);
-                this.parts[0].path.fillColor = this.fillColors[DetectionState.DETECTING];
-                this.parts[1].path.fillColor = this.fillColors[DetectionState.DETECTING];
+                this.detectionPart.setVisible(true);
+                this.detectionPart.setOpacity(0.6);
+                this.basePart.path.fillColor = this.fillColors[DetectionState.DETECTING];
+                this.detectionPart.path.fillColor = this.fillColors[DetectionState.DETECTING];
                 // 親グループ（Railオブジェクトを想定）内で最前に移動
                 this.pathGroup.bringToFront();
                 break;
             case DetectionState.AFTER_DETECT:
                 // 当たり判定領域を不可視（無効化）
-                this.parts[1].setVisible(false);
-                // this.parts[1].setOpacity(1.0);
-                this.parts[0].path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
-                this.parts[1].path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
+                this.detectionPart.setVisible(false);
+                // this.detectionPart.setOpacity(1.0);
+                this.basePart.path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
+                this.detectionPart.path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
                 break;
         }
         this.detectionState = state;
