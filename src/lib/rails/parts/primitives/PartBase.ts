@@ -13,6 +13,11 @@ export abstract class PartBase {
     get angle() { return this._angle; }
     set angle(_angle: number) { this._angle = _angle; }
 
+    constructor() {
+        // 角度だけ初期化。他は子クラスに任せる
+        this._angle = 0;
+    }
+
     /**
      * 現在位置からの相対座標で移動する。
      * @param difference

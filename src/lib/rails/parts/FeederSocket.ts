@@ -20,8 +20,11 @@ export enum FeederState {
     CONNECTED
 }
 
+/**
+ * フィーダーソケットの電流の向きを表す。
+ */
 export enum FlowDirection {
-    NONE,
+    NONE,           // 電流なし。レールパーツに対して使用され、フィーダー自体には使用されない
     START_TO_END,
     END_TO_START
 }
@@ -39,9 +42,6 @@ export class FeederSocket extends DetectablePart {
     static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "red";
 
-    basePart: RectPart;
-    detectionPart: CirclePart;
-
     railPart: RailPart;
     connectedFeeder: Feeder;        // 接続されたフィーダーオブジェクト
     _flowDirection: FlowDirection;  // 電流方向
@@ -54,6 +54,9 @@ export class FeederSocket extends DetectablePart {
     set feederState(feederState: FeederState) { this._setFeederState(feederState); }
     get enabled() { return this._isEnabled; };
     set enabled(isEnabled: boolean) { this._setEnabled(isEnabled); }
+
+    get basePart(): RectPart { return <RectPart>this.parts[0]; }
+    get detectionPart(): CirclePart  { return <CirclePart>this.parts[1]; }
 
     get position() {
         switch(this._flowDirection) {
@@ -79,7 +82,7 @@ export class FeederSocket extends DetectablePart {
      * @param {RailPart} railPart
      * @param {FlowDirection} direction
      */
-    constructor(railPart: RailPart, direction: FlowDirection = FlowDirection.NONE) {
+    constructor(railPart: RailPart, direction: FlowDirection = FlowDirection.START_TO_END) {
         let angle = (railPart.startAngle + railPart.endAngle) / 2;
         let rect = new RectPart(railPart.middlePoint, angle,
             FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
