@@ -154,7 +154,7 @@ export class GridPaper {
      * @param event
      */
     paperOnMouseUp(event) {
-        if (this.isRectSelecting) {
+        if (this.isRectSelecting && this.selectionRect) {
             console.info("end rectangle selection");
 
             // 矩形の内側または重なる図形があれば選択状態にする
@@ -165,9 +165,7 @@ export class GridPaper {
             });
 
             // 選択矩形を削除し、選択状態を解除する。
-            if (this.selectionRect) {
-                this.selectionRect.remove();
-            }
+            this.selectionRect.remove();
             this.isRectSelecting = false;
         }
     }
