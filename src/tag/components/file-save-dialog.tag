@@ -22,9 +22,9 @@
               </div>
               <label class="col-sm-2 control-label" for="{ opts.ref + '-select-folder' }">Where:</label>
               <div class="col-sm-8">
-                <input type="text" id="{ opts.ref + '-select-folder' }" class="form-control" readonly="readonly"
+                <input type="text" id="{ opts.ref + '-select-folder' }" class="form-control"
                        onclick="{ onSelectFolder }" value="{ initialFolderPath }"/>
-                <input type="hidden" id="{ opts.ref + '-folder-id' }">
+                <input type="hidden" id="{ opts.ref + '-folder-id' }" value="{ initialFolderId }">
               </div>
               <button id="reset-folder" type="button" class="btn btn-primary" onclick="{ onResetFolder }"><i class="fa fa-home" aria-hidden="true"></i></button>
             </div>
@@ -39,8 +39,16 @@
   </div>
 
   <script type="es6">
+      /**
+       *
+       * @param {string} ref
+       * @param {string} title
+       * @param {string} parentId
+       * @param {function} onOK
+       */
 
       this.initialFolderPath = "My Drive";
+      this.initialFolderId = "root";
 
 
       //====================
@@ -72,7 +80,7 @@
                           $$(`#${opts.ref}-select-folder`).val(path);
                       });
               }
-          });
+          }, opts.parentId);
       };
 
       this.onResetFolder = () => {

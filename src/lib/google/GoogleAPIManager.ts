@@ -64,22 +64,22 @@ export class GoogleAPIManager {
         return this.authAPI.isSignedIn();
     }
 
-    showFilePicker(callback: (Event) => void) {
+    showFilePicker(callback: (Event) => void, parentId: string = "root") {
         if (this.isSignedIn()) {
-            this.driveAPI.showFilePicker("root", callback);
+            this.driveAPI.showFilePicker(parentId, callback);
         } else {
             this.signIn(() => {
-                this.driveAPI.showFilePicker("root", callback);
+                this.driveAPI.showFilePicker(parentId, callback);
             })
         }
     }
 
-    showFolderPicker(callback: (Event) => void) {
+    showFolderPicker(callback: (Event) => void, parentId: string = "root") {
         if (this.isSignedIn()) {
-            this.driveAPI.showFolderPicker("root", callback);
+            this.driveAPI.showFolderPicker(parentId, callback);
         } else {
             this.signIn(() => {
-                this.driveAPI.showFolderPicker("root", callback);
+                this.driveAPI.showFolderPicker(parentId, callback);
             })
         }
     }
