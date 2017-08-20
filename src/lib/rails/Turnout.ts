@@ -35,7 +35,7 @@ export class SimpleTurnout extends Rail {
      * @param {Direction} direction
      */
     constructor(startPoint, angle, length, radius, centerAngle, direction) {
-        super(startPoint, angle);
+        super(startPoint, angle, []);
 
         this.length = length;
         this.radius = radius;
@@ -79,7 +79,7 @@ export class SymmetricalTurnout extends Rail {
      * @param {number} centerAngle
      */
     constructor(startPoint, angle, radius, centerAngle) {
-        super(startPoint, angle)
+        super(startPoint, angle, []);
 
         this.radius = radius;
         this.centerAngle = centerAngle;
@@ -117,7 +117,7 @@ export class CurvedTurnout extends Rail {
      * @param {Direction} direction
      */
     constructor(startPoint, angle, outerRadius, innerRadius, centerAngle, direction) {
-        super(startPoint, angle)
+        super(startPoint, angle, [])
 
         this.angle = angle;
         this.innerRadius = innerRadius;

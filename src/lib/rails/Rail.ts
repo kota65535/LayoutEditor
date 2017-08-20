@@ -25,18 +25,23 @@ export class Rail {
     // ジョイントの位置とレールパーツの両端の位置の間で許される誤差
     static JOINT_TO_RAIL_PART_TOLERANCE = 0.1;
 
-    railParts: RailPart[];
-    joints: Joint[];
-    feederSockets: FeederSocket[];
+    railParts: RailPart[] = [];
+    joints: Joint[] = [];
+    feederSockets: FeederSocket[] = [];
 
     startPoint: Point;
     angle: number;
 
-    pathGroup: Group;
+    pathGroup: Group = new Group();
 
-    conductionMap: any;
-    conductionState: number;
-    rendered: boolean;
+    // どのレールパーツに電気が流れるかを表す導電状態マップ。
+    // 状態ID: 導電しているRailPartのIndexのArray
+    conductionMap: any = {
+        0: [0]
+    };
+    // 現在の導電状態
+    conductionState: number = 0;
+    rendered: boolean = false;
 
 
     /**
@@ -45,24 +50,13 @@ export class Rail {
      *
      * @param {Point} startPoint
      * @param {number} angle
+     * @param {RailPart} railParts
      */
-    constructor(startPoint: Point, angle: number) {
-        this.railParts = [];
-        this.joints = [];
-        this.feederSockets = [];
+    constructor(startPoint: Point, angle: number, railParts: RailPart[]) {
         this.startPoint = startPoint;
         this.angle = angle;
 
-        this.pathGroup = new Group();
-        // どのレールパーツに電気が流れるかを表す導電状態マップ。
-        // 状態ID: 導電しているRailPartのIndexのArray
-        this.conductionMap = {
-            0: [0]
-        };
-        // 現在の導電状態
-        this.conductionState = 0;
-
-        this.rendered = false;
+        railParts.forEach(part => this.addRailPart(part));
     }
 
     /**
@@ -98,6 +92,8 @@ export class Rail {
                 this.pathGroup.addChild(feederSocket.pathGroup)
             }
         });
+
+        railPart.rail = this;
     }
 
     /**

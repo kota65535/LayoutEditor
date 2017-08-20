@@ -20,18 +20,14 @@ export class StraightRail extends Rail {
      * @param {boolean} hasFeederSocket
      */
     constructor(startPoint: Point, angle: number, length: number, hasFeederSocket: boolean) {
-        super(startPoint, 0);
+        let part = new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, hasFeederSocket);
+        super(startPoint, 0, [part]);
 
         this.length = length;
-
         this.hasFeederSocket = hasFeederSocket;
-
-        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, hasFeederSocket));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
-
-        this.showJoints();
     }
 }
 
@@ -46,12 +42,13 @@ export class DoubleStraightRail extends Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(startPoint, angle);
+        let parts = [
+            new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, true),
+            new StraightRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, length, RailPartAnchor.START, true)
+        ];
+        super(startPoint, angle, parts);
 
         this.length = length;
-
-        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, true));
-        this.addRailPart(new StraightRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, length, RailPartAnchor.START, true));
 
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
@@ -71,11 +68,12 @@ export class GappedStraightRail extends Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(startPoint, 0);
+        let parts = [
+            new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, false)
+        ];
+        super(startPoint, 0, parts);
 
         this.length = length;
-
-        this.addRailPart(new StraightRailPart(startPoint, 0, length, RailPartAnchor.START, false));
 
         this.conductionMap = {
             0: []

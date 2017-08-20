@@ -15,7 +15,7 @@ class StraightRailPart extends RailPart_1.RailPart {
      * @param {Point} point the point where the rail parts begin
      * @param {number} angle
      * @param {number} length
-     * @param {AnchorType} anchorType
+     * @param {RailPartAnchor} anchorType
      * @param {boolean} hasFeederSocket
      */
     constructor(point, angle, length, anchorType, hasFeederSocket) {
@@ -27,10 +27,6 @@ class StraightRailPart extends RailPart_1.RailPart {
         let anchor = this._getAnchorFromType(anchorType);
         this.move(point, anchor);
         this.rotate(angle, anchor);
-        // フィーダーソケットの生成
-        // if (hasFeederSocket) {
-        //     this.feederSocket = new FeederSocket(this);
-        // }
     }
     _initPath(length) {
         let pathData = sprintf_js_1.sprintf("M 0 0 L %f %f L %f %f L %f %f L %f %f L 0 %f Z", 0, -RailPart_1.RailPart.WIDTH / 2, length, -RailPart_1.RailPart.WIDTH / 2, length, 0, length, RailPart_1.RailPart.WIDTH / 2, RailPart_1.RailPart.WIDTH / 2);

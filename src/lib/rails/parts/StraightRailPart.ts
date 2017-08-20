@@ -2,8 +2,8 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
-import {RailPart} from "./RailPart";
-import {Path} from "paper";
+import {RailPart, RailPartAnchor} from "./RailPart";
+import {Path, Point} from "paper";
 
 /**
  * 直線レールパーツ。
@@ -17,10 +17,10 @@ export class StraightRailPart extends RailPart {
      * @param {Point} point the point where the rail parts begin
      * @param {number} angle
      * @param {number} length
-     * @param {AnchorType} anchorType
+     * @param {RailPartAnchor} anchorType
      * @param {boolean} hasFeederSocket
      */
-    constructor(point, angle, length, anchorType, hasFeederSocket) {
+    constructor(point: Point, angle: number, length: number, anchorType: RailPartAnchor, hasFeederSocket: boolean) {
         super(hasFeederSocket);
 
         this.length = length;
@@ -32,7 +32,6 @@ export class StraightRailPart extends RailPart {
         let anchor = this._getAnchorFromType(anchorType);
         this.move(point, anchor);
         this.rotate(angle, anchor);
-
     }
 
     _initPath(length) {

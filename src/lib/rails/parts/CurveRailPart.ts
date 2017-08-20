@@ -2,9 +2,8 @@
  * Created by tozawa on 2017/07/03.
  */
 import {sprintf} from "sprintf-js";
-import {RailPart} from "./RailPart";
-import {Path} from "paper";
-import {FeederSocket} from "./FeederSocket";
+import {RailPart, RailPartAnchor} from "./RailPart";
+import {Path, Point} from "paper";
 /**
  * 曲線レールパーツ。
  */
@@ -22,7 +21,7 @@ export class CurveRailPart extends RailPart {
      * @param {AnchorType} anchorType
      * @param {boolean} hasFeederSocket
      */
-    constructor(point, angle, radius, centerAngle, anchorType, hasFeederSocket) {
+    constructor(point: Point, angle: number, radius: number, centerAngle: number, anchorType: RailPartAnchor, hasFeederSocket: boolean) {
         super(hasFeederSocket);
 
         this.radius = radius;               // 半径
@@ -35,11 +34,6 @@ export class CurveRailPart extends RailPart {
         let anchor = this._getAnchorFromType(anchorType);
         this.move(point, anchor);
         this.rotate(angle, anchor);
-
-        // フィーダーソケットの生成
-        // if (hasFeederSocket) {
-        //     this.feederSocket = new FeederSocket(this);
-        // }
     }
 
     _initPath(radius, centerAngle) {
@@ -71,7 +65,7 @@ export class CurveRailPart extends RailPart {
      * @param {number} angle
      * @param {Point} anchor
      */
-    rotate(angle, anchor) {
+    rotate(angle: number, anchor: Point) {
         // 中心点の座標を調べる
         let centerX = this.startPoint.x - this.radius * Math.cos((90 - this.startAngle) / 180 * Math.PI);
         let centerY = this.startPoint.y + this.radius * Math.sin((90 - this.startAngle) / 180 * Math.PI);

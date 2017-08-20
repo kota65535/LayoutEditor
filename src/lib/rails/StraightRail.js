@@ -16,13 +16,12 @@ class StraightRail extends Rail_1.Rail {
      * @param {boolean} hasFeederSocket
      */
     constructor(startPoint, angle, length, hasFeederSocket) {
-        super(startPoint, 0);
+        let part = new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, hasFeederSocket);
+        super(startPoint, 0, [part]);
         this.length = length;
         this.hasFeederSocket = hasFeederSocket;
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, hasFeederSocket));
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
-        this.showJoints();
     }
 }
 exports.StraightRail = StraightRail;
@@ -34,10 +33,12 @@ class DoubleStraightRail extends Rail_1.Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(startPoint, angle);
+        let parts = [
+            new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, true),
+            new StraightRailPart_1.StraightRailPart(new paper_1.Point(startPoint.x, startPoint.y + Rail_1.Rail.SPACE), 0, length, RailPart_1.RailPartAnchor.START, true)
+        ];
+        super(startPoint, angle, parts);
         this.length = length;
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, true));
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(new paper_1.Point(startPoint.x, startPoint.y + Rail_1.Rail.SPACE), 0, length, RailPart_1.RailPartAnchor.START, true));
         this.move(startPoint, this.joints[0]);
         this.rotate(angle, this.joints[0]);
         this.showJoints();
@@ -52,9 +53,11 @@ class GappedStraightRail extends Rail_1.Rail {
      * @param {number} length
      */
     constructor(startPoint, angle, length) {
-        super(startPoint, 0);
+        let parts = [
+            new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, false)
+        ];
+        super(startPoint, 0, parts);
         this.length = length;
-        this.addRailPart(new StraightRailPart_1.StraightRailPart(startPoint, 0, length, RailPart_1.RailPartAnchor.START, false));
         this.conductionMap = {
             0: []
         };

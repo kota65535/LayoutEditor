@@ -6,6 +6,7 @@ import {FeederSocket, FlowDirection} from "./FeederSocket";
 import logger from "../../../logging";
 import {IGradientColor, Path, Point} from "paper";
 import {PartBase} from "./primitives/PartBase";
+import {Rail} from "../Rail";
 
 let log = logger("RailPart");
 
@@ -38,15 +39,17 @@ export class RailPart extends PartBase {
 
     _flowDirection: FlowDirection;  // 電流方向
 
+    _rail: Rail;
+
 
     /**
-     * レールの始点。Read Only
+     * レールパーツの始点。Read Only
      * @returns {"paper".Point}
      */
     get startPoint(): Point { return this.path.segments[0].point; }
 
     /**
-     * レールの中間点。Read Only
+     * レールパーツの中間点。Read Only
      * @returns {"paper".Point}
      */
     get middlePoint(): Point {
@@ -56,20 +59,20 @@ export class RailPart extends PartBase {
     }
 
     /**
-     * レールの終点。Read Only
+     * レールパーツの終点。Read Only
      * @returns {"paper".Point}
      */
     get endPoint(): Point { return this.path.segments[3].point; }
 
     /**
-     * レールの始点の角度
+     * レールパーツの始点の角度
      * @returns {number}
      */
     get startAngle(): number { return this.angle };
     set startAngle(angle: number) { this.angle = angle };
 
     /**
-     * レールの終点の角度
+     * レールパーツの終点の角度
      * @returns {number}
      */
     get endAngle(): number { return this._endAngle };
@@ -78,12 +81,21 @@ export class RailPart extends PartBase {
     get flowDirection() { return this._flowDirection; }
     set flowDirection(flowDirection: FlowDirection) { this._flowDirection = flowDirection; }
 
+    /**
+     * レールオブジェクトへの参照
+     * @returns {Rail}
+     */
+    get rail(): Rail { return this._rail; }
+    set rail(rail: Rail) { this._rail = rail; }
+
 
     /**
      * レールパーツの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでパスの生成・移動・回転を行う。
+     * @param {boolean} hasFeederSocket
+     * @param {Rail} rail
      */
-    constructor(hasFeederSocket) {
+    constructor(hasFeederSocket: boolean) {
         super();
         this.startAngle = this.endAngle = 0;
 
