@@ -47,14 +47,6 @@
         log.info(`is mounted.`);
         paper.setup("editor-canvas");
 
-        let mul = new MultiPartBase(new paper.Point(0,0), 0,
-            [ new RectPart(new paper.Point(0,0), 0, 50, 50, "red"),
-        new CirclePart(new paper.Point(30,30), 0, 20, "blue")]);
-
-        mul.moveRelatively(new paper.Point(70,70));
-        mul.rotateRelatively(90);
-
-
 
         // レイヤー１にグリッドを描画
         this.grid = new GridPaper("editor-canvas", BOARD_WIDTH, BOARD_HEIGHT, GRID_SIZE,
@@ -119,21 +111,29 @@
     // イベントハンドラ
     //====================
 
-    // パレットレールが指定されたら、これを選択する
+    /**
+     * パレットレールが指定されたら、これを選択する
+     */
     this.onControl(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, itemName => {
         this.selectedItem = itemName;
         log.info("Palette selected: " + this.selectedItem);
         this.editor.selectPaletteItem(this.factory[itemName]());
     });
 
-    // レイアウトデータに変更があったら、これをロードする
-    this.onControl(riot.SE.EDITOR.LAYOUT_CHANGED, (layoutData) => {
+    /**
+     * レイアウトデータに変更があった場合
+     */
+    this.onControl(riot.SE.EDITOR.LAYOUT_CHANGED, (layoutData, editingFile) => {
         log.info(`Loading layout: ${layoutData}`);
         try {
             this.editor.loadLayout(layoutData);
+            $.notify(
+                { message: `Layout is successfully loaded. \
+                Rails: ${this.editor.layoutManager.rails.length}, Feeders: ${this.editor.layoutManager.feederSockets.length} ` },
+                { type: 'success' });
         } catch(e) {
             $.notify(
-                { message: `Failed to load layout!` },
+                { message: `Invalid layout data.` },
                 { type: 'danger' });
         }
     });

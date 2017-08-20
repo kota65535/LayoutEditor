@@ -44,10 +44,13 @@ export class Rail {
     rendered: boolean = false;
 
 
+    // このレールを特定するためのID。
+    // setterではこのレールを構成するパーツにもIDを設定する。
     get name() { return this.pathGroup.name; }
     set name(name: string) {
         this.pathGroup.name = name;
-        this.railParts.forEach((part, i) => part.name = `${this.name}-${i}`);
+        this.railParts.forEach((part, i) => part.name = `${this.name}p${i}`);
+        this.feederSockets.forEach((part, i) => part.name = `${this.name}f${i}`);
     }
 
     /**
@@ -63,9 +66,9 @@ export class Rail {
         this.startPoint = startPoint;
         this.angle = angle;
 
-        railParts.forEach((part, i) => this.addRailPart(part, i));
+        railParts.forEach((part, i) => this._addRailPart(part, i));
 
-        // レール自体とパーツにIDを設定
+        // IDを設定
         this.name = name;
     }
 
@@ -75,7 +78,7 @@ export class Rail {
      * @param {RailPart} railPart
      * @param {number} index
      */
-    protected addRailPart(railPart: RailPart, index: number) {
+    private _addRailPart(railPart: RailPart, index: number) {
         this.railParts.push(railPart);
         // レールパーツは最も下に描画
         this.pathGroup.insertChild(0, railPart.path);

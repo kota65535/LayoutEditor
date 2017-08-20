@@ -103,9 +103,6 @@
                   window.googleAPIManager.downloadFile(file.id)
                       .then(resp => {
                           this.setLayout(resp.body, file.name, file.id);
-//                          $.notify(
-//                              { message: `File "${file.name}" loaded.` },
-//                              { type: 'info' });
                       }, resp => {
                           $.notify(
                               { message: `Failed to open file "${resp.result.name}". fileId: ${resp.result.id}` },
@@ -159,8 +156,8 @@
           window.googleAPIManager.updateFile(this._editingFile.id, content)
               .then(resp => {
                   $.notify(
-                      { message: `File "${resp.result.name}" saved, content: ${content}` },
-                      { type: 'info' });
+                      { message: `Layout is successfully saved. Rails: ${content["rails"].length}, Feeders: ${content["feeders"].length}` },
+                      { type: 'success' });
               }, resp => {
                   $.notify(
                       { message: `Failed to save file. fileId: ${resp.result.id}` },
@@ -189,7 +186,13 @@
       // Utility
       //====================
 
-      // 「編集中のファイル」を更新する
+      /**
+       * 「編集中のファイル」を更新する
+       * @param fileId
+       * @param fileName
+       * @param parentId
+       * @param parentName
+       */
       this.setEditingFile = (fileId, fileName, parentId, parentName) => {
           this._editingFile = {
               id: fileId,
@@ -201,23 +204,31 @@
           this.update();
       };
 
-      // レイアウトが読み込まれたことをストアに通知する。
+      /**
+       * レイアウトデータを更新し、通知する
+       * @param content
+       * @param fileName
+       * @param fileId
+       */
       this.setLayout = (content, fileName, fileId) => {
-          let layoutData = null;
+          let layoutData;
           try {
-              // パースに成功したら通知
-              layoutData = JSON.parse(content);
+              if (content) {
+                  layoutData = JSON.parse(content);
+              } else {
+                  layoutData = null;
+              }
               riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
           } catch(e) {
-              log.error(`Failed to parse JSON of fileName: ${fileName}, fileId: ${fileId}`);
+              log.error(`cannot read file as JSON. (fileName: ${fileName}, fileId: ${fileId})`);
               $.notify(
-                  { message: `Cannot load layout from file "${fileName}"!` },
+                  { message: `cannot read file as JSON. (fileName: ${fileName}, fileId: ${fileId})` },
                   { type: "danger" });
           }
       };
 
       // 親タグからeditor-mainタグを取得してcontentを取得する
-      // TODO: ちょっとDirty
+      // TODO: ちょっとDirtyなので修正する
       this.getLayout = () => {
           return this.parent.tags['editor-main'].getLayout();
       };

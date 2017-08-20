@@ -125,6 +125,12 @@ export class LayoutEditor {
     loadLayout(layoutData) {
         // グリッドジョイントがあれば削除する
         this.removeJointsOnGrid();
+        this.layoutManager.rails.forEach(rail => {
+            rail.joints.forEach(j => j.enabled = true);
+        });
+        this.layoutManager.rails.forEach(rail => {
+            rail.feederSockets.forEach(fs => fs.enabled = true);
+        });
         this.layoutManager.loadLayout(layoutData);
         // ロードしたレールのパスをグリッドペーパーに認識させる
         this.layoutManager.rails.forEach(rail => {
@@ -593,7 +599,7 @@ export class LayoutEditor {
             //     this.layoutSimulator.resetFlowSimulation();
             //     break;
             // case "f":
-            //     this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feeders);
+            //     this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feederSockets);
             //     this.layoutSimulator.resetFlowSimulation();
             //     this.layoutSimulator.simulateFlow();
             //     break;

@@ -25,16 +25,16 @@ export class EditorStore extends StoreBase {
         this.on(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData => {
             this.data["layout"] = layoutData;
             this.saveToStorage();
-            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData);
+            this.trigger(riot.SE.EDITOR.LAYOUT_CHANGED, layoutData, this.data["editingFile"]);
         });
         // ビューからの編集ファイル変更イベント
         this.on(riot.VE.EDITOR.FILE_CHANGED, editingFile => {
-            this.data["editing_file"] = editingFile;
+            this.data["editingFile"] = editingFile;
             this.saveToStorage();
         });
         // ビューからの編集ファイル初期化要求
         this.on(riot.VE.EDITOR.FILE_INIT, () => {
-            this.trigger(riot.SE.EDITOR.FILE_CHANGED, this.data["editing_file"]);
+            this.trigger(riot.SE.EDITOR.FILE_CHANGED, this.data["editingFile"]);
         });
         // ビューからのレイアウトデータ初期化要求
         this.on(riot.VE.EDITOR.LAYOUT_INIT, () => {
