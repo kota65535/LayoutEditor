@@ -113,7 +113,15 @@ export class LayoutEditor {
      * @param layoutData
      */
     loadLayout(layoutData) {
+        // グリッドジョイントがあれば削除する
+        this.removeJointsOnGrid();
         this.layoutManager.loadLayout(layoutData);
+        // ロードしたレールのパスをグリッドペーパーに認識させる
+        this.layoutManager.rails.forEach(rail => {
+            this.gridPaper.paths.push(rail.pathGroup);
+        });
+        // 何も選択していない状態にする
+        paper.project.deselectAll();
     }
 
     /**
@@ -241,9 +249,9 @@ export class LayoutEditor {
      */
     hideRailToPut() {
         this.paletteRail.setVisible(false);
-        this.paletteRail.setOpacity(0);
+        this.paletteRail.setOpacity(0.2);
         this.paletteRail.disconnect();
-        this.paletteRail.move(new paper.Point(-100000,-100000), this.paletteRail.joints[0]);
+        this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
     }
 
     /**
@@ -441,13 +449,18 @@ export class LayoutEditor {
     handleMouseDownLeft(event) {
 
         // ジョイント上でマウス左クリックした時の処理
-        this.handleMouseDownLeftOnJoint(event);
+        if (this.isRailMode()) {
+            this.handleMouseDownLeftOnJoint(event);
+            return;
+        }
 
         // フィーダー結合処理
-        let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
-            this.putFeeder(feederSocket);
-            return;
+        if (this.isFeederMode()) {
+            let feederSocket = this.layoutManager.getFeederSocket(event.point);
+            if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
+                this.putFeeder(feederSocket);
+                return;
+            }
         }
 
         // 何もなければ何もしない
