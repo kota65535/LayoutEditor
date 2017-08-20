@@ -114,7 +114,7 @@ export class LayoutSimulator {
      * @return {Rail}
      */
     getRail(path) {
-        return this.rails.find( rail => rail.getName() === path.name);
+        return this.rails.find( rail => rail.name === path.name);
     }
 
 

@@ -11,17 +11,16 @@ import {RailPart} from "./RailPart";
 let log = logger("FeederSocket");
 
 /**
- * フィーダーの電流方向をレールパーツの始点・終点を使って指定するための識別子。
- * @type {{SAME_TO_ANGLE: Symbol, REVERSE_TO_ANGLE: Symbol}}
+ * フィーダーの接続状態
  */
 export enum FeederState {
-    OPEN,
-    CONNECTING,
-    CONNECTED
+    OPEN,           // フィーダー未接続
+    CONNECTING,     // フィーダー接続中
+    CONNECTED       // フィーダー接続後
 }
 
 /**
- * フィーダーソケットの電流の向きを表す。
+ * フィーダーソケットの電流の向き
  */
 export enum FlowDirection {
     NONE,           // 電流なし。レールパーツに対して使用され、フィーダー自体には使用されない
@@ -35,6 +34,7 @@ export enum FlowDirection {
  */
 export class FeederSocket extends DetectablePart {
 
+    // 定数
     static WIDTH = 8;
     static HEIGHT = 12;
     static HIT_RADIUS = 20;
@@ -42,7 +42,7 @@ export class FeederSocket extends DetectablePart {
     static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "red";
 
-    railPart: RailPart;
+    railPart: RailPart;             // 所属するレールパーツ
     connectedFeeder: Feeder;        // 接続されたフィーダーオブジェクト
     _flowDirection: FlowDirection;  // 電流方向
     _feederState: FeederState;      // フィーダー接続状態
@@ -50,15 +50,28 @@ export class FeederSocket extends DetectablePart {
 
     get flowDirection() { return this._flowDirection; }
     set flowDirection(flowDirection: FlowDirection) { this._flowDirection = flowDirection; }
+
     get feederState() { return this._feederState; }
     set feederState(feederState: FeederState) { this._setFeederState(feederState); }
-    get enabled() { return this._isEnabled; };
-    set enabled(isEnabled: boolean) { this._setEnabled(isEnabled); }
 
+    get enabled() { return this._enabled; }
+    set enabled(isEnabled: boolean) {
+        super.enabled = isEnabled;
+        // 現在のフィーダー接続状態を再設定しておく
+        if (isEnabled) {
+            this._setFeederState(this._feederState);
+        }
+        // 接続されたフィーダーがあれば同じ状態に変更する
+        if (this.connectedFeeder) {
+            this.connectedFeeder.visible = isEnabled;
+        }
+    }
+
+    // 主パーツはRectPartであることが分かっているのでキャストする
     get basePart(): RectPart { return <RectPart>this.parts[0]; }
-    get detectionPart(): CirclePart  { return <CirclePart>this.parts[1]; }
 
     get position() {
+        // フィーダーの接続点として使われるため、電流方向によって変化する
         switch(this._flowDirection) {
             case FlowDirection.START_TO_END:
                 return this.basePart.getCenterOfBottom();
@@ -95,8 +108,10 @@ export class FeederSocket extends DetectablePart {
         this.connectedFeeder = null;
 
         // 最初は無効で未接続状態
-        this._setFeederState(FeederState.OPEN);
-        this._setEnabled(false);
+        this.enabled = true;
+        this.feederState = FeederState.OPEN;
+        this.enabled = false;
+        // this._setFeederState(FeederState.OPEN);
 
         // console.log("FeederSocket", this.railPart.path.position);
     }
@@ -152,38 +167,25 @@ export class FeederSocket extends DetectablePart {
     }
 
 
-    private _setEnabled(isEnabled: boolean) {
-        if (isEnabled) {
-            this._setFeederState(this._feederState);
-        } else {
-            // 操作無効状態なら当たり判定を消しておく
-            this.setDetectionState(DetectionState.DISABLED);
-        }
-
-        // 接続されたフィーダーがあれば同じ状態に変更する
-        if (this.connectedFeeder) {
-            this.connectedFeeder.setEnabled(isEnabled);
-        }
-        this._isEnabled = isEnabled;
-    }
-
-
     private _setFeederState(feederState: FeederState) {
-        switch(feederState) {
-            case FeederState.OPEN:
-                this.setDetectionState(DetectionState.BEFORE_DETECT);
-                break;
-            case FeederState.CONNECTING:
-                this.setDetectionState(DetectionState.DETECTING);
-                break;
-            case FeederState.CONNECTED:
-                this.setDetectionState(DetectionState.AFTER_DETECT);
-                break;
+        if (this._enabled) {
+            switch(feederState) {
+                case FeederState.OPEN:
+                    this.setDetectionState(DetectionState.BEFORE_DETECT);
+                    break;
+                case FeederState.CONNECTING:
+                    this.setDetectionState(DetectionState.DETECTING);
+                    break;
+                case FeederState.CONNECTED:
+                    this.setDetectionState(DetectionState.AFTER_DETECT);
+                    break;
+            }
+            // 接続されたフィーダーがあれば同じ状態に変更する
+            if (this.connectedFeeder) {
+                this.connectedFeeder.setState(feederState);
+            }
+            this._feederState = feederState;
         }
-        // 接続されたフィーダーがあれば同じ状態に変更する
-        if (this.connectedFeeder) {
-            this.connectedFeeder.setState(feederState);
-        }
-        this._feederState = feederState;
+        log.info(`FeederSocket @${this.railPart.name}: enabled=${this.enabled}, state=${this.feederState}, detect=${this.detectionState}`)
     }
 }

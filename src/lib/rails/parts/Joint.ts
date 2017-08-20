@@ -13,24 +13,21 @@ let log = logger("Joint");
 
 /**
  * ジョイントの状態。
- * @type {{OPEN: Symbol, CONNECTING: Symbol, CONNECTED: Symbol}}
  */
 export enum JointState {
-    DISABLED,
-    OPEN,
-    CONNECTING_FROM,
-    CONNECTING_TO,
-    CONNECTED
+    DISABLED,           // 無効状態
+    OPEN,               // 未接続
+    CONNECTING_FROM,    // 接続試行中(こちらから)
+    CONNECTING_TO,      // 接続試行中(相手から)
+    CONNECTED           // 接続後
 }
 
 /**
  * 接続方向とジョイントの向きの関係を指定するための識別子。
- * 同じならSAME_AS_ANGLE, 逆転しているならREVERSE_TO_ANGLE。
- * @type {{SAME_TO_ANGLE: Symbol, REVERSE_TO_ANGLE: Symbol}}
  */
 export enum JointDirection {
-    SAME_TO_ANGLE,
-    REVERSE_TO_ANGLE
+    SAME_TO_ANGLE,      // ジョイントの描画上の向きとジョイントの接続方向は同じ
+    REVERSE_TO_ANGLE    // ジョイントの描画上の向きとジョイントの接続方向は逆
 }
 
 /**
@@ -53,12 +50,10 @@ export class Joint extends DetectablePart {
     _currentScale: number;
     rail: any;
     rendered: false;
-    _isEnabled: boolean;
 
 
-    get basePart() {
-        return <RectPart>this.parts[0]
-    }
+    // 主パーツはRectPartであることが分かっているのでキャストする
+    get basePart() { return <RectPart>this.parts[0] }
 
     get position() {
         switch (this._direction) {
@@ -68,6 +63,15 @@ export class Joint extends DetectablePart {
                 return this.basePart.getCenterOfLeft();
         }
         return this.basePart.getCenterOfRight();
+    }
+
+    get enabled() { return this._enabled; }
+    set enabled(isEnabled: boolean) {
+        super.enabled = isEnabled;
+        // 現在のジョイント接続状態を再設定しておく
+        if (isEnabled) {
+            this.setState(this._jointState);
+        }
     }
 
     /**
@@ -114,12 +118,13 @@ export class Joint extends DetectablePart {
         this.rail = rail;
         this.rendered = false;
         this._jointState = JointState.OPEN;
-        this._isEnabled = true;
         this._currentScale = 1;
 
         this.move(position);
         this.rotate(angle, this.position);
 
+        // 最初は有効かつ未接続状態から開始
+        this.enabled = true;
         this.disconnect();
     }
 
@@ -194,16 +199,8 @@ export class Joint extends DetectablePart {
                 break;
         }
         this._jointState = state;
-    }
 
-    setEnabled(isEnabled) {
-        if (isEnabled) {
-            this.setState(this._jointState);
-            this._isEnabled = true;
-        } else {
-            this.setDetectionState(DetectionState.DISABLED);
-            this._isEnabled = false;
-        }
+        log.info(`Joint @${this.rail ? this.rail.name : null}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
     }
 
     /**

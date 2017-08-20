@@ -18,12 +18,13 @@ export class CurveRail extends Rail {
      * @param {number} angle
      * @param {number} radius
      * @param {number} centerAngle
+     * @param {string} name
      */
-    constructor(startPoint: Point, angle: number, radius: number, centerAngle: number) {
+    constructor(startPoint: Point, angle: number, radius: number, centerAngle: number, name: string) {
         let parts = [
             new CurveRailPart(startPoint, 0, radius, centerAngle, RailPartAnchor.START, true)
         ];
-        super(startPoint, 0, parts);
+        super(startPoint, 0, parts, name);
 
         this.radius = radius;
         this.centerAngle = centerAngle;
@@ -50,13 +51,14 @@ export class DoubleCurveRail extends Rail {
      * @param {number} outerRadius
      * @param {number} innerRadius
      * @param {number} centerAngle
+     * @param {string} name
      */
-    constructor(startPoint, angle, outerRadius, innerRadius, centerAngle) {
+    constructor(startPoint, angle, outerRadius, innerRadius, centerAngle, name: string) {
         let parts = [
             new CurveRailPart(startPoint, 0, outerRadius, centerAngle, RailPartAnchor.START, true),
             new CurveRailPart(new Point(startPoint.x, startPoint.y + Rail.SPACE), 0, innerRadius, centerAngle, RailPartAnchor.START, true)
         ];
-        super(startPoint, angle, parts);
+        super(startPoint, angle, parts, name);
 
         this.innerRadius = innerRadius;
         this.outerRadius = outerRadius;

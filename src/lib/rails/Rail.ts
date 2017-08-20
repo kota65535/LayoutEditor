@@ -44,6 +44,12 @@ export class Rail {
     rendered: boolean = false;
 
 
+    get name() { return this.pathGroup.name; }
+    set name(name: string) {
+        this.pathGroup.name = name;
+        this.railParts.forEach((part, i) => part.name = `${this.name}-${i}`);
+    }
+
     /**
      * レールの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでレールパーツの追加と移動・回転を行う。
@@ -51,20 +57,25 @@ export class Rail {
      * @param {Point} startPoint
      * @param {number} angle
      * @param {RailPart} railParts
+     * @param {string} name
      */
-    constructor(startPoint: Point, angle: number, railParts: RailPart[]) {
+    constructor(startPoint: Point, angle: number, railParts: RailPart[], name: string) {
         this.startPoint = startPoint;
         this.angle = angle;
 
-        railParts.forEach(part => this.addRailPart(part));
+        railParts.forEach((part, i) => this.addRailPart(part, i));
+
+        // レール自体とパーツにIDを設定
+        this.name = name;
     }
 
     /**
      * レールを構成するレールパーツを追加し、さらにその両端にジョイントを追加する。
      * Constructorからのみ呼ばれることを想定。
      * @param {RailPart} railPart
+     * @param {number} index
      */
-    protected addRailPart(railPart: RailPart) {
+    protected addRailPart(railPart: RailPart, index: number) {
         this.railParts.push(railPart);
         // レールパーツは最も下に描画
         this.pathGroup.insertChild(0, railPart.path);
@@ -234,18 +245,6 @@ export class Rail {
         this.joints.forEach( joint => {
             joint.showInfo();
         });
-    }
-
-    /**
-     * このレールを構成するパスグループに名前を付け、イベントハンドリング時に参照できるようにする。
-     * @param name
-     */
-    setName(name) {
-        this.pathGroup.name = name;
-    }
-
-    getName() {
-        return this.pathGroup.name;
     }
 
     /**

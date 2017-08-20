@@ -73,27 +73,37 @@ export class LayoutEditor {
     }
 
     changeToRailMode(paletteItem) {
+        log.info("Changing to rail mode...");
         this.layoutManager.rails.forEach(rail => {
-            rail.joints.forEach(j => j.setEnabled(true));
+            rail.joints.forEach(j => j.enabled = true);
         });
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = false);
         });
         this.selectRail(paletteItem);
+
+        log.info("Changed to rail mode.");
     }
 
     changeToFeederMode(paletteItem) {
+        log.info("Changed to feeder mode...");
         this.layoutManager.rails.forEach(rail => {
-            rail.joints.forEach(j => j.setEnabled(false));
+            rail.joints.forEach(j => j.enabled = false);
         });
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = true);
         });
         this.paletteRail = paletteItem;
         // this.selectRail(paletteItem);
+        log.info("Changed to feeder mode.");
     }
 
     selectPaletteItem(paletteItem) {
+        // もし現在のアイテムと異なる種類ならば、全ての選択状態を解除する
+        if (this.paletteRail && this.paletteRail.getItemType() !== paletteItem.getItemType()) {
+            paper.project.deselectAll();
+        }
+
         switch (paletteItem.getItemType()) {
             case PaletteItemType.RAIL:
                 this.changeToRailMode(paletteItem);
@@ -119,6 +129,7 @@ export class LayoutEditor {
         // ロードしたレールのパスをグリッドペーパーに認識させる
         this.layoutManager.rails.forEach(rail => {
             this.gridPaper.paths.push(rail.pathGroup);
+            log.info(`GridPaper: add path ${rail.pathGroup}`)
         });
         // 何も選択していない状態にする
         paper.project.deselectAll();
@@ -336,7 +347,6 @@ export class LayoutEditor {
      */
     showFeederToPut(feederSocket) {
         this.touchedFeederSocket = feederSocket;
-        console.log("connect");
         this.touchedFeederSocket.connect(true);
     }
 
@@ -425,6 +435,20 @@ export class LayoutEditor {
     }
 
     /**
+     * フィーダー上で左クリックした時の処理
+     * @param event
+     */
+    handleMouseDownLeftOnFeeder(event) {
+        let feederSocket = this.layoutManager.getFeederSocket(event.point);
+        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
+            this.putFeeder(feederSocket);
+            return true;
+
+        }
+        return false;
+    }
+
+    /**
      * マウスクリック時のハンドラ
      * @param {ToolEvent} event
      */
@@ -448,37 +472,38 @@ export class LayoutEditor {
      */
     handleMouseDownLeft(event) {
 
-        // ジョイント上でマウス左クリックした時の処理
-        if (this.isRailMode()) {
-            this.handleMouseDownLeftOnJoint(event);
-            return;
-        }
-
-        // フィーダー結合処理
-        if (this.isFeederMode()) {
-            let feederSocket = this.layoutManager.getFeederSocket(event.point);
-            if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
-                this.putFeeder(feederSocket);
-                return;
-            }
-        }
-
         // 何もなければ何もしない
         if (!event.item) {
             return;
         }
 
+        // ジョイント上でマウス左クリックした時の処理
+        if (this.isRailMode()) {
+            if (this.handleMouseDownLeftOnJoint(event)) {
+                return;
+            }
+        }
+
+        // フィーダー上でマウス左クリックした時の処理
+        if (this.isFeederMode()) {
+            if (this.handleMouseDownLeftOnFeeder(event)) {
+                return;
+            }
+        }
+
         // レールの選択状態をトグルする
-        let rail = this.layoutManager.getRail(event.item);
-        if (rail) {
-            event.item.selected = !event.item.selected; // 選択を反転
+        let railPart = this.layoutManager.getRailPart(event.point);
+        if (railPart) {
+            railPart.path.selected = !railPart.path.selected;
+            // event.item.selected = !event.item.selected; // 選択を反転
             return;
         }
 
         // フィーダーの選択状態をトグルする
-        let feeder = this.layoutManager.getFeeder(event.item);
-        if (feeder) {
-            event.item.selected = !event.item.selected; // 選択を反転
+        let feederSocket = this.layoutManager.getFeederSocket(event.point);
+        if (feederSocket) {
+            feederSocket.pathGroup.selected = !feederSocket.pathGroup.selected;
+            // event.item.selected = !event.item.selected; // 選択を反転
             return;
         }
     }
@@ -486,7 +511,8 @@ export class LayoutEditor {
 
     /**
      * ジョイント上でマウス左クリックした時の処理
-     * @param event
+     * @param {Event} event
+     * @returns {boolean} 何かしたらtrue, 何もしなければfalse
      */
     handleMouseDownLeftOnJoint(event) {
         let joint = this.getJoint(event.point);
@@ -499,8 +525,9 @@ export class LayoutEditor {
             if (isLayoutBlank) {
                 this.removeJointsOnGrid();
             }
-            return;
+            return true;
         }
+        return false;
     }
 
 
@@ -551,15 +578,15 @@ export class LayoutEditor {
         let selectedRails = paper.project.selectedItems
             .map(item => this.layoutManager.getRail(item))
             .filter(Boolean);
-        let selectedFeeders = paper.project.selectedItems
-            .map(item => this.layoutManager.getFeeder(item))
+        let selectedFeederSockets = paper.project.selectedItems
+            .map(item => this.layoutManager.getFeederSocket(event.point))
             .filter(Boolean);
         log.info("Selected rail: ", selectedRails);
-        log.info("Selected feeder: ", selectedFeeders);
+        log.info("Selected feeder: ", selectedFeederSockets);
         switch (event.key) {
             case "backspace":
                 selectedRails.forEach(r => this.layoutManager.removeRail(r));
-                selectedFeeders.forEach(f => this.layoutManager.removeFeeder(f));
+                selectedFeederSockets.forEach(f => this.layoutManager.removeFeeder(f));
                 break;
             // case "space":
             //     // 全てのレールを未チェック状態にする
@@ -604,7 +631,7 @@ export class LayoutEditor {
             //     break;
         }
 
-        log.info("Modifiers: ", this.modifierKeys);
+        // log.info("Modifiers: ", this.modifierKeys);
     }
 
     handleKeyUp(event) {

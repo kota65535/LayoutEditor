@@ -9,7 +9,8 @@ import {TrianglePart} from "./rails/parts/primitives/TrianglePart";
 import {PaletteItemType} from "./rails/parts/PaletteItem";
 
 
-let DEFAULT_POSITION = new paper.Point(-10000000,-10000000);
+// let DEFAULT_POSITION = new paper.Point(-10000000,-10000000);
+let DEFAULT_POSITION = new paper.Point(0,0);
 // let DEFAULT_POSITION = new paper.Point(0, 0);
 
 export class RailFactory {

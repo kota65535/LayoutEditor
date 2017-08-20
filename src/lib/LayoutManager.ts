@@ -7,8 +7,9 @@ import {FeederSocket, FlowDirection} from "./rails/parts/FeederSocket";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
 import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
-import {Path, Point} from "paper";
+import {Group, Path, Point} from "paper";
 import {Feeder} from "./rails/parts/Feeder";
+import {RailPart} from "./rails/parts/RailPart";
 
 let log = logger("LayoutManager");
 
@@ -35,6 +36,7 @@ export interface RailData {
 export interface FeederData {
     name: string,
     railPartName: string
+    direction: FlowDirection
 }
 
 
@@ -53,6 +55,13 @@ export class LayoutManager {
     _nextRailId: number;
     _nextFeederId: number;
 
+
+    get allJoints(): Joint[] {
+        return [].concat.apply([], this.rails.map( r => r.joints));
+    }
+    get allRailParts(): RailPart[] {
+        return [].concat.apply([], this.rails.map( r => r.railParts));
+    }
 
     constructor() {
         // レイアウト上のレールのリスト
@@ -90,6 +99,15 @@ export class LayoutManager {
         this._nextRailId = layoutData.nextRailId;
         this._nextFeederId = layoutData.nextFeederId;
 
+        log.info("START Loading layout --------------------")
+        layoutData.rails.forEach(rail => {
+            log.info(`${rail.name}: ${rail.data}`)
+        });
+        layoutData.feeders.forEach(feeder => {
+            log.info(`${feeder.name}: railPart: ${feeder.railPartName}, direction: ${feeder.direction}`)
+        });
+        log.info("END Loading layout --------------------")
+
         if (layoutData.rails) {
             layoutData.rails.forEach( entry => {
                 // Railオブジェクトにデシリアライズ
@@ -105,16 +123,19 @@ export class LayoutManager {
 
         if (layoutData.feeders) {
             layoutData.feeders.forEach( entry => {
+                // railPartNameに一致するレールパーツを検索
                 let railPart = this.rails.flatMap(rail => rail.railParts)
                     .find(part => part.name === entry.railPartName);
+
                 if (railPart) {
-                    let feederSocket = new FeederSocket(railPart, FlowDirection.NONE);
-                    feederSocket.connect(false);
-                    feederSocket.connectedFeeder.setName(entry.name);
+                    let feederSocket = new FeederSocket(railPart, entry.direction);
+                    feederSocket.enabled = true;
+                    feederSocket.connect();
+                    // this.putFeeder(feederSocket);
+                    // feederSocket.connectedFeeder.setName(entry.name);
                     this.feeders.push(feederSocket.connectedFeeder);
                 }
             })
-
         }
     }
 
@@ -123,22 +144,34 @@ export class LayoutManager {
      * @returns {LayoutData}
      */
     saveLayout(): LayoutData {
-        return {
+        let layoutData = {
             nextRailId: this._nextRailId,
             nextFeederId: this._nextFeederId,
             rails: this.rails.map(rail => {
                 return {
-                    name: rail.getName(),
+                    name: rail.name,
                     data: serialize(rail)
                 }
             }),
             feeders: this.feeders.map(feeder => {
                 return {
-                    name: feeder.getName(),
-                    railPartName: feeder.railPart.name
+                    name: feeder.name,
+                    railPartName: feeder.feederSocket.railPart.name,
+                    direction: feeder.feederSocket.flowDirection
                 }
             })
         };
+
+        log.info("START Saving layout --------------------")
+        layoutData.rails.forEach(rail => {
+            log.info(`${rail.name}: ${rail.data}`)
+        });
+        layoutData.feeders.forEach(feeder => {
+            log.info(`${feeder.name}: railPart: ${feeder.railPartName}, direction: ${feeder.direction}`)
+        });
+        log.info("END Saving layout --------------------")
+
+        return layoutData;
     }
 
     //====================
@@ -188,7 +221,22 @@ export class LayoutManager {
      * @return {Rail}
      */
     getRail(path) {
-        return this.rails.find( rail => rail.getName() === path.name);
+        return this.rails.find( rail => rail.name === path.name);
+    }
+
+    /**
+     * パスオブジェクトが属するレールオブジェクトを取得する。
+     * @param {Path} path
+     * @return {Rail}
+     */
+    getRailPart(point: Point) {
+        let hitResult = hitTest(point);
+        if (!hitResult) {
+            // 何のパスにもヒットしなかった場合
+            return null;
+        }
+        // レイアウト上の全てのレールパーツを取得
+        return this.allRailParts.find( part => part.containsPath(hitResult.item));
     }
 
     /**
@@ -204,13 +252,11 @@ export class LayoutManager {
             return null;
         }
 
-        // レイアウト上の全てのジョイントを取得
-        let allJoints = [].concat.apply([], this.rails.map( r => r.joints));
         // ヒットしたパスを含むジョイントを選択
-        let matchedJoints = allJoints.filter( joint =>
+        let matchedJoints = this.allJoints.filter( joint =>
             hitResults.map(result => joint.containsPath(result.item)).includes(true)
         );
-        log.info(`${matchedJoints.length} Joints found.`)
+        log.debug(`${matchedJoints.length} Joints found.`)
 
         // 最も近い位置にあるジョイントを選択
         let joint = matchedJoints.sort( (a, b) => a.position.getDistance(point) - b.position.getDistance(point))[0];
@@ -241,19 +287,21 @@ export class LayoutManager {
 
     /**
      * 指定の位置にあるフィーダーソケットオブジェクトを取得する。
+     * フィーダーが挿さっている場合はこれも検出の対象になる。
      * @param {Point} point
      * @return {FeederSocket} feederSocket at the point
      */
     getFeederSocket(point: Point): FeederSocket {
-        let hitResult = hitTest(point);
-        if (!hitResult) {
-            // 何のパスにもヒットしなかった場合
-            return null;
-        }
         // レイアウト上の全てのフィーダーソケットを取得
         let allFeederSockets = [].concat.apply([], this.rails.map( r => r.feederSockets));
-        // ヒットしたパスを含むフィーダーソケットを選択
-        return allFeederSockets.find( socket => socket.containsPath(hitResult.item));
+
+        let feederSocket = allFeederSockets.find(socket =>
+            socket.pathGroup.hitTest(point) !== null
+        );
+
+        log.info(feederSocket);
+
+        return feederSocket;
     }
 
     /**
@@ -261,14 +309,14 @@ export class LayoutManager {
      * @param {Path} path
      * @returns {Feeder} Feeder at the point
      */
-    getFeeder(path: Path): Feeder {
-        return this.feeders.find(feeder => feeder.getName() === path.name);
-        // let hitResult = this._hitTest(point);
-        // if (!hitResult) {
-        //     return null;
-        // }
-        // let allFeeders = [].concat.apply([], this.rails.map( r => r.feeders.map(socket => socket.connectedFeeder)))
-        // return allFeeders.find( feeder => feeder.containsPath(hitResult.item));
+    getFeeder(point: Point): Feeder {
+        let hitResult = hitTest(point);
+        if (!hitResult) {
+            // 何のパスにもヒットしなかった場合
+            return null;
+        }
+        // ヒットしたパスを含むフィーダーを選択
+        return this.feeders.find( feeder => feeder.containsPath(hitResult.item));
     }
 
 
@@ -279,7 +327,7 @@ export class LayoutManager {
     putFeeder(feederSocket: FeederSocket) {
         feederSocket.connect();
         let id = this._getNextFeederId();
-        feederSocket.connectedFeeder.setName(id);
+        feederSocket.connectedFeeder.name = id;
         this.feeders.push(feederSocket.connectedFeeder);
     }
 
@@ -287,12 +335,12 @@ export class LayoutManager {
      * フィーダーを削除する。
      * @param {Feeder} feeder to be removed
      */
-    removeFeeder(feeder: Feeder) {
-        feeder.feederSocket.disconnect();
-        let index = this.feeders.indexOf(feeder);
+    removeFeeder(feederSocket: FeederSocket) {
+        let index = this.feeders.indexOf(feederSocket.connectedFeeder);
         if(index !== -1) {
             this.feeders.splice(index, 1);
         }
+        feederSocket.disconnect();
     }
 
     /**
@@ -308,8 +356,8 @@ export class LayoutManager {
                 otherRail.railParts.forEach( otherPart => {
                     intersections = intersections.concat(part.path.getIntersections(otherPart.path, (location) => {
                         let isIntersectionNearJoints = rail.joints.map( j => {
-                            log.info("Intersection:" ,location, " Joint:", j.position);
-                            log.info("Distance", location.point.getDistance(j.position));
+                            // log.info("Intersection:" ,location, " Joint:", j.position);
+                            // log.info("Distance", location.point.getDistance(j.position));
                             return location.point.isClose(j.position, Joint.HEIGHT/2);
                         }).includes(true);
 
@@ -318,7 +366,7 @@ export class LayoutManager {
                 })
             })
         });
-        log.info("Intersections:", intersections.length, intersections.map( i => i.point));
+        // log.info("Intersections:", intersections.length, intersections.map( i => i.point));
         // デバッグ用
         // intersections.forEach( i => {
         //     new paper.Path.Circle({
@@ -341,9 +389,9 @@ export class LayoutManager {
         openFromJoints.forEach( fj => {
             openToJoints.forEach( tj => {
                 let distance = fj.position.getDistance(tj.position);
-                log.info("Distance:", distance);
+                log.debug("Distance:", distance);
                 if (distance < LayoutManager.JOINT_TO_JOINT_TOLERANCE) {
-                    log.info("Connected other joint");
+                    log.debug("Connected other joint");
                     fj.connect(tj);
                 }
             })
@@ -357,8 +405,7 @@ export class LayoutManager {
      * @param {Rail} rail
      */
     private _registerRail(rail) {
-        let id = this._getNextRailId();
-        rail.setName(id);
+        rail.name = this._getNextRailId();
         this.rails.push(rail);
 
         log.info("Added: ", serialize(rail));

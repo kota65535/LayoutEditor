@@ -12,6 +12,11 @@ export abstract class PartBase {
     set position(_position: Point) { this._position = _position; }
     get angle() { return this._angle; }
     set angle(_angle: number) { this._angle = _angle; }
+    get name() { return this._path.name };
+    set name(name: string) {  this._path.name = name };
+    get visible() { return this._path.visible; }
+    set visible(isVisible: boolean) { this._path.visible = isVisible; }
+
 
     constructor() {
         // 角度だけ初期化。他は子クラスに任せる

@@ -26,6 +26,7 @@ export function cartesian() {
  */
 export function hitTest(point) {
     let hitOptions = {
+        class: paper.Path,
         segments: true,
         stroke: true,
         fill: true,
@@ -49,6 +50,7 @@ export function hitTest(point) {
  */
 export function hitTestAll(point) {
     let hitOptions = {
+        class: paper.Path,
         segments: true,
         stroke: true,
         fill: true,
@@ -56,6 +58,7 @@ export function hitTestAll(point) {
     };
     let hitResults = paper.project.hitTestAll(point, hitOptions);
     // Groupがひっかかるとうざいので取り除く
-    let hitResultsPathOnly = hitResults.filter(r => r.item instanceof paper.Path);
-    return hitResultsPathOnly;
+    // let hitResultsPathOnly = hitResults.filter(r => r.item instanceof paper.Path);
+    // return hitResultsPathOnly;
+    return hitResults;
 }
