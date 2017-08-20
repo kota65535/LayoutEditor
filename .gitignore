@@ -127,6 +127,6 @@ fabric.properties
 # End of https://www.gitignore.io/api/node,webstorm+all
 
 dist/bundle.js*
-src/lib/rails/parts/primitives/*.js*
-src/lib/google/*.js*
+src/lib/rails/**/*.js*
+src/lib/google/**/*.js*
 *.js.map
