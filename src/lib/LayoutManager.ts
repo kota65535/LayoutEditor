@@ -3,7 +3,7 @@
  */
 import {Joint, JointState} from "./rails/parts/Joint";
 import {Rail} from "./rails/Rail";
-import {FeederSocket} from "./rails/parts/FeederSocket";
+import {FeederSocket, FlowDirection} from "./rails/parts/FeederSocket";
 import { cloneRail, serialize, deserialize } from "./RailUtil";
 import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
@@ -18,6 +18,25 @@ class MyArray<T> extends Array<T> {
         return Array.prototype.concat.apply([], this.map(lambda));
     };
 }
+
+
+export interface LayoutData {
+    nextRailId: number,
+    nextFeederId: number,
+    rails: RailData[],
+    feeders: FeederData[],
+}
+
+export interface RailData {
+    name: string,
+    data: string
+}
+
+export interface FeederData {
+    name: string,
+    railPartName: string
+}
+
 
 /**
  * レールを設置・結合することでレイアウトを構築する手段を提供するクラス。
@@ -64,22 +83,36 @@ export class LayoutManager {
      *
      * @param {Array<String>} layoutData シリアライズされたRailオブジェクトのリスト
      */
-    loadLayout(layoutData) {
+    loadLayout(layoutData: LayoutData) {
         this.destroyLayout();
         if (!layoutData) return;
 
-        if (layoutData["rails"]) {
-            layoutData["rails"].forEach( rail => {
-                let railObject = <Rail>deserialize(rail);
+        this._nextRailId = layoutData.nextRailId;
+        this._nextFeederId = layoutData.nextFeederId;
+
+        if (layoutData.rails) {
+            layoutData.rails.forEach( entry => {
+                // Railオブジェクトにデシリアライズ
+                let railObject = <Rail>deserialize(entry.data);
+                // IDを復元
+                // railObject.name = entry["id"];
+                // railObject.railParts.forEach((part, i) => part.name = `${railObject.name}-${i}`)
                 // 近いジョイント同士は接続する
                 this._connectNearJoints(railObject);
-                // 管理下におく
-                this._registerRail(railObject);
+                this.rails.push(railObject);
             })
         }
-        if (layoutData["feeders"]) {
-            layoutData["feeders"].forEach( feeder => {
-                // feeder["railId"]
+
+        if (layoutData.feeders) {
+            layoutData.feeders.forEach( entry => {
+                let railPart = this.rails.flatMap(rail => rail.railParts)
+                    .find(part => part.name === entry.railPartName);
+                if (railPart) {
+                    let feederSocket = new FeederSocket(railPart, FlowDirection.NONE);
+                    feederSocket.connect(false);
+                    feederSocket.connectedFeeder.setName(entry.name);
+                    this.feeders.push(feederSocket.connectedFeeder);
+                }
             })
 
         }
@@ -87,20 +120,22 @@ export class LayoutManager {
 
     /**
      * 現在のレイアウトデータをシリアライズしたオブジェクトを返す。
-     * @returns {{rails: Array}}
+     * @returns {LayoutData}
      */
-    saveLayout() {
+    saveLayout(): LayoutData {
         return {
+            nextRailId: this._nextRailId,
+            nextFeederId: this._nextFeederId,
             rails: this.rails.map(rail => {
                 return {
-                    id: rail.getName(),
+                    name: rail.getName(),
                     data: serialize(rail)
                 }
             }),
             feeders: this.feeders.map(feeder => {
                 return {
-                    id: feeder.getName(),
-                    railId: feeder.railPart
+                    name: feeder.getName(),
+                    railPartName: feeder.railPart.name
                 }
             })
         };
@@ -241,7 +276,7 @@ export class LayoutManager {
      * フィーダーを設置する。
      * @param {FeederSocket} feederSocket where a feeder to be connected
      */
-    putFeeder(feederSocket) {
+    putFeeder(feederSocket: FeederSocket) {
         feederSocket.connect();
         let id = this._getNextFeederId();
         feederSocket.connectedFeeder.setName(id);
@@ -252,7 +287,7 @@ export class LayoutManager {
      * フィーダーを削除する。
      * @param {Feeder} feeder to be removed
      */
-    removeFeeder(feeder) {
+    removeFeeder(feeder: Feeder) {
         feeder.feederSocket.disconnect();
         let index = this.feeders.indexOf(feeder);
         if(index !== -1) {
@@ -339,9 +374,13 @@ export class LayoutManager {
         // log.debug("ActiveLayer.children end  -----");
     }
 
-
+    /**
+     * レールの一意のIDを生成する。
+     * @returns {string}
+     * @private
+     */
     _getNextRailId() {
-        return this._nextRailId++;
+        return `rail-${this._nextRailId++}`;
     }
 
     _getNextFeederId() {
