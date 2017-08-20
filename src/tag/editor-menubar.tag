@@ -197,6 +197,7 @@
               parentId: parentId,
               parentName: parentName
           };
+          riot.control.trigger(riot.VE.EDITOR.FILE_CHANGED, this._editingFile);
           this.update();
       };
 
@@ -204,14 +205,15 @@
       this.setLayout = (content, fileName, fileId) => {
           let layoutData = null;
           try {
+              // パースに成功したら通知
               layoutData = JSON.parse(content);
+              riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
           } catch(e) {
               log.error(`Failed to parse JSON of fileName: ${fileName}, fileId: ${fileId}`);
               $.notify(
                   { message: `Cannot load layout from file "${fileName}"!` },
                   { type: "danger" });
           }
-          riot.control.trigger(riot.VE.EDITOR.LAYOUT_CHANGED, layoutData);
       };
 
       // 親タグからeditor-mainタグを取得してcontentを取得する
