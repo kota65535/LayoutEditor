@@ -46,8 +46,6 @@ export class Joint extends DetectablePart {
     static FILL_COLOR_OPEN = "darkorange";
 
 
-    basePart: RectPart;
-    detectionPart: CirclePart;
     private _direction: JointDirection;
     private _jointState: JointState;
     connectedJoint: Joint | null;
@@ -57,6 +55,10 @@ export class Joint extends DetectablePart {
     rendered: false;
     _isEnabled: boolean;
 
+
+    get basePart() {
+        return <RectPart>this.parts[0]
+    }
 
     get position() {
         switch (this._direction) {

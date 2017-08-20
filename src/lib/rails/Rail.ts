@@ -153,7 +153,7 @@ export class Rail {
             anchor = anchor.position;
         }
         this.railParts.forEach( part => {
-            part.rotateRelatively(angle, anchor)
+            part.rotateRelatively(angle, <Point>anchor)
         });
         this.joints.forEach( j => {
             j.rotateRelatively(angle, <Point>anchor);
@@ -191,6 +191,16 @@ export class Rail {
     }
 
     /**
+     * このレールを削除する。
+     */
+    remove() {
+        this.disconnect();
+        this.railParts.forEach(elem => elem.remove());
+        this.joints.forEach(elem => elem.remove());
+        this.feederSockets.forEach(elem => elem.remove());
+    }
+
+    /**
      * 指定されたパスがこのレールに属するものか否かを返す。
      * @param {Path} path
      * @returns {boolean}
@@ -199,16 +209,6 @@ export class Rail {
         return !!this.railParts.find(elem => elem.path.id === path.id)
             || !!this.joints.find(elem => elem.path.id === path.id);
         // this.railParts.forEach( elem => log.debug(elem.path.id + " " + path.id));
-    }
-
-    /**
-     * このレールを削除する。
-     */
-    remove() {
-        this.disconnect();
-        this.railParts.forEach(elem => elem.remove());
-        this.joints.forEach(elem => elem.remove());
-        this.feederSockets.forEach(elem => elem.remove());
     }
 
     /**
@@ -289,6 +289,12 @@ export class Rail {
             return [startJoint, endJoint];
         }
     }
+
+    getFeederSocketFromRailPart(railPart) {
+        return this.feederSockets.find(fs => fs.railPart === railPart);
+    }
+
+
 
     /**
      * 現在の導電状態で導電しているレールパーツを取得する。

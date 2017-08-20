@@ -27,6 +27,7 @@
     import { GridPaper } from "../lib/GridPaper";
     import { StraightRail } from "../lib/rails/StraightRail";
     import {Joint} from "../lib/rails/parts/Joint";
+    import {MultiPartBase} from "../lib/rails/parts/primitives/MultiPartBase"
     import logger from "../logging";
     let log = logger(this.__.tagName);
     import { CirclePart } from "../lib/rails/parts/primitives/CirclePart";
@@ -45,6 +46,14 @@
     this.on("mount", () => {
         log.info(`is mounted.`);
         paper.setup("editor-canvas");
+
+        let mul = new MultiPartBase(new paper.Point(0,0), 0,
+            [ new RectPart(new paper.Point(0,0), 0, 50, 50, "red"),
+        new CirclePart(new paper.Point(30,30), 0, 20, "blue")]);
+
+        mul.moveRelatively(new paper.Point(70,70));
+        mul.rotateRelatively(90);
+
 
 
         // レイヤー１にグリッドを描画

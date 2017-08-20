@@ -43,13 +43,13 @@ export class RailPart extends PartBase {
      * レールの始点。Read Only
      * @returns {"paper".Point}
      */
-    get startPoint() { return this.path.segments[0].point; }
+    get startPoint(): Point { return this.path.segments[0].point; }
 
     /**
      * レールの中間点。Read Only
      * @returns {"paper".Point}
      */
-    get middlePoint() {
+    get middlePoint(): Point {
         let centerOfOuterCurve = this.path.curves[1].getLocationAt(this.path.curves[1].length/2).point;
         let centerOfInnerCurve = this.path.curves[4].getLocationAt(this.path.curves[4].length/2).point;
         return centerOfOuterCurve.add(centerOfInnerCurve).divide(2);
@@ -59,20 +59,20 @@ export class RailPart extends PartBase {
      * レールの終点。Read Only
      * @returns {"paper".Point}
      */
-    get endPoint() { return this.path.segments[3].point; }
+    get endPoint(): Point { return this.path.segments[3].point; }
 
     /**
      * レールの始点の角度
      * @returns {number}
      */
-    get startAngle() { return this.angle };
+    get startAngle(): number { return this.angle };
     set startAngle(angle: number) { this.angle = angle };
 
     /**
      * レールの終点の角度
      * @returns {number}
      */
-    get endAngle() { return this._endAngle };
+    get endAngle(): number { return this._endAngle };
     set endAngle(angle: number) { this._endAngle = angle };
 
     get flowDirection() { return this._flowDirection; }

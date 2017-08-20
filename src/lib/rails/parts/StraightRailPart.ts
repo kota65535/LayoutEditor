@@ -4,7 +4,6 @@
 import {sprintf} from "sprintf-js";
 import {RailPart} from "./RailPart";
 import {Path} from "paper";
-import {FeederSocket} from "./FeederSocket";
 
 /**
  * 直線レールパーツ。
@@ -34,10 +33,6 @@ export class StraightRailPart extends RailPart {
         this.move(point, anchor);
         this.rotate(angle, anchor);
 
-        // フィーダーソケットの生成
-        // if (hasFeederSocket) {
-        //     this.feederSocket = new FeederSocket(this);
-        // }
     }
 
     _initPath(length) {
