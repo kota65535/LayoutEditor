@@ -15,7 +15,8 @@
 
   <script>
       import riot from "riot";
-      import { RailFactory } from "../lib/RailFactory";
+      import {RailFactory} from "../lib/RailFactory";
+      import {PaletteItemType} from "../lib/PaletteItem";
       import logger from "../logging";
       let log = logger(this.__.tagName);
 
@@ -26,24 +27,33 @@
       this.on("mount", () => {
           log.info(`is mounted.`);
           log.printOpts(opts);
-//          // 各パレットアイテムのアイコン描画
+
+          // 各パレットアイテムのアイコン描画
           opts.items.forEach(item => {
               let target = `${opts.ref}-${item.name}-canvas`;
               paper.setup(target);
               let canvas = $(`#${target}`);
-              let rail = this.factory[item.name]();
-              let bounds = rail.getBounds();
-              let center = new paper.Point(canvas.width() / 2, canvas.height() / 2);
-              rail.move(center, bounds.center);
-              rail.scale(0.4, 0.4);
+
+              switch (item.type) {
+                  case PaletteItemType.RAIL:
+                      let rail = this.factory[item.id]();
+                      let bounds = rail.getBounds();
+                      let center = new paper.Point(canvas.width() / 2, canvas.height() / 2);
+                      rail.move(center, bounds.center);
+                      rail.scale(0.4, 0.4);
+                      break;
+              }
           });
       });
 
-      // パレットアイテムをクリックすると、そのアイテムを選択する
+      /**
+       * パレットアイテムを選択したらストアに通知する
+       * @param item
+       */
       this.handleItemClick = (item) => {
           this.selectedItem = item;
-          log.info("Selected: " + this.selectedItem.name);
-          riot.control.trigger(riot.VE.EDITOR.PALETTE_ITEM_SELECTED, item.name);
+          log.info("Selected: " + this.selectedItem);
+          riot.control.trigger(riot.VE.EDITOR.PALETTE_ITEM_SELECTED, this.selectedItem);
       };
 
 

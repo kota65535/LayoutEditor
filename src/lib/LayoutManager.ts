@@ -18,6 +18,16 @@ class MyArray<T> extends Array<T> {
     flatMap(lambda) {
         return Array.prototype.concat.apply([], this.map(lambda));
     };
+    remove() {
+        let what, a = arguments, L = a.length, ax;
+        while (L && this.length) {
+            what = a[--L];
+            while ((ax = this.indexOf(what)) !== -1) {
+                this.splice(ax, 1);
+            }
+        }
+        return this;
+    }
 }
 
 
@@ -387,5 +397,15 @@ export class LayoutManager {
      */
     _getNextRailId() {
         return `r${this._nextRailId++}`;
+    }
+
+
+    getRailFromRailPartPath(path: Path) {
+        let part = this.allRailParts.find(part => part.path.id === path.id)
+        return part ? part.rail : null;
+    }
+
+    getFeederSocketFromPathGroup(pathGroup: Group) {
+        return this.allFeederSockets.find(fs => fs.pathGroup.id === pathGroup.id);
     }
 }

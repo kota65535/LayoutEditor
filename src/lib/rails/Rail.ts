@@ -4,7 +4,7 @@
 import {sprintf} from "sprintf-js";
 import { Joint, JointDirection } from "./parts/Joint";
 import { FeederSocket } from "./parts/FeederSocket";
-import { PaletteItemType } from "./parts/PaletteItem";
+import { PaletteItemType } from "../PaletteItem";
 import logger from "../../logging";
 import {Group, Point} from "paper";
 import {RailPart} from "./parts/RailPart";

@@ -38,6 +38,8 @@ export class DetectablePart extends MultiPartBase {
         }
         this._enabled = isEnabled;
     }
+    // get selected() { return this.basePart.path.selected; };
+    // set selected(isSelected: boolean) { this.basePart.path.selected = isSelected; };
 
     /**
      *

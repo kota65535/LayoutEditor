@@ -166,15 +166,6 @@ export class Joint extends DetectablePart {
     }
 
     /**
-     * ジョイントが接続中か否かを返す。
-     * @returns {State}
-     */
-    getState() {
-        return this._jointState;
-    }
-
-
-    /**
      * 状態を設定し、ジョイントの色、サイズを変更する。
      * @param state
      * @private
@@ -200,7 +191,7 @@ export class Joint extends DetectablePart {
         }
         this._jointState = state;
 
-        log.info(`Joint @${this.rail ? this.rail.name : null}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
+        log.debug(`Joint @${this.rail ? this.rail.name : null}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
     }
 
     /**

@@ -6,7 +6,7 @@ import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
 import { SimpleTurnout, SymmetricalTurnout, TurnoutDirection } from "./rails/Turnout";
 import {Feeder} from "./rails/parts/Feeder";
 import {TrianglePart} from "./rails/parts/primitives/TrianglePart";
-import {PaletteItemType} from "./rails/parts/PaletteItem";
+import {PaletteItemType} from "./PaletteItem";
 
 
 // let DEFAULT_POSITION = new paper.Point(-10000000,-10000000);

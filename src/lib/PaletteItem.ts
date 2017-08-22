@@ -9,6 +9,8 @@ export enum PaletteItemType {
 }
 
 export interface PaletteItem {
-
-    getItemType(): PaletteItemType;
+    type: PaletteItemType;
+    id: string;
+    name: string;
 }
+

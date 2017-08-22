@@ -124,7 +124,7 @@ export class GridPaper {
      * 指定の範囲のグリッドの交点を返す。
      * @param topLeft
      * @param bottomRight
-     * @returns {Array<Array<number>}
+     * @returns {Array<Point>}
      */
     getGridPoints(topLeft = this.boardMin, bottomRight = this.boardMax) {
         let rangeX = _.range(Math.floor(bottomRight.x / this.gridSize), Math.floor(topLeft.x / this.gridSize));

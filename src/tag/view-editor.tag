@@ -6,6 +6,7 @@
 
   <script>
       import riot from "riot";
+      import {PaletteItemType} from "../lib/PaletteItem";
       import logger from "../logging";
       let log = logger(this.__.tagName);
 
@@ -16,42 +17,42 @@
               title: "Straight Rails",
               ref: "straightRail",
               items: [
-                  {name: "S280"},
-                  {name: "S140"},
-                  {name: "S99"},
-                  {name: "S70"},
-                  {name: "S33"},
-                  {name: "S18_5"},
-                  {name: "S70G"}
+                  {type: PaletteItemType.RAIL, id: "S280",  name: "S280"},
+                  {type: PaletteItemType.RAIL, id: "S140",  name: "S140"},
+                  {type: PaletteItemType.RAIL, id: "S99",   name: "S99"},
+                  {type: PaletteItemType.RAIL, id: "S70",   name: "S70"},
+                  {type: PaletteItemType.RAIL, id: "S33",   name: "S33"},
+                  {type: PaletteItemType.RAIL, id: "S18_5", name: "S18-5"},
+                  {type: PaletteItemType.RAIL, id: "S70G",  name: "S70G"}
               ]
           },
           {
-              title: "CurveRails",
+              title: "Curve Rails",
               ref: "curveRail",
               items: [
-                  {name: "C280_45"},
-                  {name: "C280_15"},
-                  {name: "C317_45"},
-                  {name: "C541_15"},
+                  {type: PaletteItemType.RAIL, id: "C280_45", name: "C280-45"},
+                  {type: PaletteItemType.RAIL, id: "C280_15", name: "C280-15"},
+                  {type: PaletteItemType.RAIL, id: "C317_45", name: "C317-45"},
+                  {type: PaletteItemType.RAIL, id: "C541_15", name: "C541-15"},
               ]
           },
           {
               title: "Turnouts",
               ref: "turnout",
               items: [
-                  {name: "PL541_15"},
-                  {name: "PR541_15"},
-                  {name: "PL280_30"},
-                  {name: "PR280_30"},
-                  {name: "PY280_15"}
+                  {type: PaletteItemType.RAIL, id: "PL541_15", name: "PL541-15"},
+                  {type: PaletteItemType.RAIL, id: "PR541_15", name: "PR541-15"},
+                  {type: PaletteItemType.RAIL, id: "PL280_30", name: "PL280-30"},
+                  {type: PaletteItemType.RAIL, id: "PR280_30", name: "PR280-30"},
+                  {type: PaletteItemType.RAIL, id: "PY280_15", name: "PY280-15"}
               ]
           },
           {
               title: "Electric Parts",
               ref: "electric",
               items: [
-                  {name: "Feeder"},
-//                  {name: "GapJoiner"}
+                  {type: PaletteItemType.FEEDER, name: "Feeder"},
+                  {type: PaletteItemType.GAP_JOINER, name: "Gap Joiner"}
               ]
           }
       ];

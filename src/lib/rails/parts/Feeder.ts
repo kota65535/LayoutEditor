@@ -4,7 +4,6 @@
 
 import {TrianglePart} from "./primitives/TrianglePart";
 import {FeederSocket, FeederState} from "./FeederSocket";
-import {PaletteItem, PaletteItemType} from "./PaletteItem";
 import logger from "../../../logging";
 let log = logger("Feeder");
 
@@ -12,7 +11,7 @@ let log = logger("Feeder");
  * フィーダークラス。
  * このクラスはエディタ上の表示とイベントハンドリングのために存在し、フィーダーの実際の機能はFeederSocketクラスに集約している。
  */
-export class Feeder extends TrianglePart implements PaletteItem {
+export class Feeder extends TrianglePart {
 
     static WIDTH = 30;
     static HEIGHT = 30;
@@ -48,9 +47,5 @@ export class Feeder extends TrianglePart implements PaletteItem {
     setState(state: FeederState) {
         // フィーダーソケットの色に合わせるだけ
         this.path.fillColor = this.feederSocket.fillColors[state];
-    }
-
-    getItemType(): PaletteItemType {
-        return PaletteItemType.FEEDER;
     }
 }

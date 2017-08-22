@@ -23,9 +23,7 @@
   <script>
     import riot from "riot";
     import { LayoutEditor } from "../lib/LayoutEditor";
-    import { RailFactory } from "../lib/RailFactory";
     import { GridPaper } from "../lib/GridPaper";
-    import { StraightRail } from "../lib/rails/StraightRail";
     import {Joint} from "../lib/rails/parts/Joint";
     import {MultiPartBase} from "../lib/rails/parts/primitives/MultiPartBase"
     import logger from "../logging";
@@ -56,7 +54,6 @@
         new paper.Layer();
 
         this.editor = new LayoutEditor(this.grid);
-        this.factory = new RailFactory();
 
         // 各種ハンドラの登録
         let tool = new paper.Tool();
@@ -101,7 +98,11 @@
         }, false);
 
         // TODO: ボタンクリックイベントで選択するようにする
-        this.editor.selectPaletteItem(this.factory.S280());
+        this.editor.selectPaletteItem({
+                "type": "Rail",
+                "id": "S280",
+                "name": "S280"
+            });
 
         // レイアウトデータの初期化を始める
         riot.control.trigger(riot.VE.EDITOR.LAYOUT_INIT);
@@ -114,10 +115,10 @@
     /**
      * パレットレールが指定されたら、これを選択する
      */
-    this.onControl(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, itemName => {
-        this.selectedItem = itemName;
+    this.onControl(riot.SE.EDITOR.PALETTE_ITEM_SELECTED, item => {
+        this.selectedItem = item;
         log.info("Palette selected: " + this.selectedItem);
-        this.editor.selectPaletteItem(this.factory[itemName]());
+        this.editor.selectPaletteItem(this.selectedItem);
     });
 
     /**
@@ -138,7 +139,9 @@
         }
     });
 
-    // ツールバーにAngleが入力されたら、パレットレールの角度を変更する
+    /**
+     * ツールバーにAngleが入力されたら、パレットレールの角度を変更する
+     */
     this.onControl(riot.VE.EDITOR.ANGLE_CHANGED, (angle) => {
         log.info(`Angle changed: ${angle}`);
         // 入力なしは 0 とみなす

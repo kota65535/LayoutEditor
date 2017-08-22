@@ -129,4 +129,7 @@ fabric.properties
 dist/bundle.js*
 src/lib/rails/**/*.js*
 src/lib/google/**/*.js*
+src/lib/LayoutEditor.js*
+src/lib/LayoutManager.js*
+src/lib/PaletteItem.js*
 *.js.map

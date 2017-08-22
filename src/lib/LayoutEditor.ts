@@ -5,52 +5,57 @@ import {Joint, JointDirection, JointState} from "./rails/parts/Joint";
 import {FeederSocket, FeederState} from "./rails/parts/FeederSocket";
 import {Rail} from "./rails/Rail";
 import {CurveRail} from "./rails/CurveRail";
-import { cloneRail, serialize, deserialize } from "./RailUtil";
-import {LayoutManager} from "./LayoutManager";
+import {cloneRail, serialize, deserialize} from "./RailUtil";
+import {LayoutData, LayoutManager} from "./LayoutManager";
 import {LayoutSimulator} from "./LayoutSimulator";
 import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
-import {PaletteItemType} from "./rails/parts/PaletteItem";
+import {PaletteItem, PaletteItemType} from "./PaletteItem";
+import {GridPaper} from "./GridPaper";
+import {KeyEvent, Point, project, ToolEvent} from "paper";
+import {RailFactory} from "./RailFactory";
 
-let log = logger("LayoutEditor", "DEBUG");
-
-// [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
-Array.prototype.flatMap = function(lambda) {
-    return Array.prototype.concat.apply([], this.map(lambda));
-};
-Array.prototype.remove = function() {
-    let what, a = arguments, L = a.length, ax;
-    while (L && this.length) {
-        what = a[--L];
-        while ((ax = this.indexOf(what)) !== -1) {
-            this.splice(ax, 1);
-        }
-    }
-    return this;
-};
+let log = logger("LayoutEditor");
 
 
 export class LayoutEditor {
+    gridPaper: GridPaper;
+    layoutManager: LayoutManager;
+    layoutSimulator: LayoutSimulator;
+    railFactory: RailFactory;
+
+    // パレットで選択中のアイテム
+    paletteItem: PaletteItem;
+    // パレットで選択中のレールオブジェクト
+    paletteRail: Rail;
+    // パレットで選択中のレールの角度
+    paletteRailAngle: number;
+    // マウスカーソルで触れたフィーダーソケット
+    touchedFeederSocket: FeederSocket;
+
+    // パレットレールが接続相手に繋げるためのジョイントのインデックス
+    jointIndexOfGuide: number;
+
+    // 最初のレールを配置するためのグリッド上のジョイントとその角度
+    gridJoints: Joint[];
+    gridJointsAngle: number;
+
+
 
 
     constructor(gridPaper) {
 
-        // GridPaperインスタンスへの参照
         this.gridPaper =  gridPaper;
-
-        // 選択中のレール
-        this.paletteRail = null;
-        this.paletteRailAngle = 0;
-        // マウスカーソルで触れたフィーダーソケット
-        this.touchedFeederSocket = null;
-
-        // レール設置ガイドの自分の接続しているジョイントのインデックス
-        this.jointIndexOfGuide = null;
-
         this.layoutManager = new LayoutManager();
         this.layoutSimulator = new LayoutSimulator();
+        this.railFactory = new RailFactory();
 
-        // 最初のレールを配置するためのグリッド上のジョイント
+        this.paletteRail = null;
+        this.paletteRailAngle = 0;
+        this.touchedFeederSocket = null;
+
+        this.jointIndexOfGuide = null;
+
         this.gridJoints = [];
         this.gridJointsAngle = 0;
     }
@@ -60,51 +65,66 @@ export class LayoutEditor {
     // モード遷移
     //====================
 
-    isRailMode() {
-        return this.paletteRail.getItemType() === PaletteItemType.RAIL;
+    isRailMode(): boolean {
+        return this.paletteItem.type === PaletteItemType.RAIL;
     }
 
-    isFeederMode() {
-        return this.paletteRail.getItemType() === PaletteItemType.FEEDER;
+    isFeederMode(): boolean {
+        return this.paletteItem.type === PaletteItemType.FEEDER;
     }
 
-    isGapJoinerMode() {
-        return this.paletteRail.getItemType() === PaletteItemType.FEEDER;
+    isGapJoinerMode(): boolean {
+        return this.paletteItem.type === PaletteItemType.GAP_JOINER;
     }
 
-    changeToRailMode(paletteItem) {
+    /**
+     * レール設置モードに移行する。
+     * @param {PaletteItem} paletteItem
+     */
+    changeToRailMode(paletteItem: PaletteItem) {
         log.info("Changing to rail mode...");
+        // ジョイントを有効化、フィーダーソケットを無効化
         this.layoutManager.rails.forEach(rail => {
             rail.joints.forEach(j => j.enabled = true);
         });
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = false);
         });
-        this.selectRail(paletteItem);
+        // レールの生成と選択
+        this.selectRail(this.railFactory[paletteItem.id]());
 
         log.info("Changed to rail mode.");
     }
 
-    changeToFeederMode(paletteItem) {
+    /**
+     * フィーダー設置モードに移行する。
+     * @param {PaletteItem} paletteItem
+     */
+    changeToFeederMode(paletteItem: PaletteItem) {
         log.info("Changed to feeder mode...");
+        // ジョイントを無効化、フィーダーソケットを有効化
         this.layoutManager.rails.forEach(rail => {
             rail.joints.forEach(j => j.enabled = false);
         });
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = true);
         });
-        this.paletteRail = paletteItem;
         // this.selectRail(paletteItem);
         log.info("Changed to feeder mode.");
     }
 
-    selectPaletteItem(paletteItem) {
+    /**
+     * パレットアイテムを選択する。
+     * モードもこれに応じて切り替わる。
+     * @param {PaletteItem} paletteItem
+     */
+    selectPaletteItem(paletteItem: PaletteItem) {
         // もし現在のアイテムと異なる種類ならば、全ての選択状態を解除する
-        if (this.paletteRail && this.paletteRail.getItemType() !== paletteItem.getItemType()) {
-            paper.project.deselectAll();
+        if (this.paletteItem && this.paletteItem.type !== paletteItem.type) {
+            project.deselectAll();
         }
 
-        switch (paletteItem.getItemType()) {
+        switch (paletteItem.type) {
             case PaletteItemType.RAIL:
                 this.changeToRailMode(paletteItem);
                 break;
@@ -115,30 +135,33 @@ export class LayoutEditor {
                 // this.selectFeeder(paletteItem);
                 // break;
         }
+        this.paletteItem = paletteItem;
     }
-
 
     /**
      * 保存されていたレイアウトをロードし、エディタ上に配置する。
      * @param layoutData
      */
-    loadLayout(layoutData) {
+    loadLayout(layoutData: LayoutData) {
         // グリッドジョイントがあれば削除する
-        this.removeJointsOnGrid();
+        this.removeGridJoints();
+        // ジョイント、フィーダー両方の選択を有効化する
         this.layoutManager.rails.forEach(rail => {
             rail.joints.forEach(j => j.enabled = true);
         });
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = true);
         });
+        // レイアウトデータをロードする
         this.layoutManager.loadLayout(layoutData);
+
         // ロードしたレールのパスをグリッドペーパーに認識させる
         this.layoutManager.rails.forEach(rail => {
             this.gridPaper.paths.push(rail.pathGroup);
             log.info(`GridPaper: add path ${rail.pathGroup}`)
         });
         // 何も選択していない状態にする
-        paper.project.deselectAll();
+        project.deselectAll();
     }
 
     /**
@@ -153,7 +176,7 @@ export class LayoutEditor {
      * レイアウトが空（レールが一本も配置されていない）か否かを返す。
      * @returns {boolean}
      */
-    isLayoutBlank() {
+    isLayoutBlank(): boolean {
         return this.layoutManager.rails.length === 0;
     }
 
@@ -162,16 +185,17 @@ export class LayoutEditor {
     //==============================
 
     /**
-     * 一本目のレールを配置するための透明なジョイント（以降、グリッドジョイント）をグリッド上に配置する。
+     * 一本目のレールをグリッド上に配置するためのジョイント（グリッドジョイント）を配置する。
+     * @param {Point} cursorPosition
      */
-    putJointsOnGrid(cursorPosition) {
+    putGridJoints(cursorPosition: Point) {
         // マウスカーソルの周囲のグリッドの座標を取得する
-        let topLeft = cursorPosition.subtract(new paper.Point(this.gridPaper.gridSize, this.gridPaper.gridSize));
-        let bottomRight = cursorPosition.add(new paper.Point(this.gridPaper.gridSize, this.gridPaper.gridSize));
+        let topLeft = cursorPosition.subtract(new Point(this.gridPaper.gridSize, this.gridPaper.gridSize));
+        let bottomRight = cursorPosition.add(new Point(this.gridPaper.gridSize, this.gridPaper.gridSize));
         let gridPoints = this.gridPaper.getGridPoints(topLeft, bottomRight);
 
         // 更新のためいったん全て消す
-        this.removeJointsOnGrid();
+        this.removeGridJoints();
 
         if (this.isLayoutBlank()) {
             // グリッド上に透明なジョイントを作成
@@ -189,17 +213,17 @@ export class LayoutEditor {
     /**
      * 全てのグリッドジョイントを削除する。
      */
-    removeJointsOnGrid() {
+    removeGridJoints() {
         this.gridJoints.forEach(joint => joint.remove());
         this.gridJoints = [];
     }
 
     /**
      * 指定の位置のグリッドジョイントを返す。
-     * @param point
-     * @returns {*}
+     * @param {Point} point
+     * @returns {Joint}
      */
-    searchJointsOnGrid(point) {
+    searchGridJoints(point: Point): Joint {
         let hitResult = hitTest(point);
         if (!hitResult) {
             return null;
@@ -208,16 +232,17 @@ export class LayoutEditor {
     }
 
     /**
-     * 指定の位置のジョイントを取得する。グリッドジョイントも含む。
+     * 指定の位置のジョイントを取得する。
      * @param point
-     * @returns {*}
+     * @returns {Joint}
      */
-    getJoint(point) {
+    getJoint(point: Point) {
         let joint;
         if (this.isLayoutBlank()) {
-            joint = this.searchJointsOnGrid(point);
+            // レイアウトが空ならグリッドジョイント
+            joint = this.searchGridJoints(point);
         } else {
-            // カーソル上のジョイントのうち、最も近いものを選択する。
+            // そうでなければカーソル位置のジョイントのうち、最も近いものを選択する。
             joint = this.layoutManager.getJoint(point);
         }
         return joint;
@@ -232,7 +257,7 @@ export class LayoutEditor {
      * @param {Rail} rail
      *
      */
-    selectRail(rail) {
+    selectRail(rail: Rail) {
         // TODO: パレットを連打すると、その分だけ不可視のレールが生成されてしまう
         this.paletteRail = rail;
         this.paletteRail.rotate(this.paletteRailAngle, this.paletteRail.startPoint);
@@ -244,7 +269,7 @@ export class LayoutEditor {
      * 設置されるレールのガイドを半透明で表示する。
      * @param {Joint} toJoint
      */
-    showRailToPut(toJoint) {
+    showRailToPut(toJoint: Joint) {
         this.paletteRail.setVisible(true);
         this.paletteRail.setOpacity(0.5);
         // レール選択直後の場合、対向レールの種類にもとづいてレールガイドの初期向きを設定する
@@ -268,7 +293,7 @@ export class LayoutEditor {
         this.paletteRail.setVisible(false);
         this.paletteRail.setOpacity(0.2);
         this.paletteRail.disconnect();
-        this.paletteRail.move(new paper.Point(0,0), this.paletteRail.joints[0]);
+        this.paletteRail.move(new Point(0,0), this.paletteRail.joints[0]);
     }
 
     /**
@@ -276,8 +301,7 @@ export class LayoutEditor {
      * カーブレールが続く場合、弧の向きに合わせてガイドレールの初期接続ジョイントを一定に保つ。
      * @param toJoint
      */
-    initJointOfGuide(toJoint) {
-        // 対向レールとパレットレールの両者がカーブレールの場合、カーブの向きを揃える。
+    initJointOfGuide(toJoint: Joint) { // 対向レールとパレットレールの両者がカーブレールの場合、カーブの向きを揃える。
         // TODO: ジョイントの個数が２であることが前提になっている。より汎用的なロジックを考える。
         let opponentRail = toJoint.rail;
         if (!opponentRail) {
@@ -303,9 +327,9 @@ export class LayoutEditor {
 
     /**
      * レールガイドが接続する自身のジョイントのインデックスを取得する。
-     * @returns {Number}
+     * @returns {Joint}
      */
-    getCurrentJointOfGuide() {
+    getCurrentJointOfGuide(): Joint {
         return this.paletteRail.joints[this.jointIndexOfGuide];
     }
 
@@ -320,13 +344,13 @@ export class LayoutEditor {
      * 選択されたレールを設置する。
      * @param {Joint} toJoint
      */
-    putSelectedRail(toJoint) {
+    putSelectedRail(toJoint: Joint) {
         // 接続先のレールよりも上に移動する。設置したレールのジョイントの当たり判定を優先したいので。
         this.paletteRail.pathGroup.bringToFront();
         let result = this.layoutManager.putRail(this.paletteRail, this.getCurrentJointOfGuide(), toJoint);
         if (result) {
             this.gridPaper.paths.push(this.paletteRail.pathGroup);
-            this.selectRail(cloneRail(this.paletteRail));
+            this.selectRail(<any>cloneRail(this.paletteRail));
             this.jointIndexOfGuide = null;
         }
     }
@@ -338,7 +362,7 @@ export class LayoutEditor {
 
     selectFeeder() {
         this.layoutManager.rails.forEach(rail => {
-            rail.feederSockets.forEach(fs => fs.setState(FeederState.OPEN));
+            rail.feederSockets.forEach(fs => fs.feederState = FeederState.OPEN);
         });
         this.showFeederSockets();
         log.info("Feeder selected");
@@ -351,7 +375,7 @@ export class LayoutEditor {
      * 設置されるフィーダーのガイドを半透明で表示する。
      * @param {FeederSocket} feederSocket at the mouse cursor
      */
-    showFeederToPut(feederSocket) {
+    showFeederToPut(feederSocket: FeederSocket) {
         this.touchedFeederSocket = feederSocket;
         this.touchedFeederSocket.connect(true);
     }
@@ -371,7 +395,7 @@ export class LayoutEditor {
     /**
      * フィーダーを設置する。
      */
-    putFeeder(feederSocket) {
+    putFeeder(feederSocket: FeederSocket) {
         this.layoutManager.putFeeder(feederSocket);
     }
 
@@ -384,11 +408,11 @@ export class LayoutEditor {
      * マウス移動時のハンドラ
      * @param {ToolEvent} event
      */
-    handleMouseMove(event) {
+    handleMouseMove(event: ToolEvent) {
 
         // レイアウトが空ならグリッドジョイントをカーソルの周囲に生成する
         if (this.isLayoutBlank()) {
-            this.putJointsOnGrid(event.point);
+            this.putGridJoints(event.point);
         }
 
         // 何にも接触していない場合、各種ガイドを消す
@@ -408,9 +432,9 @@ export class LayoutEditor {
 
     /**
      * ジョイント上にマウスが乗った時の処理
-     * @param event
+     * @param {ToolEvent} event
      */
-    handleMouseMoveOnJoint(event) {
+    handleMouseMoveOnJoint(event: ToolEvent) {
         // 乗っているジョイントを取得
         let joint = this.getJoint(event.point);
         // ジョイント上かつ接続中でないならレール設置ガイドを表示する
@@ -423,9 +447,9 @@ export class LayoutEditor {
 
     /**
      * フィーダー上にマウスが乗った時の処理
-     * @param event
+     * @param {ToolEvent} event
      */
-    handleMouseMoveOnFeeder(event) {
+    handleMouseMoveOnFeeder(event: ToolEvent) {
         // 乗っているフィーダーを取得
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
 
@@ -442,9 +466,9 @@ export class LayoutEditor {
 
     /**
      * フィーダー上で左クリックした時の処理
-     * @param event
+     * @param {ToolEvent} event
      */
-    handleMouseDownLeftOnFeeder(event) {
+    handleMouseDownLeftOnFeeder(event: ToolEvent) {
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
         if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
             this.putFeeder(feederSocket);
@@ -456,14 +480,15 @@ export class LayoutEditor {
 
     /**
      * マウスクリック時のハンドラ
+     * TODO: TypeDefinitionにeventが欠けている？
      * @param {ToolEvent} event
      */
-    handleMouseDown(event) {
+    handleMouseDown(event: any) {
         let buttons = {
             0: "Left",
             2: "Right"
         }
-        let buttonName = buttons[event.event.button]
+        let buttonName = buttons[event.event.button];
         if (buttonName) {
             this[this.handleMouseDown.name + buttonName](event);
         }
@@ -473,10 +498,9 @@ export class LayoutEditor {
      * マウス左クリック時のハンドラ。以下の処理を行う。
      *   - 未接続のジョイント上ならば、現在選択中のレールと接続する。
      *   - レールならば、そのレールを選択する。
-     *
      * @param {ToolEvent} event
      */
-    handleMouseDownLeft(event) {
+    handleMouseDownLeft(event: ToolEvent) {
 
         // 何もなければ何もしない
         if (!event.item) {
@@ -508,7 +532,8 @@ export class LayoutEditor {
         // フィーダーの選択状態をトグルする
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
         if (feederSocket) {
-            feederSocket.pathGroup.selected = !feederSocket.pathGroup.selected;
+            feederSocket.basePart.path.selected = !feederSocket.basePart.path.selected;
+            feederSocket.connectedFeeder.path.selected = !feederSocket.connectedFeeder.path.selected;
             // event.item.selected = !event.item.selected; // 選択を反転
             return;
         }
@@ -517,10 +542,10 @@ export class LayoutEditor {
 
     /**
      * ジョイント上でマウス左クリックした時の処理
-     * @param {Event} event
+     * @param {ToolEvent} event
      * @returns {boolean} 何かしたらtrue, 何もしなければfalse
      */
-    handleMouseDownLeftOnJoint(event) {
+    handleMouseDownLeftOnJoint(event: ToolEvent) {
         let joint = this.getJoint(event.point);
         let isLayoutBlank = this.isLayoutBlank();
 
@@ -529,7 +554,7 @@ export class LayoutEditor {
             this.putSelectedRail(joint)
             // レイアウトが空だったらグリッドジョイントを削除する
             if (isLayoutBlank) {
-                this.removeJointsOnGrid();
+                this.removeGridJoints();
             }
             return true;
         }
@@ -543,7 +568,7 @@ export class LayoutEditor {
      *
      * @param {ToolEvent} event
      */
-    handleMouseDownRight(event) {
+    handleMouseDownRight(event: ToolEvent) {
         let joint = this.getJoint(event.point);
         if (joint && joint.jointState !== JointState.CONNECTED) {
             joint.disconnect();
@@ -563,7 +588,7 @@ export class LayoutEditor {
      * マウスドラッグ時のハンドラ。
      * @param event
      */
-    handleMouseDrag(event) {
+    handleMouseDrag(event: ToolEvent) {
         log.info("down point: ", event.downPoint);
         log.info("event point: ", event.point);
         log.info("delta ", event.delta);
@@ -579,13 +604,13 @@ export class LayoutEditor {
      *
      * @param {KeyEvent} event
      */
-    handleKeyDown(event) {
+    handleKeyDown(event: KeyEvent) {
         // 選択されたレールを取得する
-        let selectedRails = paper.project.selectedItems
-            .map(item => this.layoutManager.getRail(item))
+        let selectedRails = (<any>project).selectedItems
+            .map(item => this.layoutManager.getRailFromRailPartPath(item))
             .filter(Boolean);
-        let selectedFeederSockets = paper.project.selectedItems
-            .map(item => this.layoutManager.getFeederSocket(event.point))
+        let selectedFeederSockets = (<any>project).selectedItems
+            .map(item => this.layoutManager.getFeederSocketFromPathGroup(item))
             .filter(Boolean);
         log.info("Selected rail: ", selectedRails);
         log.info("Selected feeder: ", selectedFeederSockets);
