@@ -37,6 +37,7 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
+                exclude: /node_modules/,
                 loader: "ts-loader"
             },
             {
@@ -109,5 +110,5 @@ module.exports = {
     },
 
 
-    devtool: "source-map"
+    devtool: "inline-source-map"
 }

@@ -7,7 +7,7 @@ import {MultiPartBase} from "./MultiPartBase";
  * 当たり判定による検出状態。
  */
 export enum DetectionState {
-    BEFORE_DETECT,      // 検出前
+    BEFORE_DETECT = 0,  // 検出前
     DETECTING,          // 検出中（カーソルが当たっている）
     AFTER_DETECT        // 検出後（クリックなどにより選択された）
 }
@@ -21,7 +21,7 @@ export class DetectablePart extends MultiPartBase {
     // COLOR_DETECTING: string = "deepskyblue";
     // COLOR_AFTER_DETECT: string = "darkgray";
 
-    detectionState: DetectionState;
+    _detectionState: DetectionState;
     fillColors: string[];
     _enabled: boolean;      // 検出の有効・無効を切り替えるフラグ。本体は見える。
 
@@ -32,14 +32,16 @@ export class DetectablePart extends MultiPartBase {
 
     get enabled() { return this._enabled; }
     set enabled(isEnabled: boolean) {
-        this.detectionPart.setVisible(isEnabled);
+        this.detectionPart.visible = isEnabled;
         if (isEnabled) {
-            this.setDetectionState(this.detectionState);
+            this._setDetectionState(this._detectionState);
         }
         this._enabled = isEnabled;
     }
-    // get selected() { return this.basePart.path.selected; };
-    // set selected(isSelected: boolean) { this.basePart.path.selected = isSelected; };
+
+    // 検出状態
+    get detectionState() { return this._detectionState; }
+    set detectionState(state: DetectionState) { this._setDetectionState(state); }
 
     /**
      *
@@ -57,38 +59,32 @@ export class DetectablePart extends MultiPartBase {
         // 無効状態かつ未接続
         // いったんDetectionStateを設定するためのスマートでないやり方
         this._enabled = true;
-        this.setDetectionState(DetectionState.BEFORE_DETECT);
-        this._enabled = false;
-    }
-
-
-    setVisible(isVisible: boolean) {
-        this.basePart.setVisible(isVisible);
-        this.detectionPart.setVisible(isVisible);
+        this.detectionState = DetectionState.BEFORE_DETECT;
+        this.enabled = false;
     }
 
     /**
      * 指定されたパスがこのパーツに属するか否かを返す。
-     * 当たり判定は本体には無いことに注意すること。
+     * TODO: 当たり判定が本体に存在すると何か困るんだっけ？
      * @param {"paper".Path} path
      * @returns {boolean}
      */
     containsPath(path: Path): boolean {
-        return this.detectionPart.containsPath(path);
+        return this.basePart.containsPath(path) || this.detectionPart.containsPath(path);
     }
 
     /**
      * 検出状態を変更する。
      * @param {DetectionState} state
      */
-    setDetectionState(state: DetectionState) {
+    private _setDetectionState(state: DetectionState) {
         // 無効時はDetectionStateの変更は許可されない。
         if (this._enabled) {
             switch(state) {
                 case DetectionState.BEFORE_DETECT:
                     // 当たり判定領域を半透明化
-                    this.detectionPart.setVisible(true);
-                    this.detectionPart.setOpacity(0.3);
+                    this.detectionPart.visible = true;
+                    this.detectionPart.opacity = 0.3;
                     this.basePart.path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
                     this.detectionPart.path.fillColor = this.fillColors[DetectionState.BEFORE_DETECT];
                     // 親グループ（Railオブジェクトを想定）内で最前に移動
@@ -97,8 +93,8 @@ export class DetectablePart extends MultiPartBase {
                     break;
                 case DetectionState.DETECTING:
                     // 当たり判定領域を半透明化
-                    this.detectionPart.setVisible(true);
-                    this.detectionPart.setOpacity(0.6);
+                    this.detectionPart.visible = true;
+                    this.detectionPart.opacity = 0.6;
                     this.basePart.path.fillColor = this.fillColors[DetectionState.DETECTING];
                     this.detectionPart.path.fillColor = this.fillColors[DetectionState.DETECTING];
                     // 親グループ（Railオブジェクトを想定）内で最前に移動
@@ -106,15 +102,13 @@ export class DetectablePart extends MultiPartBase {
                     break;
                 case DetectionState.AFTER_DETECT:
                     // 当たり判定領域を不可視（無効化）
-                    this.detectionPart.setVisible(false);
-                    // this.detectionPart.setOpacity(0);
+                    this.detectionPart.visible = false;
+                    // this.detectionPart.opacity = 0;
                     this.basePart.path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
                     this.detectionPart.path.fillColor = this.fillColors[DetectionState.AFTER_DETECT];
                     break;
             }
-            this.detectionState = state;
+            this._detectionState = state;
         }
-
-
     }
 }

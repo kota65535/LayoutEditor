@@ -35,12 +35,12 @@ export enum FlowDirection {
 export class FeederSocket extends DetectablePart {
 
     // 定数
-    static WIDTH = 8;
+    static WIDTH = 6;
     static HEIGHT = 12;
     static HIT_RADIUS = 20;
-    static FILL_COLOR_CONNECTED = "darkgray";
+    static FILL_COLOR_CONNECTED = "forestgreen";
     static FILL_COLOR_CONNECTING = "deepskyblue";
-    static FILL_COLOR_OPEN = "red";
+    static FILL_COLOR_OPEN = "forestgreen";
 
     railPart: RailPart;             // 所属するレールパーツ
     connectedFeeder: Feeder;        // 接続されたフィーダーオブジェクト
@@ -101,7 +101,7 @@ export class FeederSocket extends DetectablePart {
             FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
         let circle = new CirclePart(railPart.middlePoint, angle, FeederSocket.HIT_RADIUS, FeederSocket.FILL_COLOR_OPEN);
         super(railPart.middlePoint, angle, rect, circle,
-            [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
+            [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
 
         this.railPart = railPart;
         this._flowDirection = direction;
@@ -171,18 +171,18 @@ export class FeederSocket extends DetectablePart {
         if (this._enabled) {
             switch(feederState) {
                 case FeederState.OPEN:
-                    this.setDetectionState(DetectionState.BEFORE_DETECT);
+                    this.detectionState = DetectionState.BEFORE_DETECT;
                     break;
                 case FeederState.CONNECTING:
-                    this.setDetectionState(DetectionState.DETECTING);
+                    this.detectionState = DetectionState.DETECTING;
                     break;
                 case FeederState.CONNECTED:
-                    this.setDetectionState(DetectionState.AFTER_DETECT);
+                    this.detectionState = DetectionState.AFTER_DETECT;
                     break;
             }
             // 接続されたフィーダーがあれば同じ状態に変更する
             if (this.connectedFeeder) {
-                this.connectedFeeder.setState(feederState);
+                this.connectedFeeder.state = feederState;
             }
             this._feederState = feederState;
         }

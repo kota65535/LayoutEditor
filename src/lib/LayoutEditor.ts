@@ -14,6 +14,7 @@ import {PaletteItem, PaletteItemType} from "./PaletteItem";
 import {GridPaper} from "./GridPaper";
 import {KeyEvent, Point, project, ToolEvent} from "paper";
 import {RailFactory} from "./RailFactory";
+import {GapSocket, GapState} from "./rails/parts/GapSocket";
 
 let log = logger("LayoutEditor");
 
@@ -32,6 +33,8 @@ export class LayoutEditor {
     paletteRailAngle: number;
     // マウスカーソルで触れたフィーダーソケット
     touchedFeederSocket: FeederSocket;
+    // マウスカーソルで触れたギャップジョイナーソケット
+    touchedGapSocket: GapSocket;
 
     // パレットレールが接続相手に繋げるためのジョイントのインデックス
     jointIndexOfGuide: number;
@@ -90,6 +93,9 @@ export class LayoutEditor {
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = false);
         });
+        this.layoutManager.rails.forEach(rail => {
+            rail.gapSockets.forEach(gs => gs.enabled = false);
+        });
         // レールの生成と選択
         this.selectRail(this.railFactory[paletteItem.id]());
 
@@ -109,8 +115,30 @@ export class LayoutEditor {
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = true);
         });
+        this.layoutManager.rails.forEach(rail => {
+            rail.gapSockets.forEach(gs => gs.enabled = false);
+        });
         // this.selectRail(paletteItem);
         log.info("Changed to feeder mode.");
+    }
+
+    /**
+     * ジョイナー設置モードに移行する。
+     * @param {PaletteItem} paletteItem
+     */
+    changeToJoinerMode(paletteItem: PaletteItem) {
+        log.info("Changed to gap mode...");
+        // ジョイントを有効化、フィーダーソケットを無効化
+        this.layoutManager.rails.forEach(rail => {
+            rail.joints.forEach(j => j.enabled = false);
+        });
+        this.layoutManager.rails.forEach(rail => {
+            rail.feederSockets.forEach(fs => fs.enabled = false);
+        });
+        this.layoutManager.rails.forEach(rail => {
+            rail.gapSockets.forEach(gs => gs.enabled = true);
+        });
+        log.info("Changed to gap mode.");
     }
 
     /**
@@ -132,11 +160,15 @@ export class LayoutEditor {
                 this.changeToFeederMode(paletteItem);
                 break;
             case PaletteItemType.GAP_JOINER:
-                // this.selectFeeder(paletteItem);
-                // break;
+                this.changeToJoinerMode(paletteItem);
+                break;
         }
         this.paletteItem = paletteItem;
     }
+
+    //====================
+    // レイアウトの保存・読込
+    //====================
 
     /**
      * 保存されていたレイアウトをロードし、エディタ上に配置する。
@@ -172,6 +204,10 @@ export class LayoutEditor {
         return this.layoutManager.saveLayout();
     }
 
+    //==============================
+    // 一本目のレール設置時特有のメソッド
+    //==============================
+
     /**
      * レイアウトが空（レールが一本も配置されていない）か否かを返す。
      * @returns {boolean}
@@ -179,10 +215,6 @@ export class LayoutEditor {
     isLayoutBlank(): boolean {
         return this.layoutManager.rails.length === 0;
     }
-
-    //==============================
-    // 一本目のレール設置時特有のメソッド
-    //==============================
 
     /**
      * 一本目のレールをグリッド上に配置するためのジョイント（グリッドジョイント）を配置する。
@@ -202,9 +234,9 @@ export class LayoutEditor {
             gridPoints.forEach(point => {
                 let joint = new Joint(point, this.gridJointsAngle, JointDirection.SAME_TO_ANGLE, null);
                 // TODO: デバッグ用
-                joint.basePart.setOpacity(0);
+                joint.basePart.opacity = 0;
                 // joint.setOpacity(0);
-                joint.basePart.setVisible(false);
+                joint.basePart.visible = false;
                 this.gridJoints.push(joint);
             });
         }
@@ -236,7 +268,7 @@ export class LayoutEditor {
      * @param point
      * @returns {Joint}
      */
-    getJoint(point: Point) {
+    getJoint(point: Point): Joint {
         let joint;
         if (this.isLayoutBlank()) {
             // レイアウトが空ならグリッドジョイント
@@ -249,7 +281,7 @@ export class LayoutEditor {
     }
 
     //==============================
-    // レール設置機能に関するメソッド
+    // レール設置モードに関わるメソッド
     //==============================
 
     /**
@@ -356,20 +388,8 @@ export class LayoutEditor {
     }
 
     //==============================
-    // フィーダー設置機能に関わるメソッド
+    // フィーダー設置モードに関わるメソッド
     //==============================
-
-
-    selectFeeder() {
-        this.layoutManager.rails.forEach(rail => {
-            rail.feederSockets.forEach(fs => fs.feederState = FeederState.OPEN);
-        });
-        this.showFeederSockets();
-        log.info("Feeder selected");
-    }
-
-    showFeederSockets() {
-    }
 
     /**
      * 設置されるフィーダーのガイドを半透明で表示する。
@@ -399,10 +419,47 @@ export class LayoutEditor {
         this.layoutManager.putFeeder(feederSocket);
     }
 
+    //==============================
+    // ギャップジョイナー設置モードに関わるメソッド
+    //==============================
 
-    //====================
-    // UIイベントハンドラ
-    //====================
+    /**
+     * 設置されるギャップジョイナーのガイドを半透明で表示する。
+     * @param {GapSocket} gapSocket at the mouse cursor
+     */
+    showGapToPut(gapSocket: GapSocket) {
+        this.touchedGapSocket = gapSocket;
+        this.touchedGapSocket.connect(true);
+        if (this.touchedGapSocket.joint.isConnected()) {
+            this.touchedGapSocket.joint.connectedJoint.gapSocket.connect(true);
+        }
+    }
+
+    /**
+     * 設置されるギャップジョイナーのガイドを消去する。
+     */
+    hideGapToPut() {
+        // 接続試行中ならガイドを消去する
+        if (this.touchedGapSocket && this.touchedGapSocket.gapState === GapState.CONNECTING) {
+            this.touchedGapSocket.disconnect();
+            if (this.touchedGapSocket.joint.isConnected()) {
+                this.touchedGapSocket.joint.connectedJoint.gapSocket.disconnect();
+            }
+        }
+        // このとき接触しているフィーダーは無い
+        this.touchedGapSocket = null;
+    }
+
+    /**
+     * ギャップジョイナーを設置する。
+     */
+    putGap(gapSocket: GapSocket) {
+        this.layoutManager.putGap(gapSocket);
+    }
+
+    //==============================
+    // UIイベントハンドラ / マウス移動
+    //==============================
 
     /**
      * マウス移動時のハンドラ
@@ -415,18 +472,20 @@ export class LayoutEditor {
             this.putGridJoints(event.point);
         }
 
-        // 何にも接触していない場合、各種ガイドを消す
-
         // ジョイント上にマウスが乗った時の処理
-        if (this.isRailMode()) {
+        if (this.isRailMode() || this.isGapJoinerMode()) {
             this.hideRailToPut();
             this.handleMouseMoveOnJoint(event);
         }
-
         // フィーダー上にマウスが乗った時の処理
         if (this.isFeederMode()) {
             this.hideFeederToPut();
             this.handleMouseMoveOnFeeder(event);
+        }
+        // ギャップジョイナー上にマウスが乗った時の処理
+        if (this.isGapJoinerMode()) {
+            this.hideGapToPut();
+            this.handleMouseMoveOnGapJoiner(event);
         }
     }
 
@@ -437,11 +496,11 @@ export class LayoutEditor {
     handleMouseMoveOnJoint(event: ToolEvent) {
         // 乗っているジョイントを取得
         let joint = this.getJoint(event.point);
-        // ジョイント上かつ接続中でないならレール設置ガイドを表示する
-        if (joint && ! (joint.jointState === JointState.CONNECTED)) {
-            this.showRailToPut(joint);
-        } else {
-            this.hideRailToPut();
+        if (this.isRailMode()) {
+            // ジョイント上かつ接続中でないならレール設置ガイドを表示する
+            if (joint && joint.jointState !== JointState.CONNECTED) {
+                this.showRailToPut(joint);
+            }
         }
     }
 
@@ -453,30 +512,30 @@ export class LayoutEditor {
         // 乗っているフィーダーを取得
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
 
-        // フィーダーソケット上かつ下記の条件に当てはまればフィーダーガイドを表示
-        //  - フィーダーが選択されている
-        //  - フィーダーが未接続または接続試行中である
-        if (feederSocket
-            && [FeederState.OPEN, FeederState.CONNECTING].includes(feederSocket.feederState)) {
+        // フィーダーソケット上かつ接続中でないならフィーダー設置ガイドを表示する
+        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
             this.showFeederToPut(feederSocket);
-        } else {
-            this.hideFeederToPut();
         }
     }
 
     /**
-     * フィーダー上で左クリックした時の処理
+     * ギャップジョイナーソケット上にマウスが乗った時の処理
      * @param {ToolEvent} event
      */
-    handleMouseDownLeftOnFeeder(event: ToolEvent) {
-        let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
-            this.putFeeder(feederSocket);
-            return true;
-
+    handleMouseMoveOnGapJoiner(event: ToolEvent) {
+        // 乗っているギャップソケットを取得
+        let gap = this.layoutManager.getGapSocket(event.point);
+        if (this.isGapJoinerMode()) {
+            // ギャップソケット上かつ接続中でないならギャップ設置ガイドを表示する
+            if (gap && gap.gapState !== GapState.CONNECTED) {
+                this.showGapToPut(gap);
+            }
         }
-        return false;
     }
+
+    //==============================
+    // UIイベントハンドラ / マウス左クリック
+    //==============================
 
     /**
      * マウスクリック時のハンドラ
@@ -513,10 +572,15 @@ export class LayoutEditor {
                 return;
             }
         }
-
         // フィーダー上でマウス左クリックした時の処理
         if (this.isFeederMode()) {
             if (this.handleMouseDownLeftOnFeeder(event)) {
+                return;
+            }
+        }
+        // ギャップジョイナー上でマウス左クリックした時の処理
+        if (this.isGapJoinerMode()) {
+            if (this.handleMouseDownLeftOnGapJoiner(event)) {
                 return;
             }
         }
@@ -528,7 +592,6 @@ export class LayoutEditor {
             // event.item.selected = !event.item.selected; // 選択を反転
             return;
         }
-
         // フィーダーの選択状態をトグルする
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
         if (feederSocket) {
@@ -539,7 +602,6 @@ export class LayoutEditor {
         }
     }
 
-
     /**
      * ジョイント上でマウス左クリックした時の処理
      * @param {ToolEvent} event
@@ -548,7 +610,6 @@ export class LayoutEditor {
     handleMouseDownLeftOnJoint(event: ToolEvent) {
         let joint = this.getJoint(event.point);
         let isLayoutBlank = this.isLayoutBlank();
-
         // ジョイント結合・レール設置処理
         if (joint && joint.jointState !== JointState.CONNECTED) {
             this.putSelectedRail(joint)
@@ -561,6 +622,35 @@ export class LayoutEditor {
         return false;
     }
 
+    /**
+     * フィーダー上で左クリックした時の処理
+     * @param {ToolEvent} event
+     */
+    handleMouseDownLeftOnFeeder(event: ToolEvent) {
+        let feederSocket = this.layoutManager.getFeederSocket(event.point);
+        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
+            this.putFeeder(feederSocket);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * ギャップジョイナー上で左クリックした時の処理
+     * @param {ToolEvent} event
+     */
+    handleMouseDownLeftOnGapJoiner(event: ToolEvent) {
+        let gapSocket = this.layoutManager.getGapSocket(event.point);
+        if (gapSocket && gapSocket.gapState !== GapState.CONNECTED) {
+            this.putGap(gapSocket);
+            return true;
+        }
+        return false;
+    }
+
+    //==============================
+    // UIイベントハンドラ / マウス右クリック
+    //==============================
 
     /**
      * マウス右クリック時のハンドラ。以下の処理を行う。
@@ -606,11 +696,12 @@ export class LayoutEditor {
      */
     handleKeyDown(event: KeyEvent) {
         // 選択されたレールを取得する
+        let selectedItems = (<any>project).selectedItems;
         let selectedRails = (<any>project).selectedItems
             .map(item => this.layoutManager.getRailFromRailPartPath(item))
             .filter(Boolean);
         let selectedFeederSockets = (<any>project).selectedItems
-            .map(item => this.layoutManager.getFeederSocketFromPathGroup(item))
+            .map(item => this.layoutManager.getFeederSocketFromPath(item))
             .filter(Boolean);
         log.info("Selected rail: ", selectedRails);
         log.info("Selected feeder: ", selectedFeederSockets);
@@ -662,7 +753,7 @@ export class LayoutEditor {
             //     break;
         }
 
-        // log.info("Modifiers: ", this.modifierKeys);
+        project.deselectAll();
     }
 
     handleKeyUp(event) {

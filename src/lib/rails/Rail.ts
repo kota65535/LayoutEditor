@@ -8,6 +8,7 @@ import { PaletteItemType } from "../PaletteItem";
 import logger from "../../logging";
 import {Group, Point} from "paper";
 import {RailPart} from "./parts/RailPart";
+import {GapSocket} from "./parts/GapSocket";
 
 
 let log = logger("Rail");
@@ -28,6 +29,7 @@ export class Rail {
     railParts: RailPart[] = [];
     joints: Joint[] = [];
     feederSockets: FeederSocket[] = [];
+    gapSockets: GapSocket[] = [];
 
     startPoint: Point;
     angle: number;
@@ -50,7 +52,9 @@ export class Rail {
     set name(name: string) {
         this.pathGroup.name = name;
         this.railParts.forEach((part, i) => part.name = `${this.name}p${i}`);
-        this.feederSockets.forEach((part, i) => part.name = `${this.name}f${i}`);
+        this.joints.forEach((j, i) => j.name = `${this.name}j${i}`);
+        this.feederSockets.forEach((f, i) => f.name = `${this.name}f${i}`);
+        this.gapSockets.forEach((g, i) => g.name = `${this.name}g${i}`);
     }
 
     /**
@@ -99,12 +103,20 @@ export class Rail {
         }
 
         // フィーダーソケットの追加
+        // FIXME: 多分これだとレールパーツが複数で一部がフィーダーソケットを持たないときにバグる
         this.railParts.forEach(part => {
             if (part.hasFeederSocket()) {
                 let feederSocket = new FeederSocket(part);
                 this.feederSockets.push(feederSocket);
                 this.pathGroup.addChild(feederSocket.pathGroup)
             }
+        });
+
+        this.joints.forEach(j => {
+            let gapSocket = new GapSocket(j);
+            this.gapSockets.push(gapSocket);
+            this.pathGroup.addChild(gapSocket.pathGroup);
+            j.gapSocket = gapSocket;
         });
 
         railPart.rail = this;
@@ -136,6 +148,9 @@ export class Rail {
         });
         this.feederSockets.forEach( feeder => {
             feeder.moveRelatively(difference);
+        });
+        this.gapSockets.forEach( gap => {
+            gap.moveRelatively(difference);
         });
         this._updatePoints();
     }
@@ -170,6 +185,9 @@ export class Rail {
         })
         this.feederSockets.forEach( f => {
             f.rotateRelatively(angle, <Point>anchor);
+        })
+        this.gapSockets.forEach( g => {
+            g.rotateRelatively(angle, <Point>anchor);
         })
         this.angle += angle;
         this._updatePoints();
@@ -208,6 +226,7 @@ export class Rail {
         this.railParts.forEach(elem => elem.remove());
         this.joints.forEach(elem => elem.remove());
         this.feederSockets.forEach(elem => elem.remove());
+        this.gapSockets.forEach(elem => elem.remove());
     }
 
     /**
@@ -226,9 +245,10 @@ export class Rail {
      * @param {number} value
      */
     setOpacity(value) {
-        this.railParts.forEach(elem => elem.path.opacity = value);
-        this.joints.forEach(elem => elem.setOpacity(value));
-        this.feederSockets.forEach(elem => elem.path.opacity = value);
+        this.railParts.forEach(elem => elem.opacity = value);
+        this.joints.forEach(elem => elem.opacity = value);
+        this.feederSockets.forEach(elem => elem.opacity = value);
+        this.gapSockets.forEach(elem => elem.opacity = value);
     }
 
     /**
@@ -236,9 +256,10 @@ export class Rail {
      * @param {boolean} isVisible
      */
     setVisible(isVisible) {
-        this.railParts.forEach(elem => elem.path.visible = isVisible);
-        this.joints.forEach(elem => elem.setVisible(isVisible));
-        this.feederSockets.forEach(elem => elem.path.visible = isVisible);
+        this.railParts.forEach(elem => elem.visible = isVisible);
+        this.joints.forEach(elem => elem.visible = isVisible);
+        this.feederSockets.forEach(elem => elem.visible = isVisible);
+        this.gapSockets.forEach(elem => elem.visible = isVisible);
     }
 
     /**

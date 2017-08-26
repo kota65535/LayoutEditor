@@ -11,6 +11,10 @@ export abstract class MultiPartBase extends PartBase {
     set angle(angle: number) { this.parts[0].angle = this.parts[0].angle; }
     get position() { return this.parts[0].position; }
     set position(position: Point) { this.parts[0].position = this.parts[0].position; }
+    get visible(): boolean { return this.pathGroup.visible; }
+    set visible(isVisible: boolean) { this.pathGroup.visible = isVisible; }
+    get opacity(): number { return this.pathGroup.opacity; }
+    set opacity(value: number) { this.pathGroup.opacity = value; }
 
 
     constructor(position: Point, angle: number, parts: PartBase[]) {
@@ -30,10 +34,10 @@ export abstract class MultiPartBase extends PartBase {
         this.parts.forEach(part => part.moveRelatively(difference));
     }
 
-    // move(position: Point, anchor: Point) {
-    //     let difference = position.subtract(anchor);
-    //     this.moveRelatively(difference);
-    // }
+    move(position: Point, anchor: Point = this.position) {
+        let difference = position.subtract(anchor);
+        this.moveRelatively(difference);
+    }
 
     rotateRelatively(difference: number, anchor: Point = this.position) {
         this.parts.forEach(part => part.rotateRelatively(difference, anchor));
@@ -49,22 +53,6 @@ export abstract class MultiPartBase extends PartBase {
      */
     remove() {
         this.pathGroup.remove();
-    }
-
-    /**
-     * パスの可視・不可視を設定する。
-     * @param isVisible
-     */
-    setVisible(isVisible: boolean) {
-        this.pathGroup.visible = isVisible;
-    }
-
-    /**
-     * パスの透明度を設定する。
-     * @param value
-     */
-    setOpacity(value: number) {
-        this.pathGroup.opacity = value;
     }
 
     /**

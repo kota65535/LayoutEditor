@@ -25,6 +25,11 @@ export class Feeder extends TrianglePart {
         log.info(`Feeder @${this.feederSocket ? this.feederSocket.name : null}: visible=${this.visible}`);
     }
 
+    set state(state: FeederState) {
+        // フィーダーソケットの色に合わせるだけ
+        this.path.fillColor = this.feederSocket.fillColors[state];
+    }
+
     /**
      * フィーダーを指定のフィーダーソケットに作成する。
      * @param {FeederSocket} feederSocket
@@ -41,11 +46,6 @@ export class Feeder extends TrianglePart {
 
         // 有効化
         this.visible = true;
-        this.setState(feederSocket._feederState);
-    }
-
-    setState(state: FeederState) {
-        // フィーダーソケットの色に合わせるだけ
-        this.path.fillColor = this.feederSocket.fillColors[state];
+        this.state = feederSocket.feederState;
     }
 }

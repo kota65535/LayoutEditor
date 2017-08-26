@@ -4,18 +4,19 @@ export abstract class PartBase {
 
     protected _path: Path;
     protected _angle: number;
-    protected _position: Point;
 
-    get path() { return this._path; }
+    get path(): Path { return this._path; }
     set path(_path: Path) { this._path = _path; }
-    get position() { return this._position; }
-    set position(_position: Point) { this._position = _position; }
-    get angle() { return this._angle; }
+    get position(): Point { return this.path.position; }
+    set position(_position: Point) { this.path.position = _position; }
+    get angle(): number { return this._angle; }
     set angle(_angle: number) { this._angle = _angle; }
-    get name() { return this._path.name };
+    get name(): string { return this._path.name };
     set name(name: string) {  this._path.name = name };
-    get visible() { return this._path.visible; }
+    get visible(): boolean { return this._path.visible; }
     set visible(isVisible: boolean) { this._path.visible = isVisible; }
+    get opacity(): number { return this._path.opacity; }
+    set opacity(value: number) { this._path.opacity = value; }
 
 
     constructor() {
@@ -29,7 +30,6 @@ export abstract class PartBase {
      */
     moveRelatively(difference: Point) {
         this.path.position = this.path.position.add(difference);
-        this._position = this.path.position;
     }
 
     /**
@@ -67,22 +67,6 @@ export abstract class PartBase {
      */
     remove() {
         this.path.remove();
-    }
-
-    /**
-     * パスの可視・不可視を設定する。
-     * @param isVisible
-     */
-    setVisible(isVisible: boolean) {
-        this.path.visible = isVisible;
-    }
-
-    /**
-     * パスの透明度を設定する。
-     * @param value
-     */
-    setOpacity(value: number) {
-        this.path.opacity = value;
     }
 
     /**

@@ -7,7 +7,9 @@ import {CirclePart} from "./primitives/CirclePart";
 import {sprintf} from "sprintf-js";
 import logger from "../../../logging";
 import {DetectionState, DetectablePart} from "./primitives/DetectablePart";
-import {Point} from "paper";
+import {Path, Point} from "paper";
+import {Gap} from "./Gap";
+import {GapSocket} from "./GapSocket";
 
 let log = logger("Joint");
 
@@ -15,7 +17,6 @@ let log = logger("Joint");
  * ジョイントの状態。
  */
 export enum JointState {
-    DISABLED,           // 無効状態
     OPEN,               // 未接続
     CONNECTING_FROM,    // 接続試行中(こちらから)
     CONNECTING_TO,      // 接続試行中(相手から)
@@ -41,15 +42,17 @@ export class Joint extends DetectablePart {
     static FILL_COLOR_CONNECTED = "grey";
     static FILL_COLOR_CONNECTING = "deepskyblue";
     static FILL_COLOR_OPEN = "darkorange";
+    static SHRINKING_RATE = 0.7;
 
 
-    private _direction: JointDirection;
-    private _jointState: JointState;
+    private _direction: JointDirection;     // 接続方向
+    private _jointState: JointState;        // 接続状態
     connectedJoint: Joint | null;
 
     _currentScale: number;
     rail: any;
     rendered: false;
+    _gapSocket: GapSocket;
 
 
     // 主パーツはRectPartであることが分かっているのでキャストする
@@ -70,9 +73,13 @@ export class Joint extends DetectablePart {
         super.enabled = isEnabled;
         // 現在のジョイント接続状態を再設定しておく
         if (isEnabled) {
-            this.setState(this._jointState);
+            this.jointState = this._jointState;
         }
     }
+
+    get gapSocket(): GapSocket { return this._gapSocket; };
+    set gapSocket(gapSocket: GapSocket) { this._gapSocket = gapSocket; };
+
 
     /**
      * 接続方向の角度を取得する。
@@ -87,9 +94,9 @@ export class Joint extends DetectablePart {
         return this.basePart.angle;
     }
 
-    get jointState(): number {
-        return this._jointState;
-    }
+    // ジョイントの接続状態。外部から変更する必要は殆ど無い。
+    get jointState(): JointState { return this._jointState; }
+    set jointState(state: JointState) { this._setJointState(state); }
 
     /**
      * ジョイントを指定の位置・角度で作成する。
@@ -120,12 +127,28 @@ export class Joint extends DetectablePart {
         this._jointState = JointState.OPEN;
         this._currentScale = 1;
 
-        this.move(position);
+        this._gapSocket = null;
+
+        this.move(position, this.position);
         this.rotate(angle, this.position);
 
         // 最初は有効かつ未接続状態から開始
         this.enabled = true;
         this.disconnect();
+    }
+
+    // this.positionをオーバーライドしているので、これもオーバーライドする必要がある・・・
+    move(position: Point, anchor: Point = this.position): void {
+        super.move(position, anchor);
+    }
+
+    rotateRelatively(difference: number, anchor: Point = this.position) {
+        super.rotateRelatively(difference, anchor);
+    }
+
+    rotate(angle: number, anchor: Point = this.position) {
+        let relAngle = angle - this.parts[0].angle;
+        this.rotateRelatively(relAngle, anchor);
     }
 
     /**
@@ -137,11 +160,11 @@ export class Joint extends DetectablePart {
         this.connectedJoint = joint;
         joint.connectedJoint = this;
         if (isDryRun) {
-            this.setState(JointState.CONNECTING_FROM);
-            joint.setState(JointState.CONNECTING_TO);
+            this.jointState = JointState.CONNECTING_FROM;
+            joint.jointState = JointState.CONNECTING_TO;
         } else {
-            this.setState(JointState.CONNECTED);
-            joint.setState(JointState.CONNECTED);
+            this.jointState = JointState.CONNECTED;
+            joint.jointState = JointState.CONNECTED;
         }
     }
 
@@ -150,11 +173,15 @@ export class Joint extends DetectablePart {
      */
     disconnect() {
         if (this.connectedJoint) {
-            this.connectedJoint.setState(JointState.OPEN);
+            this.connectedJoint.jointState = JointState.OPEN;
             this.connectedJoint.connectedJoint = null;
         }
-        this.setState(JointState.OPEN);
+        this.jointState = JointState.OPEN;
         this.connectedJoint = null;
+    }
+
+    isConnected(): boolean {
+        return !!this.connectedJoint;
     }
 
     /**
@@ -170,22 +197,22 @@ export class Joint extends DetectablePart {
      * @param state
      * @private
      */
-    setState(state: JointState) {
+    private _setJointState(state: JointState) {
         switch(state) {
             case JointState.OPEN:
-                this.setDetectionState(DetectionState.BEFORE_DETECT);
+                this.detectionState = DetectionState.BEFORE_DETECT;
                 this.unshrink();
                 break;
             case JointState.CONNECTING_FROM:
-                this.setDetectionState(DetectionState.DETECTING);
+                this.detectionState = DetectionState.DETECTING;
                 this.unshrink();
                 break;
             case JointState.CONNECTING_TO:
-                this.setDetectionState(DetectionState.DETECTING);
+                this.detectionState = DetectionState.DETECTING;
                 this.unshrink();
                 break;
             case JointState.CONNECTED:
-                this.setDetectionState(DetectionState.AFTER_DETECT);
+                this.detectionState = DetectionState.AFTER_DETECT;
                 this.shrink();
                 break;
         }
@@ -195,27 +222,18 @@ export class Joint extends DetectablePart {
     }
 
     /**
-     * 本体への透明度設定を行う。
-     * 当たり判定の透明度は状態の混乱を招くので今の所は変更しない。
-     * @param {number} value
-     */
-    setOpacity(value: number) {
-        this.basePart.setOpacity(value);
-    }
-
-    /**
      * ジョイントに接続後、お互い接続方向に幅を縮める（合体するようなイメージ）
      */
     shrink() {
         if (this._currentScale === 1) {
-            this._scaleHorizontally(7/10);
-            this._currentScale = 7/10;
+            this._scaleHorizontally(Joint.SHRINKING_RATE);
+            this._currentScale = Joint.SHRINKING_RATE;
         }
     }
 
     unshrink() {
         if (this._currentScale !== 1) {
-            this._scaleHorizontally(10/7);
+            this._scaleHorizontally(1/Joint.SHRINKING_RATE);
             this._currentScale = 1;
         }
     }
@@ -223,11 +241,11 @@ export class Joint extends DetectablePart {
     /**
      * angle=0 時の水平方向に拡大・縮小する。
      */
-    _scaleHorizontally(value: number) {
+    private _scaleHorizontally(value: number) {
         let angle = this.basePart.angle;
-        this.basePart.rotate(0);
+        this.rotate(0, this.position);
         this.basePart.scale(value, 1, this.position);
-        this.basePart.rotate(angle);
+        this.rotate(angle, this.position);
     }
 
     showInfo() {

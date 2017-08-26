@@ -10,6 +10,7 @@ import logger from "../logging";
 import {Group, Path, Point} from "paper";
 import {Feeder} from "./rails/parts/Feeder";
 import {RailPart} from "./rails/parts/RailPart";
+import {GapSocket} from "./rails/parts/GapSocket";
 
 let log = logger("LayoutManager");
 
@@ -59,6 +60,7 @@ export class LayoutManager {
 
     rails: MyArray<Rail>;           // レイアウトを構成するレール
     feederSockets: FeederSocket[];  // フィーダーがささっているフィーダーソケット
+    gapSockets: GapSocket[];        // ギャップを
 
     _nextRailId: number;
 
@@ -72,10 +74,14 @@ export class LayoutManager {
     get allRailParts(): RailPart[] {
         return [].concat.apply([], this.rails.map( r => r.railParts));
     }
+    get allGapSockets(): GapSocket[] {
+        return [].concat.apply([], this.rails.map( r => r.gapSockets));
+    }
 
     constructor() {
         this.rails = new MyArray();
         this.feederSockets = [];
+        this.gapSockets = [];
         this._nextRailId = 0;
     }
 
@@ -323,6 +329,46 @@ export class LayoutManager {
         feederSocket.disconnect();
     }
 
+    //====================
+    // ギャップジョイナー設置系メソッド
+    //====================
+
+    getGapSocket(point: Point): GapSocket {
+        // レイアウト上の全てのギャップソケットを取得
+        let gapSockets = this.allGapSockets.find(socket =>
+            socket.pathGroup.hitTest(point) !== null
+        );
+        return gapSockets;
+    }
+
+    /**
+     * ギャップを設置する。
+     * @param {GapSocket} gapSocket
+     */
+    putGap(gapSocket: GapSocket) {
+        gapSocket.connect();
+        if (gapSocket.joint.isConnected()) {
+            gapSocket.joint.connectedJoint.gapSocket.connect();
+        }
+        // gapSocket.name = this._getNextGapSocketId();
+        this.gapSockets.push(gapSocket);
+    }
+
+    /**
+     * ギャップを削除する。
+     * @param {GapSocket} gapSocket
+     */
+    removeGap(gapSocket: GapSocket) {
+        let index = this.gapSockets.indexOf(gapSocket);
+        if(index !== -1) {
+            this.gapSockets.splice(index, 1);
+        }
+        gapSocket.disconnect();
+        if (gapSocket.joint.isConnected()) {
+            gapSocket.joint.connectedJoint.gapSocket.disconnect();
+        }
+    }
+
     /**
      * レール設置時に他のレールに重なっていないか確認する。
      * TODO: 判別条件がイケてないので修正
@@ -378,7 +424,6 @@ export class LayoutManager {
         })
     }
 
-
     /**
      * レールオブジェクトをレイアウトに登録する。
      * レールには一意のIDが割り当てられる。
@@ -401,11 +446,11 @@ export class LayoutManager {
 
 
     getRailFromRailPartPath(path: Path) {
-        let part = this.allRailParts.find(part => part.path.id === path.id)
+        let part = this.allRailParts.find(part => part.containsPath(path));
         return part ? part.rail : null;
     }
 
-    getFeederSocketFromPathGroup(pathGroup: Group) {
-        return this.allFeederSockets.find(fs => fs.pathGroup.id === pathGroup.id);
+    getFeederSocketFromPath(path: Path) {
+        return this.allFeederSockets.find(fs => fs.containsPath(path));
     }
 }
