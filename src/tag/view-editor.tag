@@ -44,15 +44,17 @@
                   {type: PaletteItemType.RAIL, id: "PR541_15", name: "PR541-15"},
                   {type: PaletteItemType.RAIL, id: "PL280_30", name: "PL280-30"},
                   {type: PaletteItemType.RAIL, id: "PR280_30", name: "PR280-30"},
-                  {type: PaletteItemType.RAIL, id: "PY280_15", name: "PY280-15"}
+                  {type: PaletteItemType.RAIL, id: "PY280_15", name: "PY280-15"},
+                  {type: PaletteItemType.RAIL, id: "CPR317_280_45", name: "CPR317/280-45"},
+                  {type: PaletteItemType.RAIL, id: "CPL317_280_45", name: "CPL317/280-45"}
               ]
           },
           {
               title: "Electric Parts",
               ref: "electric",
               items: [
-                  {type: PaletteItemType.FEEDER, name: "Feeder"},
-                  {type: PaletteItemType.GAP_JOINER, name: "Gap Joiner"}
+                  {type: PaletteItemType.FEEDER, id: "Feeder", name: "Feeder"},
+                  {type: PaletteItemType.GAP_JOINER, id: "Gap", name: "Gap Joiner"}
               ]
           }
       ];

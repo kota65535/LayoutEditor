@@ -1,7 +1,7 @@
 import { Rail } from "./rails/Rail";
 import { StraightRail, DoubleStraightRail, GappedStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
-import { SimpleTurnout, SymmetricalTurnout, Direction } from "./rails/Turnout";
+import { SimpleTurnout, SymmetricalTurnout, CurvedTurnout } from "./rails/Turnout";
 import { Point } from "paper";
 
 // Use ES6 Object Literal Property Value Shorthand to maintain a map
@@ -14,6 +14,7 @@ const classes = {
     DoubleCurveRail,
     SimpleTurnout,
     SymmetricalTurnout,
+    CurvedTurnout,
     Point
 };
 

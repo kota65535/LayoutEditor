@@ -3,7 +3,7 @@
  */
 import { StraightRail, DoubleStraightRail, GappedStraightRail } from "./rails/StraightRail";
 import { CurveRail, DoubleCurveRail } from "./rails/CurveRail";
-import { SimpleTurnout, SymmetricalTurnout, TurnoutDirection } from "./rails/Turnout";
+import {CurvedTurnout, SimpleTurnout, SymmetricalTurnout, TurnoutDirection} from "./rails/Turnout";
 import {Feeder} from "./rails/parts/Feeder";
 import {TrianglePart} from "./rails/parts/primitives/TrianglePart";
 import {PaletteItemType} from "./PaletteItem";
@@ -64,6 +64,15 @@ export class RailFactory {
     }
     PY280_15() {
         return new SymmetricalTurnout(DEFAULT_POSITION, 0, 280, 15);
+    }
+    PY280_15() {
+        return new SymmetricalTurnout(DEFAULT_POSITION, 0, 280, 15);
+    }
+    CPR317_280_45() {
+        return new CurvedTurnout(DEFAULT_POSITION, 0, 317, 280, 45, TurnoutDirection.RIGHT);
+    }
+    CPL317_280_45() {
+        return new CurvedTurnout(DEFAULT_POSITION, 0, 317, 280, 45, TurnoutDirection.LEFT);
     }
 
     Feeder() {

@@ -5,7 +5,7 @@
     <div class="col-sm-6 palette-item" each={ item in opts.items }>
       <button type="button" class="btn btn-primary btn-block" onClick={ handleItemClick.bind(this, item) }>
         <div class="item-icon">
-          <canvas class="button-canvas" id="{ parent.opts.ref }-{ item.name }-canvas"></canvas>
+          <canvas class="button-canvas" id="{ parent.opts.ref }-{ item.id }-canvas"></canvas>
         </div>
         <div class="item-title">{ item.name }</div>
       </button>
@@ -30,7 +30,7 @@
 
           // 各パレットアイテムのアイコン描画
           opts.items.forEach(item => {
-              let target = `${opts.ref}-${item.name}-canvas`;
+              let target = `${opts.ref}-${item.id}-canvas`;
               paper.setup(target);
               let canvas = $(`#${target}`);
 
