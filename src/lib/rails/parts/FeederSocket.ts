@@ -38,15 +38,13 @@ export class FeederSocket extends DetectablePart {
     static WIDTH = 6;
     static HEIGHT = 12;
     static HIT_RADIUS = 20;
-    static FILL_COLOR_CONNECTED = "forestgreen";
-    static FILL_COLOR_CONNECTING = "deepskyblue";
-    static FILL_COLOR_OPEN = "forestgreen";
+    static FILL_COLORS = ["limegreen", "deepskyblue", "limegreen"];
+    static OPACITIES = [0.2, 0.4];
 
     railPart: RailPart;             // 所属するレールパーツ
     connectedFeeder: Feeder;        // 接続されたフィーダーオブジェクト
     _flowDirection: FlowDirection;  // 電流方向
     _feederState: FeederState;      // フィーダー接続状態
-    _isEnabled: boolean;            // 操作有効・無効状態
 
     get flowDirection() { return this._flowDirection; }
     set flowDirection(flowDirection: FlowDirection) { this._flowDirection = flowDirection; }
@@ -62,9 +60,9 @@ export class FeederSocket extends DetectablePart {
             this._setFeederState(this._feederState);
         }
         // 接続されたフィーダーがあれば同じ状態に変更する
-        if (this.connectedFeeder) {
-            this.connectedFeeder.visible = isEnabled;
-        }
+        // if (this.connectedFeeder) {
+        //     this.connectedFeeder.visible = isEnabled;
+        // }
     }
 
     // 主パーツはRectPartであることが分かっているのでキャストする
@@ -98,10 +96,9 @@ export class FeederSocket extends DetectablePart {
     constructor(railPart: RailPart, direction: FlowDirection = FlowDirection.START_TO_END) {
         let angle = (railPart.startAngle + railPart.endAngle) / 2;
         let rect = new RectPart(railPart.middlePoint, angle,
-            FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLOR_OPEN);
-        let circle = new CirclePart(railPart.middlePoint, angle, FeederSocket.HIT_RADIUS, FeederSocket.FILL_COLOR_OPEN);
-        super(railPart.middlePoint, angle, rect, circle,
-            [FeederSocket.FILL_COLOR_OPEN, FeederSocket.FILL_COLOR_CONNECTING, FeederSocket.FILL_COLOR_CONNECTED]);
+            FeederSocket.WIDTH, FeederSocket.HEIGHT, FeederSocket.FILL_COLORS[0]);
+        let circle = new CirclePart(railPart.middlePoint, angle, FeederSocket.HIT_RADIUS, FeederSocket.FILL_COLORS[0]);
+        super(railPart.middlePoint, angle, rect, circle, FeederSocket.FILL_COLORS, FeederSocket.OPACITIES, false);
 
         this.railPart = railPart;
         this._flowDirection = direction;

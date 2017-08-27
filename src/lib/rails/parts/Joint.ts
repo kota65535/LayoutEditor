@@ -37,9 +37,8 @@ export class Joint extends DetectablePart {
     static WIDTH = 8;
     static HEIGHT = 16;
     static HIT_RADIUS = 20;
-    static FILL_COLOR_CONNECTED = "grey";
-    static FILL_COLOR_CONNECTING = "deepskyblue";
-    static FILL_COLOR_OPEN = "darkorange";
+    static FILL_COLORS = ["darkorange", "deepskyblue", "grey"];
+    static OPACITIES = [0.2, 0.4];
     static SHRINKING_RATE = 0.7;
 
 
@@ -104,7 +103,7 @@ export class Joint extends DetectablePart {
      * @param {Rail} rail ジョイントが属するレールオブジェクト
      */
     constructor(position: Point, angle: number, direction: JointDirection, rail: any) {
-        let rect = new RectPart(position, 0, Joint.WIDTH, Joint.HEIGHT, Joint.FILL_COLOR_OPEN);
+        let rect = new RectPart(position, 0, Joint.WIDTH, Joint.HEIGHT, Joint.FILL_COLORS[0]);
         let circlePosition = new Point(Joint.WIDTH/2, 0);
         switch (direction) {
             case JointDirection.SAME_TO_ANGLE:
@@ -114,8 +113,8 @@ export class Joint extends DetectablePart {
                 circlePosition = new Point(-Joint.WIDTH/2, 0);
                 break;
         }
-        let circle = new CirclePart(position.add(circlePosition), 0, Joint.HIT_RADIUS, Joint.FILL_COLOR_OPEN);
-        super(position, angle, rect, circle, [Joint.FILL_COLOR_OPEN, Joint.FILL_COLOR_CONNECTING, Joint.FILL_COLOR_CONNECTED]);
+        let circle = new CirclePart(position.add(circlePosition), 0, Joint.HIT_RADIUS, Joint.FILL_COLORS[0]);
+        super(position, angle, rect, circle, Joint.FILL_COLORS, Joint.OPACITIES, true);
 
 
         this._direction = direction;
@@ -247,6 +246,6 @@ export class Joint extends DetectablePart {
     }
 
     showInfo() {
-        log.debug(`Joint @${this.rail ? this.rail.name : null}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
+        log.debug(`Joint @${this.name}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
     }
 }

@@ -14,7 +14,7 @@ let log = logger("Gap");
 export class Gap extends RectPart {
 
     static WIDTH = 6;
-    static HEIGHT = 24;
+    static HEIGHT = 30;
 
     gapSocket: GapSocket;
 

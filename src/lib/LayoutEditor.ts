@@ -123,10 +123,10 @@ export class LayoutEditor {
     }
 
     /**
-     * ジョイナー設置モードに移行する。
+     * ギャップジョイナー設置モードに移行する。
      * @param {PaletteItem} paletteItem
      */
-    changeToJoinerMode(paletteItem: PaletteItem) {
+    changeToGapJoinerMode(paletteItem: PaletteItem) {
         log.info("Changed to gap mode...");
         // ジョイントを有効化、フィーダーソケットを無効化
         this.layoutManager.rails.forEach(rail => {
@@ -135,8 +135,9 @@ export class LayoutEditor {
         this.layoutManager.rails.forEach(rail => {
             rail.feederSockets.forEach(fs => fs.enabled = false);
         });
+        // 現在接続済みのジョイントに対してのみギャップを設置することができる
         this.layoutManager.rails.forEach(rail => {
-            rail.gapSockets.forEach(gs => gs.enabled = true);
+            rail.joints.filter(j => j.isConnected()).forEach(j => j.gapSocket.enabled = true);
         });
         log.info("Changed to gap mode.");
     }
@@ -160,7 +161,7 @@ export class LayoutEditor {
                 this.changeToFeederMode(paletteItem);
                 break;
             case PaletteItemType.GAP_JOINER:
-                this.changeToJoinerMode(paletteItem);
+                this.changeToGapJoinerMode(paletteItem);
                 break;
         }
         this.paletteItem = paletteItem;
@@ -561,26 +562,32 @@ export class LayoutEditor {
      */
     handleMouseDownLeft(event: ToolEvent) {
 
+        log.info("handleMouseDownLeft START----------");
+
         // 何もなければ何もしない
         if (!event.item) {
+            log.info("handleMouseDownLeft END by Nothing------------");
             return;
         }
 
         // ジョイント上でマウス左クリックした時の処理
         if (this.isRailMode()) {
             if (this.handleMouseDownLeftOnJoint(event)) {
+                log.info("handleMouseDownLeft END by Joint------------");
                 return;
             }
         }
         // フィーダー上でマウス左クリックした時の処理
         if (this.isFeederMode()) {
             if (this.handleMouseDownLeftOnFeeder(event)) {
+                log.info("handleMouseDownLeft END by Feeder------------");
                 return;
             }
         }
         // ギャップジョイナー上でマウス左クリックした時の処理
         if (this.isGapJoinerMode()) {
             if (this.handleMouseDownLeftOnGapJoiner(event)) {
+                log.info("handleMouseDownLeft END by Gap------------");
                 return;
             }
         }

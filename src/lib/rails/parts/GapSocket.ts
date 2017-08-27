@@ -34,9 +34,9 @@ export class GapSocket extends DetectablePart {
     static WIDTH = 6;
     static HEIGHT = 12;
     static HIT_RADIUS = 20;
-    static FILL_COLOR_CONNECTED = "red";
-    static FILL_COLOR_CONNECTING = "deepskyblue";
-    static FILL_COLOR_OPEN = "forestgreen";
+    static FILL_COLORS = ["red", "deepskyblue", "red"];
+    static OPACITIES = [0.1, 0.2];
+
 
     joint: Joint;             // 所属するジョイント
     connectedGap: Gap;        // 接続されたギャップオブジェクト
@@ -53,9 +53,9 @@ export class GapSocket extends DetectablePart {
             this._setGapState(this._gapState);
         }
         // 接続されたギャップがあれば同じ状態に変更する
-        if (this.connectedGap) {
-            this.connectedGap.visible = isEnabled;
-        }
+        // if (this.connectedGap) {
+        //     this.connectedGap.visible = isEnabled;
+        // }
     }
 
     // 主パーツはRectPartであることが分かっているのでキャストする
@@ -68,9 +68,8 @@ export class GapSocket extends DetectablePart {
      */
     constructor(joint: Joint) {
         let base = new CirclePart(joint.position, 0, 5, 'black');
-        let detection = new CirclePart(joint.position, 0, GapSocket.HIT_RADIUS, GapSocket.FILL_COLOR_OPEN);
-        super(joint.position, joint.angle, base, detection,
-            [GapSocket.FILL_COLOR_OPEN, GapSocket.FILL_COLOR_CONNECTING, GapSocket.FILL_COLOR_CONNECTED]);
+        let detection = new CirclePart(joint.position, 0, GapSocket.HIT_RADIUS, GapSocket.FILL_COLORS[0]);
+        super(joint.position, joint.angle, base, detection, GapSocket.FILL_COLORS, GapSocket.OPACITIES, false);
 
         this.joint = joint;
         this.connectedGap = null;
