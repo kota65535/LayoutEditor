@@ -7,6 +7,7 @@ import logger from "../../../logging";
 import {DetectablePart, DetectionState} from "./primitives/DetectablePart";
 import {CirclePart} from "./primitives/CirclePart";
 import {RailPart} from "./RailPart";
+import {Path} from "paper";
 
 let log = logger("FeederSocket");
 
@@ -149,18 +150,34 @@ export class FeederSocket extends DetectablePart {
      * このソケットからフィーダーを削除する。
      */
     disconnect() {
+        if (! this.isConnected()) {
+            return;
+        }
         this.connectedFeeder.remove();
         this._setFeederState(FeederState.OPEN);
         this.connectedFeeder = null;
     }
 
-
     /**
-     *
+     * フィーダーが接続されているか否かを返す。
      * @returns {boolean}
      */
-    isConnected() {
+    isConnected(): boolean {
         return !!this.connectedFeeder;
+    }
+
+    /**
+     * 指定のパスを含むか否かを返す。
+     * ソケットにフィーダーが接続されている場合、フィーダーにも含まれているか調べる。
+     * @param {"paper".Path} path
+     * @returns {boolean}
+     */
+    containsPath(path: Path): boolean {
+        if (this.isConnected()) {
+            return super.containsPath(path) || this.connectedFeeder.containsPath(path);
+        } else {
+            return super.containsPath(path);
+        }
     }
 
 

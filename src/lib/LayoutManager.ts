@@ -35,6 +35,7 @@ export interface LayoutData {
     nextRailId: number,
     rails: RailData[],
     feeders: FeederData[],
+    gaps: GapData[]
 }
 
 export interface RailData {
@@ -45,6 +46,10 @@ export interface RailData {
 export interface FeederData {
     name: string,
     direction: FlowDirection
+}
+
+export interface GapData {
+    name: string
 }
 
 
@@ -96,6 +101,8 @@ export class LayoutManager {
         this.rails = new MyArray();
         this.feederSockets.forEach(f => f.remove());
         this.feederSockets = [];
+        this.gapSockets.forEach(g => g.remove());
+        this.gapSockets = [];
     }
 
     /**
@@ -107,16 +114,9 @@ export class LayoutManager {
         this.destroyLayout();
         if (!layoutData) return;
 
-        this._nextRailId = layoutData.nextRailId;
+        this.showLayoutInfo(layoutData);
 
-        log.info("START Loading layout --------------------")
-        layoutData.rails.forEach(rail => {
-            log.info(`${rail.name}: ${rail.data}`)
-        });
-        layoutData.feeders.forEach(feeder => {
-            log.info(`${feeder.name}: direction: ${feeder.direction}`)
-        });
-        log.info("END Loading layout --------------------")
+        this._nextRailId = layoutData.nextRailId;
 
         if (layoutData.rails) {
             layoutData.rails.forEach( entry => {
@@ -140,6 +140,15 @@ export class LayoutManager {
                 this.feederSockets.push(feederSocket);
             })
         }
+
+        if (layoutData.gaps) {
+            layoutData.gaps.forEach( entry => {
+                let gapSocket = this.allGapSockets.find(fs => fs.name === entry.name);
+                gapSocket.enabled = true;
+                gapSocket.connect();
+                this.gapSockets.push(gapSocket);
+            })
+        }
     }
 
     /**
@@ -160,19 +169,30 @@ export class LayoutManager {
                     name: feeder.name,
                     direction: feeder.flowDirection
                 }
+            }),
+            gaps: this.gapSockets.map(gap => {
+                return {
+                    name: gap.name
+                }
             })
         };
+        this.showLayoutInfo(layoutData);
 
-        log.info("START Loading layout --------------------")
+        return layoutData;
+    }
+
+    showLayoutInfo(layoutData: LayoutData) {
+        log.info("showLayoutInfo START--------------------")
         layoutData.rails.forEach(rail => {
             log.info(`${rail.name}: ${rail.data}`)
         });
         layoutData.feeders.forEach(feeder => {
             log.info(`${feeder.name}: direction: ${feeder.direction}`)
         });
-        log.info("END Loading layout --------------------")
-
-        return layoutData;
+        layoutData.gaps.forEach(gap => {
+            log.info(`${gap.name}: `)
+        });
+        log.info("showLayoutInfo END--------------------")
     }
 
     //====================
@@ -355,15 +375,17 @@ export class LayoutManager {
 
     /**
      * ギャップを設置する。
+     * ジョイントが接続済みの場合、対向ジョイントのギャップも設置する。
      * @param {GapSocket} gapSocket
      */
     putGap(gapSocket: GapSocket) {
         gapSocket.connect();
-        if (gapSocket.joint.isConnected()) {
-            gapSocket.joint.connectedJoint.gapSocket.connect();
-        }
-        // gapSocket.name = this._getNextGapSocketId();
         this.gapSockets.push(gapSocket);
+        if (gapSocket.joint.isConnected()) {
+            let opponentGap = gapSocket.joint.connectedJoint.gapSocket;
+            opponentGap.connect();
+            this.gapSockets.push(opponentGap);
+        }
     }
 
     /**
@@ -466,5 +488,9 @@ export class LayoutManager {
 
     getFeederSocketFromPath(path: Path) {
         return this.allFeederSockets.find(fs => fs.containsPath(path));
+    }
+
+    getGapSocketFromPath(path: Path) {
+        return this.allGapSockets.find(gs => gs.containsPath(path));
     }
 }

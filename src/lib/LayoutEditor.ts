@@ -570,42 +570,30 @@ export class LayoutEditor {
             return;
         }
 
-        // ジョイント上でマウス左クリックした時の処理
+        // ジョイント・レールパーツをクリックした時の処理
         if (this.isRailMode()) {
+            // ジョイントの処理を優先
             if (this.handleMouseDownLeftOnJoint(event)) {
                 log.info("handleMouseDownLeft END by Joint------------");
                 return;
             }
+            // レールパーツの処理
+            this.handleMouseDownLeftOnRailPart(event);
+            log.info("handleMouseDownLeft END by RailPart------------");
         }
-        // フィーダー上でマウス左クリックした時の処理
+
+        // フィーダーをクリックした時の処理
         if (this.isFeederMode()) {
             if (this.handleMouseDownLeftOnFeeder(event)) {
                 log.info("handleMouseDownLeft END by Feeder------------");
-                return;
-            }
-        }
-        // ギャップジョイナー上でマウス左クリックした時の処理
-        if (this.isGapJoinerMode()) {
-            if (this.handleMouseDownLeftOnGapJoiner(event)) {
-                log.info("handleMouseDownLeft END by Gap------------");
-                return;
             }
         }
 
-        // レールの選択状態をトグルする
-        let railPart = this.layoutManager.getRailPart(event.point);
-        if (railPart) {
-            railPart.path.selected = !railPart.path.selected;
-            // event.item.selected = !event.item.selected; // 選択を反転
-            return;
-        }
-        // フィーダーの選択状態をトグルする
-        let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket) {
-            feederSocket.basePart.path.selected = !feederSocket.basePart.path.selected;
-            feederSocket.connectedFeeder.path.selected = !feederSocket.connectedFeeder.path.selected;
-            // event.item.selected = !event.item.selected; // 選択を反転
-            return;
+        // ギャップジョイナーをクリックした時の処理
+        if (this.isGapJoinerMode()) {
+            if (this.handleMouseDownLeftOnGapJoiner(event)) {
+                log.info("handleMouseDownLeft END by Gap------------");
+            }
         }
     }
 
@@ -616,43 +604,68 @@ export class LayoutEditor {
      */
     handleMouseDownLeftOnJoint(event: ToolEvent) {
         let joint = this.getJoint(event.point);
-        let isLayoutBlank = this.isLayoutBlank();
-        // ジョイント結合・レール設置処理
-        if (joint && joint.jointState !== JointState.CONNECTED) {
+        if (! joint) {
+            return false;
+        }
+        // 未接続ならジョイント結合・レール設置処理
+        if (joint.jointState !== JointState.CONNECTED) {
+            let isLayoutBlank = this.isLayoutBlank();
             this.putSelectedRail(joint)
             // レイアウトが空だったらグリッドジョイントを削除する
             if (isLayoutBlank) {
                 this.removeGridJoints();
             }
-            return true;
         }
-        return false;
+        return true;
+    }
+
+    handleMouseDownLeftOnRailPart(event: ToolEvent) {
+        let railPart = this.layoutManager.getRailPart(event.point);
+        if (! railPart) {
+            return false
+        }
+        // レールの選択状態をトグルする
+        railPart.path.selected = !railPart.path.selected;
+        // event.item.selected = !event.item.selected; // 選択を反転
+        return;
     }
 
     /**
      * フィーダー上で左クリックした時の処理
      * @param {ToolEvent} event
      */
-    handleMouseDownLeftOnFeeder(event: ToolEvent) {
+    handleMouseDownLeftOnFeeder(event: ToolEvent): boolean {
         let feederSocket = this.layoutManager.getFeederSocket(event.point);
-        if (feederSocket && feederSocket.feederState !== FeederState.CONNECTED) {
-            this.putFeeder(feederSocket);
-            return true;
+        if (! feederSocket) {
+            return false;
         }
-        return false;
+        // 未接続ならフィーダー接続処理、接続済みなら選択処理
+        if (feederSocket.feederState !== FeederState.CONNECTED) {
+            this.putFeeder(feederSocket);
+        } else {
+            feederSocket.basePart.path.selected = !feederSocket.basePart.path.selected;
+            feederSocket.connectedFeeder.path.selected = !feederSocket.connectedFeeder.path.selected;
+        }
+        return true;
     }
 
     /**
      * ギャップジョイナー上で左クリックした時の処理
      * @param {ToolEvent} event
      */
-    handleMouseDownLeftOnGapJoiner(event: ToolEvent) {
+    handleMouseDownLeftOnGapJoiner(event: ToolEvent): boolean {
         let gapSocket = this.layoutManager.getGapSocket(event.point);
-        if (gapSocket && gapSocket.gapState !== GapState.CONNECTED) {
-            this.putGap(gapSocket);
-            return true;
+        if (! gapSocket) {
+            return false;
         }
-        return false;
+        // 未接続ならギャップ接続処理、接続済みなら選択処理
+        if (gapSocket.gapState !== GapState.CONNECTED) {
+            this.putGap(gapSocket);
+        } else {
+            gapSocket.basePart.path.selected = !gapSocket.basePart.path.selected;
+            gapSocket.connectedGap.path.selected = !gapSocket.connectedGap.path.selected;
+        }
+        return true;
     }
 
     //==============================
@@ -702,20 +715,28 @@ export class LayoutEditor {
      * @param {KeyEvent} event
      */
     handleKeyDown(event: KeyEvent) {
-        // 選択されたレールを取得する
         let selectedItems = (<any>project).selectedItems;
+        // 選択されたレールを取得
         let selectedRails = (<any>project).selectedItems
             .map(item => this.layoutManager.getRailFromRailPartPath(item))
             .filter(Boolean);
+        // 選択されたフィーダーを取得
         let selectedFeederSockets = (<any>project).selectedItems
             .map(item => this.layoutManager.getFeederSocketFromPath(item))
             .filter(Boolean);
+        // 選択されたギャップを取得
+        let selectedGapSockets = (<any>project).selectedItems
+            .map(item => this.layoutManager.getGapSocketFromPath(item))
+            .filter(Boolean);
+
         log.info("Selected rail: ", selectedRails);
         log.info("Selected feeder: ", selectedFeederSockets);
+        log.info("Selected gap: ", selectedGapSockets);
         switch (event.key) {
             case "backspace":
                 selectedRails.forEach(r => this.layoutManager.removeRail(r));
                 selectedFeederSockets.forEach(f => this.layoutManager.removeFeeder(f));
+                selectedGapSockets.forEach(g => this.layoutManager.removeGap(g));
                 break;
             // case "space":
             //     // 全てのレールを未チェック状態にする

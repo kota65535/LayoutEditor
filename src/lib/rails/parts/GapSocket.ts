@@ -7,6 +7,7 @@ import {DetectablePart, DetectionState} from "./primitives/DetectablePart";
 import {CirclePart} from "./primitives/CirclePart";
 import {Gap} from "./Gap";
 import {Joint} from "./Joint";
+import {Path} from "paper";
 
 let log = logger("GapSocket");
 
@@ -103,22 +104,35 @@ export class GapSocket extends DetectablePart {
      * このソケットからギャップを削除する。
      */
     disconnect() {
-        if (this.isConnected()) {
-            this.connectedGap.remove();
-            this._setGapState(GapState.OPEN);
-            this.connectedGap = null;
+        if (! this.isConnected()) {
+            return;
         }
+        this.connectedGap.remove();
+        this._setGapState(GapState.OPEN);
+        this.connectedGap = null;
     }
 
-
     /**
-     *
+     * ギャップが接続されているか否かを返す。
      * @returns {boolean}
      */
-    isConnected() {
+    isConnected(): boolean {
         return !!this.connectedGap;
     }
 
+    /**
+     * 指定のパスを含むか否かを返す。
+     * ソケットにギャップが接続されている場合、ギャップにも含まれているか調べる。
+     * @param {"paper".Path} path
+     * @returns {boolean}
+     */
+    containsPath(path: Path): boolean {
+        if (this.isConnected()) {
+            return super.containsPath(path) || this.connectedGap.containsPath(path);
+        } else {
+            return super.containsPath(path);
+        }
+    }
 
     private _setGapState(gapState: GapState) {
         if (this._enabled) {
