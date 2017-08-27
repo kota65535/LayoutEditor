@@ -742,11 +742,11 @@ export class LayoutEditor {
             //     // 全てのレールを未チェック状態にする
             //     this.layoutSimulator.resetFlowSimulation();
             //     break;
-            // case "f":
-            //     this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feederSockets);
-            //     this.layoutSimulator.resetFlowSimulation();
-            //     this.layoutSimulator.simulateFlow();
-            //     break;
+            case "f":
+                this.layoutSimulator.init(this.layoutManager.rails, this.layoutManager.feederSockets, this.layoutManager.gapSockets);
+                this.layoutSimulator.resetFlowSimulation();
+                this.layoutSimulator.simulateAllFeeders();
+                break;
             // case "s":
             //     selectedRails.forEach(r => r.toggleSwitch());
             //     this.layoutSimulator.resetFlowSimulation();

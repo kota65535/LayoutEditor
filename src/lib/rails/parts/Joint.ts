@@ -8,6 +8,7 @@ import logger from "../../../logging";
 import {DetectionState, DetectablePart} from "./primitives/DetectablePart";
 import {Point} from "paper";
 import {GapSocket} from "./GapSocket";
+import {Rail} from "../Rail";
 
 let log = logger("Joint");
 
@@ -47,7 +48,7 @@ export class Joint extends DetectablePart {
     connectedJoint: Joint | null;
 
     _currentScale: number;
-    rail: any;
+    rail: Rail;
     rendered: false;
     _gapSocket: GapSocket;
 

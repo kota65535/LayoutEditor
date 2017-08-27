@@ -31,7 +31,6 @@ export class Rail {
     feederSockets: FeederSocket[] = [];
     gapSockets: GapSocket[] = [];
 
-    startPoint: Point;
     angle: number;
 
     pathGroup: Group = new Group();
@@ -57,6 +56,9 @@ export class Rail {
         this.gapSockets.forEach((g, i) => g.name = `${this.name}g${i}`);
     }
 
+    get startPoint(): Point { return this.railParts[0].startPoint; }
+
+
     /**
      * レールの初期化。基底クラスでは特に重要な処理は行わない。
      * 子クラスではここでレールパーツの追加と移動・回転を行う。
@@ -67,7 +69,6 @@ export class Rail {
      * @param {string} name
      */
     constructor(startPoint: Point, angle: number, railParts: RailPart[], name: string) {
-        this.startPoint = startPoint;
         this.angle = angle;
 
         railParts.forEach((part, i) => this._addRailPart(part, i));
@@ -89,34 +90,35 @@ export class Rail {
      * @param {number} index
      */
     private _addRailPart(railPart: RailPart, index: number) {
-        this.railParts.push(railPart);
         // レールパーツは最も下に描画
         // this.pathGroup.insertChild(0, railPart.path);
 
         // 重複が無いか確認してからジョイントを追加する
-        if ( ! this._isJointDuplicate(railPart.startPoint) ) {
-            let startJoint = new Joint(railPart.startPoint, railPart.startAngle, JointDirection.REVERSE_TO_ANGLE, this);
+        let startJoint = this._getJointAt(railPart.startPoint);
+        if (! startJoint) {
+            startJoint = new Joint(railPart.startPoint, railPart.startAngle, JointDirection.REVERSE_TO_ANGLE, this);
             this.joints.push(startJoint);
-            // ジョイントは常にレールパーツの上に描画
-            // startJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
-            // this.pathGroup.addChild(startJoint.pathGroup);
         }
-        if ( ! this._isJointDuplicate(railPart.endPoint) ) {
-            let endJoint = new Joint(railPart.endPoint, railPart.endAngle, JointDirection.SAME_TO_ANGLE, this);
+        railPart.joints.push(startJoint);
+
+
+        let endJoint = this._getJointAt(railPart.endPoint);
+        if (! endJoint) {
+            endJoint = new Joint(railPart.endPoint, railPart.endAngle, JointDirection.SAME_TO_ANGLE, this);
             this.joints.push(endJoint);
-            // this.pathGroup.addChild(endJoint.pathGroup);
-            // endJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
         }
+        railPart.joints.push(endJoint);
 
         // 各レールパーツにフィーダーソケットの追加
         // FIXME: 多分これだとレールパーツが複数で一部がフィーダーソケットを持たないときにバグる
         if (railPart.hasFeederSocket()) {
             let feederSocket = new FeederSocket(railPart);
+            railPart.feederSocket = feederSocket;
             this.feederSockets.push(feederSocket);
-            // this.pathGroup.addChild(feederSocket.pathGroup)
         }
 
         railPart.rail = this;
+        this.railParts.push(railPart);
     }
 
     /**
@@ -149,7 +151,6 @@ export class Rail {
         this.gapSockets.forEach( gap => {
             gap.moveRelatively(difference);
         });
-        this._updatePoints();
     }
 
     /**
@@ -187,7 +188,6 @@ export class Rail {
             g.rotateRelatively(angle, <Point>anchor);
         })
         this.angle += angle;
-        this._updatePoints();
     }
 
     /**
@@ -290,7 +290,6 @@ export class Rail {
         this.conductionState = state;
     }
 
-
     /**
      * レールパーツの両端のジョイントを取得する。開始点、終了点の順に取得される。
      * @param {RailPart} railPart
@@ -306,41 +305,25 @@ export class Rail {
         }
     }
 
-    getFeederSocketFromRailPart(railPart) {
-        return this.feederSockets.find(fs => fs.railPart === railPart);
-    }
-
-
-
     /**
      * 現在の導電状態で導電しているレールパーツを取得する。
      * @returns {Array<RailPart>}
      */
-    getConductiveRailParts() {
+    getConductiveRailParts(): RailPart[] {
         return this.conductionMap[this.conductionState].map( index => this.railParts[index])
     }
 
     /**
      * 現在の導電状態で導電しており、かつ指定のジョイントに接しているレールパーツを取得する。
-     * @param {Joint}joint
+     * @param {Joint} joint
      * @returns {RailPart}
      */
-    getConductiveRailPartOfJoint(joint) {
+    getConductiveRailPartOfJoint(joint: Joint): RailPart {
         let ret = this.getConductiveRailParts().find(part => {
-            return joint.getPosition().isClose(part.startPoint, 0.1) || joint.position.isClose(part.endPoint, 0.1);
+            return joint.position.isClose(part.startPoint, 0.1) || joint.position.isClose(part.endPoint, 0.1);
         });
         return ret;
     }
-
-
-    /**
-     * 内部情報を更新する。開始点のみ。
-     * @private
-     */
-    _updatePoints() {
-        this.startPoint = this.railParts[0].startPoint;
-    }
-
 
     /**
      * レール全体のバウンディングボックスを取得する。パレット用。
@@ -364,19 +347,14 @@ export class Rail {
     }
 
 
-    getItemType() {
-        return PaletteItemType.RAIL;
-    }
-
     /**
      * 与えられた座標にジョイントが存在するか否かを返す。
      * @param {Point} point
      * @returns {boolean}
      * @private
      */
-    private _isJointDuplicate(point: Point) {
-        let duplicates = this.joints.filter( jo => jo.position.isClose(point, 0.1));
-        return duplicates.length > 0;
+    private _getJointAt(point: Point): Joint {
+        return this.joints.find( jo => jo.position.isClose(point, 0.1));
     }
 
     /**

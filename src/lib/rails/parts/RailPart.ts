@@ -7,6 +7,8 @@ import logger from "../../../logging";
 import {IGradientColor, Path, Point} from "paper";
 import {PartBase} from "./primitives/PartBase";
 import {Rail} from "../Rail";
+import {Joint} from "./Joint";
+import {Feeder} from "./Feeder";
 
 let log = logger("RailPart");
 
@@ -40,6 +42,10 @@ export class RailPart extends PartBase {
     _flowDirection: FlowDirection;  // 電流方向
 
     _rail: Rail;
+
+    // 後から設定される
+    joints: Joint[];
+    feederSocket: FeederSocket;
 
 
     /**
@@ -88,6 +94,13 @@ export class RailPart extends PartBase {
     get rail(): Rail { return this._rail; }
     set rail(rail: Rail) { this._rail = rail; }
 
+    /**
+     * シミュレーションされたか否か
+     * @returns {boolean}
+     */
+    get simulated(): boolean { return this._isSimulated; }
+    set simulated(isSimulated: boolean) { this._isSimulated = isSimulated; }
+
 
     /**
      * レールパーツの初期化。基底クラスでは特に重要な処理は行わない。
@@ -102,6 +115,8 @@ export class RailPart extends PartBase {
         this._hasFeederSocket = hasFeederSocket;
         this._isSimulated = false;
         this._flowDirection = FlowDirection.NONE;
+        this.joints = [];
+        this.feederSocket = null;
     }
 
     /**
@@ -143,14 +158,6 @@ export class RailPart extends PartBase {
         return this._hasFeederSocket;
     }
 
-    isSimulated() {
-        return this._isSimulated;
-    }
-
-    setSimulated(isSimulated) {
-        this._isSimulated = isSimulated;
-    }
-
 
     /**
      * 電流のアニメーションを行う。
@@ -169,12 +176,12 @@ export class RailPart extends PartBase {
             case FlowDirection.START_TO_END:
                 currentOrigin = this.startPoint.multiply(2 - ratio).add(this.endPoint.multiply(ratio - 1));
                 currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
-                log.debug("S to E : ", currentOrigin, "=>", currentDestination);
+                // log.debug("S to E : ", currentOrigin, "=>", currentDestination);
                 break;
             case FlowDirection.END_TO_START:
                 currentOrigin = this.startPoint.multiply(ratio + 1).add(this.endPoint.multiply(-ratio));
                 currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
-                log.debug("E to S : ", currentOrigin, "=>", currentDestination);
+                // log.debug("E to S : ", currentOrigin, "=>", currentDestination);
                 break;
         }
 
