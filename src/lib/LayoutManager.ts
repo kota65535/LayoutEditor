@@ -8,7 +8,6 @@ import { cloneRail, serialize, deserialize } from "./RailUtil";
 import {hitTest, hitTestAll} from "./utils";
 import logger from "../logging";
 import {Group, Path, Point} from "paper";
-import {Feeder} from "./rails/parts/Feeder";
 import {RailPart} from "./rails/parts/RailPart";
 import {GapSocket} from "./rails/parts/GapSocket";
 
@@ -294,18 +293,18 @@ export class LayoutManager {
      * @return {FeederSocket} feederSocket at the point
      */
     getFeederSocket(point: Point): FeederSocket {
-        // レイアウト上の全てのフィーダーソケットを取得
-        let allFeederSockets = [].concat.apply([], this.rails.map( r => r.feederSockets));
-
-        let feederSocket = allFeederSockets.find(socket =>
-            socket.pathGroup.hitTest(point) !== null
+        let hitResults = hitTestAll(point);
+        if (!hitResults) {
+            return null;
+        }
+        let matchedFeederSockets = this.allFeederSockets.filter( fs =>
+            hitResults.map(result => fs.containsPath(result.item)).includes(true)
         );
-
-        log.info(feederSocket);
-
+        log.debug(`${matchedFeederSockets.length} FeederSockets found.`)
+        // 最も近い位置にあるフィーダーソケットを選択
+        let feederSocket = matchedFeederSockets.sort( (a, b) => a.position.getDistance(point) - b.position.getDistance(point))[0];
         return feederSocket;
     }
-
 
     /**
      * フィーダーを設置する。
@@ -333,12 +332,25 @@ export class LayoutManager {
     // ギャップジョイナー設置系メソッド
     //====================
 
+    /**
+     * 指定の位置にあるフィーダーソケットオブジェクトを取得する。
+     * フィーダーが挿さっている場合はこれも検出の対象になる。
+     * @param {Point} point
+     * @return {FeederSocket} feederSocket at the point
+     */
     getGapSocket(point: Point): GapSocket {
-        // レイアウト上の全てのギャップソケットを取得
-        let gapSockets = this.allGapSockets.find(socket =>
-            socket.pathGroup.hitTest(point) !== null
+        let hitResults = hitTestAll(point);
+        if (!hitResults) {
+            return null;
+        }
+        let matchedGapSockets = this.allGapSockets.filter( fs =>
+            hitResults.map(result => fs.containsPath(result.item)).includes(true)
         );
-        return gapSockets;
+        log.debug(`${matchedGapSockets.length} GapSockets found.`);
+        matchedGapSockets.forEach(gs => gs.showInfo());
+        // 最も近い位置にあるギャップソケットを選択
+        let gapSocket = matchedGapSockets.sort( (a, b) => a.position.getDistance(point) - b.position.getDistance(point))[0];
+        return gapSocket;
     }
 
     /**
@@ -368,6 +380,8 @@ export class LayoutManager {
             gapSocket.joint.connectedJoint.gapSocket.disconnect();
         }
     }
+
+
 
     /**
      * レール設置時に他のレールに重なっていないか確認する。

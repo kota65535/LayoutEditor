@@ -4,11 +4,9 @@
 
 import {RectPart} from "./primitives/RectPart";
 import {CirclePart} from "./primitives/CirclePart";
-import {sprintf} from "sprintf-js";
 import logger from "../../../logging";
 import {DetectionState, DetectablePart} from "./primitives/DetectablePart";
-import {Path, Point} from "paper";
-import {Gap} from "./Gap";
+import {Point} from "paper";
 import {GapSocket} from "./GapSocket";
 
 let log = logger("Joint");
@@ -218,7 +216,7 @@ export class Joint extends DetectablePart {
         }
         this._jointState = state;
 
-        log.debug(`Joint @${this.rail ? this.rail.name : null}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
+        this.showInfo();
     }
 
     /**
@@ -249,7 +247,6 @@ export class Joint extends DetectablePart {
     }
 
     showInfo() {
-        log.debug(sprintf("joint: (%.3f, %.3f) | angle: %.3f, dir: %.3f",
-            this.position.x, this.position.y, this.angle, this.direction));
+        log.debug(`Joint @${this.rail ? this.rail.name : null}: enabled=${this.enabled}, state=${this._jointState}, detect=${this.detectionState}`)
     }
 }

@@ -70,8 +70,8 @@ export class FeederSocket extends DetectablePart {
     // 主パーツはRectPartであることが分かっているのでキャストする
     get basePart(): RectPart { return <RectPart>this.parts[0]; }
 
-    get position() {
-        // フィーダーの接続点として使われるため、電流方向によって変化する
+    // フィーダー(Feederオブジェクトそのもの)の接続点
+    get feederPosition() {
         switch(this._flowDirection) {
             case FlowDirection.START_TO_END:
                 return this.basePart.getCenterOfBottom();
@@ -186,6 +186,11 @@ export class FeederSocket extends DetectablePart {
             }
             this._feederState = feederState;
         }
-        log.info(`FeederSocket @${this.railPart.name}: enabled=${this.enabled}, state=${this.feederState}, detect=${this.detectionState}`)
+
+        this.showInfo();
+    }
+
+    showInfo() {
+        log.debug(`FeederSocket @${this.railPart.name}: enabled=${this.enabled}, state=${this.feederState}, detect=${this.detectionState}`)
     }
 }

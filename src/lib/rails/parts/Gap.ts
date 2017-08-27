@@ -21,7 +21,7 @@ export class Gap extends RectPart {
     get visible() { return super.visible; }
     set visible(isVisible: boolean) {
         super.visible = isVisible;
-        log.info(`Gap @${this.gapSocket ? this.gapSocket.name : null}: visible=${this.visible}`);
+        log.debug(`Gap @${this.gapSocket ? this.gapSocket.name : null}: visible=${this.visible}`);
     }
 
     set state(state: GapState) {

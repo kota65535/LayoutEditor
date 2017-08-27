@@ -22,7 +22,7 @@ export class Feeder extends TrianglePart {
     get visible() { return super.visible; }
     set visible(isVisible: boolean) {
         super.visible = isVisible;
-        log.info(`Feeder @${this.feederSocket ? this.feederSocket.name : null}: visible=${this.visible}`);
+        log.debug(`Feeder @${this.feederSocket ? this.feederSocket.name : null}: visible=${this.visible}`);
     }
 
     set state(state: FeederState) {
@@ -35,14 +35,14 @@ export class Feeder extends TrianglePart {
      * @param {FeederSocket} feederSocket
      */
     constructor(feederSocket: FeederSocket) {
-        super(feederSocket.position, feederSocket.angle, Feeder.WIDTH, Feeder.HEIGHT, "black");
+        super(feederSocket.feederPosition, feederSocket.angle, Feeder.WIDTH, Feeder.HEIGHT, "black");
 
         this.feederSocket = feederSocket;
 
         // フィーダーソケットのパスグループに追加
         feederSocket.pathGroup.addChild(this.path);
 
-        this.move(feederSocket.position, this.getCenterOfTop());
+        this.move(feederSocket.feederPosition, this.getCenterOfTop());
 
         // 有効化
         this.visible = true;

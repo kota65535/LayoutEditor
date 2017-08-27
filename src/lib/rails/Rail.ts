@@ -71,6 +71,12 @@ export class Rail {
         this.angle = angle;
 
         railParts.forEach((part, i) => this._addRailPart(part, i));
+        // 各ジョイントにギャップソケットを追加
+        this.joints.forEach(j => {
+            let gapSocket = new GapSocket(j);
+            this.gapSockets.push(gapSocket);
+            j.gapSocket = gapSocket;
+        });
 
         // IDを設定
         this.name = name;
@@ -85,7 +91,7 @@ export class Rail {
     private _addRailPart(railPart: RailPart, index: number) {
         this.railParts.push(railPart);
         // レールパーツは最も下に描画
-        this.pathGroup.insertChild(0, railPart.path);
+        // this.pathGroup.insertChild(0, railPart.path);
 
         // 重複が無いか確認してからジョイントを追加する
         if ( ! this._isJointDuplicate(railPart.startPoint) ) {
@@ -93,31 +99,22 @@ export class Rail {
             this.joints.push(startJoint);
             // ジョイントは常にレールパーツの上に描画
             // startJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
-            this.pathGroup.addChild(startJoint.pathGroup);
+            // this.pathGroup.addChild(startJoint.pathGroup);
         }
         if ( ! this._isJointDuplicate(railPart.endPoint) ) {
             let endJoint = new Joint(railPart.endPoint, railPart.endAngle, JointDirection.SAME_TO_ANGLE, this);
             this.joints.push(endJoint);
-            this.pathGroup.addChild(endJoint.pathGroup);
+            // this.pathGroup.addChild(endJoint.pathGroup);
             // endJoint.parts.forEach(part => this.pathGroup.addChild(part.path));
         }
 
-        // フィーダーソケットの追加
+        // 各レールパーツにフィーダーソケットの追加
         // FIXME: 多分これだとレールパーツが複数で一部がフィーダーソケットを持たないときにバグる
-        this.railParts.forEach(part => {
-            if (part.hasFeederSocket()) {
-                let feederSocket = new FeederSocket(part);
-                this.feederSockets.push(feederSocket);
-                this.pathGroup.addChild(feederSocket.pathGroup)
-            }
-        });
-
-        this.joints.forEach(j => {
-            let gapSocket = new GapSocket(j);
-            this.gapSockets.push(gapSocket);
-            this.pathGroup.addChild(gapSocket.pathGroup);
-            j.gapSocket = gapSocket;
-        });
+        if (railPart.hasFeederSocket()) {
+            let feederSocket = new FeederSocket(railPart);
+            this.feederSockets.push(feederSocket);
+            // this.pathGroup.addChild(feederSocket.pathGroup)
+        }
 
         railPart.rail = this;
     }

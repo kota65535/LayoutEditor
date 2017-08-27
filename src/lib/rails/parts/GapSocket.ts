@@ -140,7 +140,11 @@ export class GapSocket extends DetectablePart {
             }
             this._gapState = gapState;
         }
-        log.info(`GapSocket @${this.joint.name}: enabled=${this.enabled}, state=${this.gapState}, detect=${this.detectionState}`);
+        this.showInfo();
         // log.info(`GapSocket @${this.joint.name}: basePart.path=${this.basePart.path.position}, detectPart.path=${this.detectionPart.path.position}`);
+    }
+
+    showInfo() {
+        log.info(`GapSocket @${this.joint.name}: enabled=${this.enabled}, state=${this.gapState}, detect=${this.detectionState}`);
     }
 }
