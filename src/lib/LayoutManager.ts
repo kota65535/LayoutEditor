@@ -13,23 +13,6 @@ import {GapSocket} from "./rails/parts/GapSocket";
 
 let log = logger("LayoutManager");
 
-class MyArray<T> extends Array<T> {
-    // [B](f: (A) ⇒ [B]): [B]  ; Although the types in the arrays aren't strict (:
-    flatMap(lambda) {
-        return Array.prototype.concat.apply([], this.map(lambda));
-    };
-    remove() {
-        let what, a = arguments, L = a.length, ax;
-        while (L && this.length) {
-            what = a[--L];
-            while ((ax = this.indexOf(what)) !== -1) {
-                this.splice(ax, 1);
-            }
-        }
-        return this;
-    }
-}
-
 
 export interface LayoutData {
     nextRailId: number,
@@ -62,7 +45,7 @@ export class LayoutManager {
     // ジョイント間の距離がこの値よりも近い場合は接続している扱いにする
     static JOINT_TO_JOINT_TOLERANCE = 2;
 
-    rails: MyArray<Rail>;           // レイアウトを構成するレール
+    rails: Rail[];           // レイアウトを構成するレール
     feederSockets: FeederSocket[];  // フィーダーがささっているフィーダーソケット
     gapSockets: GapSocket[];        // ギャップを
 
@@ -83,7 +66,7 @@ export class LayoutManager {
     }
 
     constructor() {
-        this.rails = new MyArray();
+        this.rails = [];
         this.feederSockets = [];
         this.gapSockets = [];
         this._nextRailId = 0;
@@ -98,7 +81,7 @@ export class LayoutManager {
      */
     destroyLayout() {
         this.rails.forEach(r =>  r.remove());
-        this.rails = new MyArray();
+        this.rails = [];
         this.feederSockets.forEach(f => f.remove());
         this.feederSockets = [];
         this.gapSockets.forEach(g => g.remove());
@@ -257,7 +240,7 @@ export class LayoutManager {
             return null;
         }
         // レイアウト上の全てのレールパーツを取得
-        return this.allRailParts.find( part => part.containsPath(hitResult.item));
+        return this.allRailParts.find( part => part.containsPath(<any>hitResult.item));
     }
 
     /**

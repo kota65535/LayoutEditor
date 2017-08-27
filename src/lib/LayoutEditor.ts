@@ -261,7 +261,7 @@ export class LayoutEditor {
         if (!hitResult) {
             return null;
         }
-        return this.gridJoints.find(joint => joint.containsPath(hitResult.item));
+        return this.gridJoints.find(joint => joint.containsPath(<any>hitResult.item));
     }
 
     /**
