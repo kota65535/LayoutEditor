@@ -42,7 +42,6 @@ export class Rail {
     };
     // 現在の導電状態
     conductionState: number = 0;
-    rendered: boolean = false;
 
 
     // このレールを特定するためのID。

@@ -49,7 +49,6 @@ export class Joint extends DetectablePart {
 
     _currentScale: number;
     rail: Rail;
-    rendered: false;
     _gapSocket: GapSocket;
 
 
@@ -121,7 +120,6 @@ export class Joint extends DetectablePart {
         this._direction = direction;
         this.connectedJoint = null;
         this.rail = rail;
-        this.rendered = false;
         this._jointState = JointState.OPEN;
         this._currentScale = 1;
 

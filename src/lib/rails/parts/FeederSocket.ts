@@ -26,7 +26,8 @@ export enum FeederState {
 export enum FlowDirection {
     NONE,           // 電流なし。レールパーツに対して使用され、フィーダー自体には使用されない
     START_TO_END,
-    END_TO_START
+    END_TO_START,
+    ILLEGAL
 }
 
 
@@ -128,7 +129,6 @@ export class FeederSocket extends DetectablePart {
                break;
        }
     }
-
 
     /**
      * このソケットにフィーダーを接続する。

@@ -94,13 +94,6 @@ export class RailPart extends PartBase {
     get rail(): Rail { return this._rail; }
     set rail(rail: Rail) { this._rail = rail; }
 
-    /**
-     * シミュレーションされたか否か
-     * @returns {boolean}
-     */
-    get simulated(): boolean { return this._isSimulated; }
-    set simulated(isSimulated: boolean) { this._isSimulated = isSimulated; }
-
 
     /**
      * レールパーツの初期化。基底クラスでは特に重要な処理は行わない。
@@ -183,6 +176,9 @@ export class RailPart extends PartBase {
                 currentDestination = currentOrigin.add(this.endPoint.subtract(this.startPoint).multiply(2));
                 // log.debug("E to S : ", currentOrigin, "=>", currentDestination);
                 break;
+            case FlowDirection.ILLEGAL:
+                this.path.fillColor = "red";
+                return;
         }
 
         this.path.fillColor = <IGradientColor>{
